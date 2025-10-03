@@ -1,0 +1,10 @@
+{
+  "name": "github",
+  "version": "1.0.0",
+  "description": "Override rules for GitHub API patterns",
+  "author": "OSS Protocols Community",
+  "created": "2025-01-15T00:00:00Z",
+  "rules_count": 8,
+  "tags": ["github", "api", "pagination", "rate-limiting"],
+  "protocol_hints": ["github", "git"]
+}

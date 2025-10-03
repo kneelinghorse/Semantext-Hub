@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  northwind-db:
+    image: postgres:15-alpine
+    container_name: northwind-postgres
+    environment:
+      POSTGRES_USER: northwind_user
+      POSTGRES_PASSWORD: northwind_pass
+      POSTGRES_DB: northwind
+    ports:
+      - "5432:5432"
+    volumes:
+      - northwind-data:/var/lib/postgresql/data
+      - ./seed.sql:/docker-entrypoint-initdb.d/seed.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U northwind_user -d northwind"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  northwind-data:
+    driver: local

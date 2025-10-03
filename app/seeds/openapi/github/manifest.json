@@ -1,0 +1,18 @@
+{
+  "id": "github-api",
+  "type": "openapi",
+  "version": "1.0.0",
+  "name": "GitHub API Seed",
+  "description": "GitHub REST API subset with repositories, issues, and user management",
+  "spec_path": "./spec.json",
+  "overrides_path": "./overrides",
+  "tags": ["api", "github", "developer-tools", "vcs"],
+  "metadata": {
+    "protocol_count": 30,
+    "pii_fields": 8,
+    "override_rules": 8,
+    "api_endpoints": 15,
+    "api_version": "2022-11-28"
+  },
+  "demo_description": "Demonstrates API versioning, rate limiting, and user data handling patterns in developer platforms"
+}

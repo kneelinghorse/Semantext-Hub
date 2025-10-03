@@ -1,0 +1,18 @@
+{
+  "_react-vendor-nf7bT_Uh.js": {
+    "file": "assets/react-vendor-nf7bT_Uh.js",
+    "name": "react-vendor"
+  },
+  "index.html": {
+    "file": "assets/index-BTR-PQR8.js",
+    "name": "index",
+    "src": "index.html",
+    "isEntry": true,
+    "imports": [
+      "_react-vendor-nf7bT_Uh.js"
+    ],
+    "css": [
+      "assets/index-CCFZt5Gf.css"
+    ]
+  }
+}

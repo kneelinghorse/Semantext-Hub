@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  sakila-db:
+    image: postgres:15-alpine
+    container_name: sakila-postgres
+    environment:
+      POSTGRES_USER: sakila_user
+      POSTGRES_PASSWORD: sakila_pass
+      POSTGRES_DB: sakila
+    ports:
+      - "5433:5432"
+    volumes:
+      - sakila-data:/var/lib/postgresql/data
+      - ./seed.sql:/docker-entrypoint-initdb.d/seed.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sakila_user -d sakila"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  sakila-data:
+    driver: local

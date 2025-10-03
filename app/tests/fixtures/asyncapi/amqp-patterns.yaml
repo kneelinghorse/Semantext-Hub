@@ -1,0 +1,238 @@
+asyncapi: 3.0.0
+info:
+  title: AMQP Pattern Examples
+  version: 1.0.0
+  description: Test fixtures for AMQP-specific event patterns (DLQ, retry, routing)
+
+channels:
+  # Pattern: Retry without max attempts (WARN severity)
+  customer.events.verified:
+    address: customer.events.verified
+    messages:
+      customerVerified:
+        $ref: '#/components/messages/customerVerified'
+    bindings:
+      amqp:
+        is: routingKey
+        exchange:
+          name: customer.events
+          type: topic
+          durable: true
+        queue:
+          name: customer.verified.queue
+          durable: true
+
+  # Pattern: Proper retry with max attempts (INFO severity)
+  order.events.shipped:
+    address: order.events.shipped
+    messages:
+      orderShipped:
+        $ref: '#/components/messages/orderShipped'
+    bindings:
+      amqp:
+        is: routingKey
+        exchange:
+          name: order.events
+          type: topic
+          durable: true
+        queue:
+          name: order.shipped.queue
+          durable: true
+          metadata:
+            x-max-retries: 3
+            x-message-ttl: 60000
+
+  # Pattern: DLQ configuration for PII events (INFO severity)
+  user.events.registered:
+    address: user.events.registered
+    messages:
+      userRegistered:
+        $ref: '#/components/messages/userRegistered'
+    bindings:
+      amqp:
+        is: routingKey
+        exchange:
+          name: user.events
+          type: topic
+          durable: true
+        queue:
+          name: user.registered.queue
+          durable: true
+          metadata:
+            x-max-retries: 5
+            x-dead-letter-exchange: user.events.dlq
+
+  # Pattern: Routing key ordering (INFO severity)
+  transaction.events.completed:
+    address: transaction.events.completed
+    messages:
+      transactionCompleted:
+        $ref: '#/components/messages/transactionCompleted'
+    bindings:
+      amqp:
+        is: routingKey
+        exchange:
+          name: transaction.events
+          type: topic
+          durable: true
+        queue:
+          name: transaction.completed.queue
+        metadata:
+          routing-key: transaction.completed.{user_id}
+
+operations:
+  receiveCustomerVerified:
+    action: receive
+    channel:
+      $ref: '#/channels/customer.events.verified'
+
+  receiveOrderShipped:
+    action: receive
+    channel:
+      $ref: '#/channels/order.events.shipped'
+
+  receiveUserRegistered:
+    action: receive
+    channel:
+      $ref: '#/channels/user.events.registered'
+
+  receiveTransactionCompleted:
+    action: receive
+    channel:
+      $ref: '#/channels/transaction.events.completed'
+
+components:
+  messages:
+    customerVerified:
+      name: CustomerVerified
+      title: Customer Verified Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/customerVerifiedPayload'
+      x-delivery:
+        retry_policy: exponential
+        transport: amqp
+
+    orderShipped:
+      name: OrderShipped
+      title: Order Shipped Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/orderShippedPayload'
+      x-delivery:
+        retry_policy: exponential
+        transport: amqp
+        metadata:
+          x-max-retries: 3
+
+    userRegistered:
+      name: UserRegistered
+      title: User Registered Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/userRegisteredPayload'
+      x-delivery:
+        retry_policy: exponential
+        dlq: user.events.dlq
+        transport: amqp
+        metadata:
+          x-max-retries: 5
+
+    transactionCompleted:
+      name: TransactionCompleted
+      title: Transaction Completed Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/transactionCompletedPayload'
+      x-delivery:
+        retry_policy: simple
+        transport: amqp
+        metadata:
+          routing-key: transaction.completed.{user_id}
+
+  schemas:
+    customerVerifiedPayload:
+      type: object
+      required:
+        - customer_id
+        - verified_at
+        - email
+      properties:
+        customer_id:
+          type: string
+          description: Customer identifier
+        verified_at:
+          type: string
+          format: date-time
+        email:
+          type: string
+          description: Customer email (PII)
+        phone:
+          type: string
+          description: Customer phone (PII)
+        verification_method:
+          type: string
+
+    orderShippedPayload:
+      type: object
+      required:
+        - order_id
+        - shipped_at
+        - tracking_number
+      properties:
+        order_id:
+          type: string
+        shipped_at:
+          type: string
+          format: date-time
+        tracking_number:
+          type: string
+        carrier:
+          type: string
+        estimated_delivery:
+          type: string
+          format: date-time
+
+    userRegisteredPayload:
+      type: object
+      required:
+        - user_id
+        - registered_at
+        - email
+      properties:
+        user_id:
+          type: string
+          description: User identifier
+        registered_at:
+          type: string
+          format: date-time
+        email:
+          type: string
+          description: User email (PII)
+        name:
+          type: string
+          description: User full name (PII)
+        ip_address:
+          type: string
+          description: Registration IP (PII)
+
+    transactionCompletedPayload:
+      type: object
+      required:
+        - transaction_id
+        - completed_at
+        - amount
+      properties:
+        transaction_id:
+          type: string
+        user_id:
+          type: string
+        completed_at:
+          type: string
+          format: date-time
+        amount:
+          type: number
+        currency:
+          type: string
+        status:
+          type: string

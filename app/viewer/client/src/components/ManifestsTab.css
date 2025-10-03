@@ -1,0 +1,306 @@
+.manifests-tab {
+  padding: var(--spacing-xl);
+}
+
+.manifests-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-lg);
+}
+
+.manifests-header h2 {
+  margin: 0;
+}
+
+.manifests-count {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  background-color: var(--color-bg-secondary);
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+/* Empty State */
+.empty-manifests {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  color: var(--color-text-tertiary);
+}
+
+.empty-icon {
+  font-size: 4rem;
+  margin-bottom: var(--spacing-md);
+  opacity: 0.5;
+}
+
+/* Manifests List */
+.manifests-list {
+  display: grid;
+  gap: var(--spacing-md);
+}
+
+.manifest-item {
+  padding: var(--spacing-lg);
+  background-color: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.manifest-item:hover {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.manifest-item:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.manifest-item.selected {
+  border-color: var(--color-primary);
+  background-color: rgba(3, 102, 214, 0.05);
+}
+
+.manifest-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-sm);
+}
+
+.manifest-id {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  font-family: var(--font-mono);
+}
+
+.manifest-format {
+  display: inline-block;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.manifest-format.openapi {
+  background-color: rgba(73, 204, 144, 0.15);
+  color: #49cc90;
+}
+
+.manifest-format.asyncapi {
+  background-color: rgba(138, 43, 226, 0.15);
+  color: #8a2be2;
+}
+
+.manifest-format.graphql {
+  background-color: rgba(225, 0, 152, 0.15);
+  color: #e10098;
+}
+
+.manifest-format.grpc {
+  background-color: rgba(36, 123, 160, 0.15);
+  color: #247ba0;
+}
+
+.manifest-format.unknown {
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text-tertiary);
+}
+
+.manifest-item-meta {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.manifest-urn {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+  color: var(--color-primary);
+}
+
+.manifest-size {
+  font-size: 0.75rem;
+  color: var(--color-text-tertiary);
+}
+
+/* Manifest Detail Modal */
+.manifest-detail-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: var(--spacing-lg);
+}
+
+.manifest-detail {
+  background-color: var(--color-bg-elevated);
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  width: 100%;
+  max-width: 900px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.detail-header {
+  padding: var(--spacing-lg) var(--spacing-xl);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.detail-title {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.detail-title h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-family: var(--font-mono);
+}
+
+.detail-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.btn-download,
+.btn-close {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all var(--transition-fast);
+}
+
+.btn-download {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.btn-download:hover:not(:disabled) {
+  background-color: var(--color-primary-hover);
+}
+
+.btn-download:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-close {
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text);
+}
+
+.btn-close:hover {
+  background-color: var(--color-border);
+}
+
+.detail-meta {
+  padding: var(--spacing-md) var(--spacing-xl);
+  background-color: var(--color-bg-secondary);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.meta-item {
+  display: flex;
+  gap: var(--spacing-sm);
+  font-size: 0.875rem;
+}
+
+.meta-label {
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.meta-value {
+  font-family: var(--font-mono);
+  color: var(--color-text);
+}
+
+.detail-content {
+  flex: 1;
+  overflow: auto;
+  padding: var(--spacing-xl);
+}
+
+.detail-loading,
+.detail-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  color: var(--color-text-secondary);
+}
+
+.detail-error {
+  color: var(--color-error);
+}
+
+.detail-error pre {
+  margin-top: var(--spacing-md);
+  font-size: 0.875rem;
+}
+
+.manifest-content {
+  background-color: var(--color-bg-secondary);
+  padding: var(--spacing-lg);
+  border-radius: 6px;
+  overflow-x: auto;
+  margin: 0;
+}
+
+.manifest-content code {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--color-text);
+}
+
+.manifest-content .token.key {
+  color: #c678dd;
+}
+
+.manifest-content .token.string {
+  color: #98c379;
+}
+
+.manifest-content .token.number {
+  color: #d19a66;
+}
+
+.manifest-content .token.boolean {
+  color: #56b6c2;
+}
+
+.manifest-content .token.null {
+  color: #e06c75;
+}

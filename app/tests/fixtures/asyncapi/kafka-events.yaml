@@ -1,0 +1,103 @@
+asyncapi: '2.6.0'
+info:
+  title: E-Commerce Order Events
+  version: '1.0.0'
+  description: Kafka-based order event streaming for e-commerce platform
+
+servers:
+  production:
+    url: kafka://kafka.example.com:9092
+    protocol: kafka
+    description: Production Kafka cluster
+
+channels:
+  orders.created:
+    description: Order creation events
+    bindings:
+      kafka:
+        topic: orders.created
+        partitions: 3
+        replicas: 2
+        configs:
+          retention.ms: 604800000
+          cleanup.policy: delete
+          min.insync.replicas: 2
+          acks: all
+          enable.idempotence: true
+          retry.backoff.ms: 1000
+          retries: 5
+          dead.letter.queue.topic.name: orders.created.dlq
+    publish:
+      operationId: publishOrderCreated
+      message:
+        name: OrderCreated
+        contentType: application/json
+        payload:
+          type: object
+          properties:
+            orderId:
+              type: string
+              description: Unique order identifier
+            customerId:
+              type: string
+              description: Customer identifier
+            customerEmail:
+              type: string
+              format: email
+              description: Customer email address
+            orderTotal:
+              type: number
+              description: Total order amount
+            items:
+              type: array
+              items:
+                type: object
+                properties:
+                  productId:
+                    type: string
+                  quantity:
+                    type: integer
+                  price:
+                    type: number
+            shippingAddress:
+              type: object
+              properties:
+                street:
+                  type: string
+                city:
+                  type: string
+                zipCode:
+                  type: string
+                country:
+                  type: string
+            timestamp:
+              type: string
+              format: date-time
+          required:
+            - orderId
+            - customerId
+            - customerEmail
+            - orderTotal
+
+  orders.updated:
+    description: Order update events
+    bindings:
+      kafka:
+        topic: orders.updated
+        partitions: 3
+        replicas: 2
+    publish:
+      message:
+        name: OrderUpdated
+        contentType: application/json
+        payload:
+          type: object
+          properties:
+            orderId:
+              type: string
+            status:
+              type: string
+              enum: [pending, processing, shipped, delivered, cancelled]
+            timestamp:
+              type: string
+              format: date-time

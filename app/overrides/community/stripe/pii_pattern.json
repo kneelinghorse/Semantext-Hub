@@ -1,0 +1,119 @@
+[
+  {
+    "id": "stripe-customer-email",
+    "type": "pii_pattern",
+    "pattern": {
+      "field": "email",
+      "context": "customers",
+      "data_pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"
+    },
+    "classification": "pii",
+    "confidence": 0.95,
+    "metadata": {
+      "source": "community",
+      "author": "stripe-patterns",
+      "created": "2025-01-15T00:00:00Z",
+      "verified_by": 150,
+      "description": "Email field in Stripe customers",
+      "tags": ["stripe", "customer", "email", "pii"],
+      "protocol_hints": ["stripe", "payment"]
+    }
+  },
+  {
+    "id": "stripe-customer-phone",
+    "type": "pii_pattern",
+    "pattern": {
+      "field": "phone",
+      "context": "customers",
+      "data_pattern": "^\\+?[1-9]\\d{1,14}$"
+    },
+    "classification": "pii",
+    "confidence": 0.92,
+    "metadata": {
+      "source": "community",
+      "author": "stripe-patterns",
+      "created": "2025-01-15T00:00:00Z",
+      "verified_by": 120,
+      "description": "Phone number in Stripe customers",
+      "tags": ["stripe", "customer", "phone", "pii"],
+      "protocol_hints": ["stripe"]
+    }
+  },
+  {
+    "id": "stripe-customer-name",
+    "type": "pii_pattern",
+    "pattern": {
+      "field": "name",
+      "context": "customers"
+    },
+    "classification": "pii",
+    "confidence": 0.88,
+    "metadata": {
+      "source": "community",
+      "author": "stripe-patterns",
+      "created": "2025-01-15T00:00:00Z",
+      "verified_by": 200,
+      "description": "Customer name field",
+      "tags": ["stripe", "customer", "name", "pii"],
+      "protocol_hints": ["stripe"]
+    }
+  },
+  {
+    "id": "stripe-card-last4",
+    "type": "pii_pattern",
+    "pattern": {
+      "field": "last4",
+      "context": "cards",
+      "data_pattern": "^\\d{4}$"
+    },
+    "classification": "sensitive",
+    "confidence": 0.90,
+    "metadata": {
+      "source": "community",
+      "author": "stripe-patterns",
+      "created": "2025-01-15T00:00:00Z",
+      "verified_by": 180,
+      "description": "Last 4 digits of card number",
+      "tags": ["stripe", "payment", "card", "sensitive"],
+      "protocol_hints": ["stripe", "payment"]
+    }
+  },
+  {
+    "id": "stripe-bank-account-number",
+    "type": "pii_pattern",
+    "pattern": {
+      "field": { "regex": "(account.*number|bank.*account)", "flags": "i" },
+      "context": "bank_accounts"
+    },
+    "classification": "pii",
+    "confidence": 0.93,
+    "metadata": {
+      "source": "community",
+      "author": "stripe-patterns",
+      "created": "2025-01-15T00:00:00Z",
+      "verified_by": 95,
+      "description": "Bank account number fields",
+      "tags": ["stripe", "banking", "account", "pii"],
+      "protocol_hints": ["stripe", "banking"]
+    }
+  },
+  {
+    "id": "stripe-customer-address",
+    "type": "pii_pattern",
+    "pattern": {
+      "field": { "regex": "(address|city|postal_code|country)", "flags": "i" },
+      "context": "customers"
+    },
+    "classification": "pii",
+    "confidence": 0.85,
+    "metadata": {
+      "source": "community",
+      "author": "stripe-patterns",
+      "created": "2025-01-15T00:00:00Z",
+      "verified_by": 145,
+      "description": "Customer address fields",
+      "tags": ["stripe", "customer", "address", "pii"],
+      "protocol_hints": ["stripe"]
+    }
+  }
+]

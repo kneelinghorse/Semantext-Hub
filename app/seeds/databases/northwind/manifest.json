@@ -1,0 +1,18 @@
+{
+  "id": "northwind-db",
+  "type": "database",
+  "version": "1.0.0",
+  "name": "Northwind Database",
+  "description": "Classic Northwind traders sample database with customers, orders, products, and employees",
+  "tags": ["database", "sql", "sample", "northwind", "postgres"],
+  "metadata": {
+    "database": "postgresql",
+    "tables": 13,
+    "sample_rows": 1000,
+    "protocol_count": 13,
+    "port": 5432,
+    "default_database": "northwind"
+  },
+  "docker_compose_path": "./docker-compose.yml",
+  "demo_description": "Classic relational database with realistic business data including customer information, orders, and inventory"
+}

@@ -1,0 +1,225 @@
+asyncapi: 3.0.0
+info:
+  title: MQTT Pattern Examples
+  version: 1.0.0
+  description: Test fixtures for MQTT-specific event patterns (QoS, retain, fanout)
+
+channels:
+  # Pattern: Schema evolution - backward compatible (INFO severity)
+  device.telemetry.temperature:
+    address: device/telemetry/temperature
+    messages:
+      temperatureReading:
+        $ref: '#/components/messages/temperatureReading'
+    bindings:
+      mqtt:
+        qos: 1
+        retain: false
+
+  # Pattern: Schema evolution - rigid (WARN severity)
+  device.commands.reboot:
+    address: device/commands/reboot
+    messages:
+      rebootCommand:
+        $ref: '#/components/messages/rebootCommand'
+    bindings:
+      mqtt:
+        qos: 2
+        retain: false
+
+  # Pattern: Moderate fanout (2-3 subscribers, INFO severity)
+  sensor.events.alert:
+    address: sensor/events/alert
+    messages:
+      sensorAlert:
+        $ref: '#/components/messages/sensorAlert'
+    bindings:
+      mqtt:
+        qos: 1
+        retain: true
+
+  # Pattern: Balanced schema (INFO severity)
+  device.status.online:
+    address: device/status/online
+    messages:
+      deviceOnline:
+        $ref: '#/components/messages/deviceOnline'
+    bindings:
+      mqtt:
+        qos: 0
+        retain: true
+
+operations:
+  receiveTemperature:
+    action: receive
+    channel:
+      $ref: '#/channels/device.telemetry.temperature'
+
+  receiveRebootCommand:
+    action: receive
+    channel:
+      $ref: '#/channels/device.commands.reboot'
+
+  # Moderate fanout: 3 subscribers
+  receiveSensorAlert1:
+    action: receive
+    channel:
+      $ref: '#/channels/sensor.events.alert'
+  receiveSensorAlert2:
+    action: receive
+    channel:
+      $ref: '#/channels/sensor.events.alert'
+  receiveSensorAlert3:
+    action: receive
+    channel:
+      $ref: '#/channels/sensor.events.alert'
+
+  receiveDeviceOnline:
+    action: receive
+    channel:
+      $ref: '#/channels/device.status.online'
+
+components:
+  messages:
+    temperatureReading:
+      name: TemperatureReading
+      title: Temperature Reading Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/temperatureReadingPayload'
+      x-delivery:
+        retry_policy: none
+        transport: mqtt
+
+    rebootCommand:
+      name: RebootCommand
+      title: Device Reboot Command
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/rebootCommandPayload'
+      x-delivery:
+        retry_policy: none
+        transport: mqtt
+
+    sensorAlert:
+      name: SensorAlert
+      title: Sensor Alert Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/sensorAlertPayload'
+      x-delivery:
+        retry_policy: none
+        transport: mqtt
+
+    deviceOnline:
+      name: DeviceOnline
+      title: Device Online Status
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/deviceOnlinePayload'
+      x-delivery:
+        retry_policy: none
+        transport: mqtt
+
+  schemas:
+    # Backward compatible: 80% optional fields (4 optional, 1 required)
+    temperatureReadingPayload:
+      type: object
+      required:
+        - device_id
+      properties:
+        device_id:
+          type: string
+          description: Device identifier
+        temperature:
+          type: number
+          description: Temperature in Celsius
+        humidity:
+          type: number
+          description: Relative humidity percentage
+        timestamp:
+          type: string
+          format: date-time
+          description: Reading timestamp
+        battery_level:
+          type: number
+          description: Battery level percentage
+
+    # Rigid: 86% required fields (6 required, 1 optional)
+    rebootCommandPayload:
+      type: object
+      required:
+        - command_id
+        - device_id
+        - issued_at
+        - force
+        - timeout
+        - reason
+      properties:
+        command_id:
+          type: string
+          description: Command identifier
+        device_id:
+          type: string
+          description: Target device identifier
+        issued_at:
+          type: string
+          format: date-time
+          description: Command issue timestamp
+        force:
+          type: boolean
+          description: Force reboot flag
+        timeout:
+          type: integer
+          description: Timeout in seconds
+        reason:
+          type: string
+          description: Reboot reason
+        scheduled_time:
+          type: string
+          format: date-time
+          description: Optional scheduled reboot time
+
+    # Balanced: 50% optional fields (2 optional, 2 required)
+    sensorAlertPayload:
+      type: object
+      required:
+        - alert_id
+        - sensor_id
+      properties:
+        alert_id:
+          type: string
+          description: Alert identifier
+        sensor_id:
+          type: string
+          description: Sensor identifier
+        alert_type:
+          type: string
+          description: Type of alert
+        severity:
+          type: string
+          description: Alert severity level
+
+    # Balanced: 60% optional fields (3 optional, 2 required)
+    deviceOnlinePayload:
+      type: object
+      required:
+        - device_id
+        - online_at
+      properties:
+        device_id:
+          type: string
+          description: Device identifier
+        online_at:
+          type: string
+          format: date-time
+          description: Online timestamp
+        ip_address:
+          type: string
+          description: Device IP address
+        firmware_version:
+          type: string
+          description: Firmware version
+        location:
+          type: object
+          description: Device location

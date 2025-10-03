@@ -1,0 +1,75 @@
+asyncapi: '2.6.0'
+info:
+  title: Payment Webhooks
+  version: '1.0.0'
+  description: HTTP webhook notifications for payment events
+
+servers:
+  production:
+    url: https://api.example.com/webhooks
+    protocol: https
+    description: Production webhook endpoint
+
+channels:
+  /payment/completed:
+    description: Payment completion webhook
+    bindings:
+      http:
+        type: request
+        method: POST
+    publish:
+      message:
+        name: PaymentCompleted
+        contentType: application/json
+        payload:
+          type: object
+          properties:
+            paymentId:
+              type: string
+            transactionId:
+              type: string
+            amount:
+              type: number
+            currency:
+              type: string
+            customerEmail:
+              type: string
+              format: email
+            creditCardNumber:
+              type: string
+              x-pii: true
+              description: Last 4 digits only
+            timestamp:
+              type: string
+              format: date-time
+          required:
+            - paymentId
+            - transactionId
+            - amount
+            - currency
+
+  /payment/failed:
+    description: Payment failure webhook
+    bindings:
+      http:
+        type: request
+        method: POST
+    publish:
+      message:
+        name: PaymentFailed
+        contentType: application/json
+        payload:
+          type: object
+          properties:
+            paymentId:
+              type: string
+            errorCode:
+              type: string
+            errorMessage:
+              type: string
+            timestamp:
+              type: string
+              format: date-time
+          required:
+            - paymentId
+            - errorCode

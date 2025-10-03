@@ -1,0 +1,18 @@
+{
+  "id": "stripe-api",
+  "type": "openapi",
+  "version": "1.0.0",
+  "name": "Stripe API Seed",
+  "description": "Stripe payment API with customer and payment endpoints, including PII handling examples",
+  "spec_path": "./spec.json",
+  "overrides_path": "./overrides",
+  "tags": ["payment", "api", "stripe", "saas"],
+  "metadata": {
+    "protocol_count": 50,
+    "pii_fields": 15,
+    "override_rules": 12,
+    "api_endpoints": 25,
+    "api_version": "2023-10-16"
+  },
+  "demo_description": "Demonstrates PII handling in payment APIs with customer data, encryption requirements, and GDPR compliance patterns"
+}

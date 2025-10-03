@@ -1,0 +1,319 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Stripe API (Demo Subset)",
+    "version": "2023-10-16",
+    "description": "Simplified Stripe API for demonstration purposes"
+  },
+  "servers": [
+    {
+      "url": "https://api.stripe.com/v1"
+    }
+  ],
+  "paths": {
+    "/customers": {
+      "get": {
+        "summary": "List all customers",
+        "operationId": "listCustomers",
+        "tags": ["Customers"],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "maximum": 100 }
+          },
+          {
+            "name": "starting_after",
+            "in": "query",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CustomerList" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a customer",
+        "operationId": "createCustomer",
+        "tags": ["Customers"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CustomerCreate" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Customer" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/customers/{id}": {
+      "get": {
+        "summary": "Retrieve a customer",
+        "operationId": "getCustomer",
+        "tags": ["Customers"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Customer" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a customer",
+        "operationId": "deleteCustomer",
+        "tags": ["Customers"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/payment_intents": {
+      "post": {
+        "summary": "Create a payment intent",
+        "operationId": "createPaymentIntent",
+        "tags": ["PaymentIntents"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/PaymentIntentCreate" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PaymentIntent" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/payment_intents/{id}": {
+      "get": {
+        "summary": "Retrieve a payment intent",
+        "operationId": "getPaymentIntent",
+        "tags": ["PaymentIntents"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PaymentIntent" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/charges": {
+      "get": {
+        "summary": "List charges",
+        "operationId": "listCharges",
+        "tags": ["Charges"],
+        "parameters": [
+          {
+            "name": "customer",
+            "in": "query",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ChargeList" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Customer": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "x-pii": true
+          },
+          "name": {
+            "type": "string",
+            "x-pii": true
+          },
+          "phone": {
+            "type": "string",
+            "x-pii": true
+          },
+          "address": {
+            "type": "object",
+            "x-pii": true,
+            "properties": {
+              "line1": { "type": "string" },
+              "line2": { "type": "string" },
+              "city": { "type": "string" },
+              "state": { "type": "string" },
+              "postal_code": { "type": "string" },
+              "country": { "type": "string" }
+            }
+          },
+          "metadata": { "type": "object" },
+          "created": { "type": "integer" }
+        }
+      },
+      "CustomerCreate": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "x-pii": true
+          },
+          "name": {
+            "type": "string",
+            "x-pii": true
+          },
+          "phone": {
+            "type": "string",
+            "x-pii": true
+          },
+          "address": {
+            "type": "object",
+            "x-pii": true
+          },
+          "metadata": { "type": "object" }
+        }
+      },
+      "CustomerList": {
+        "type": "object",
+        "properties": {
+          "object": { "type": "string", "enum": ["list"] },
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Customer" }
+          },
+          "has_more": { "type": "boolean" },
+          "url": { "type": "string" }
+        }
+      },
+      "PaymentIntent": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "amount": { "type": "integer" },
+          "currency": { "type": "string" },
+          "customer": { "type": "string" },
+          "payment_method": { "type": "string" },
+          "status": {
+            "type": "string",
+            "enum": ["requires_payment_method", "requires_confirmation", "succeeded", "canceled"]
+          },
+          "client_secret": {
+            "type": "string",
+            "x-sensitive": true
+          },
+          "metadata": { "type": "object" }
+        }
+      },
+      "PaymentIntentCreate": {
+        "type": "object",
+        "required": ["amount", "currency"],
+        "properties": {
+          "amount": { "type": "integer" },
+          "currency": { "type": "string" },
+          "customer": { "type": "string" },
+          "payment_method": { "type": "string" },
+          "metadata": { "type": "object" }
+        }
+      },
+      "Charge": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "amount": { "type": "integer" },
+          "currency": { "type": "string" },
+          "customer": { "type": "string" },
+          "status": { "type": "string" },
+          "receipt_email": {
+            "type": "string",
+            "x-pii": true
+          }
+        }
+      },
+      "ChargeList": {
+        "type": "object",
+        "properties": {
+          "object": { "type": "string", "enum": ["list"] },
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Charge" }
+          },
+          "has_more": { "type": "boolean" }
+        }
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "security": [
+    { "bearerAuth": [] }
+  ]
+}

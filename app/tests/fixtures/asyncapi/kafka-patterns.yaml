@@ -1,0 +1,286 @@
+asyncapi: '3.0.0'
+info:
+  title: Kafka Pattern Examples
+  version: 1.0.0
+  description: Test fixtures for Kafka-specific event patterns (DLQ, retry, ordering)
+
+channels:
+  # Pattern: PII event with retries but no DLQ (ERROR severity)
+  userEventsDeleted:
+    address: user.events.deleted
+    messages:
+      userDeleted:
+        $ref: '#/components/messages/userDeleted'
+    bindings:
+      kafka:
+        topic: user.events.deleted
+        partitions: 3
+        topicConfiguration:
+          retry.backoff.ms: 3000
+          retries: 5
+
+  # Pattern: DLQ configured properly for PII + retries (INFO severity)
+  userEventsUpdated:
+    address: user.events.updated
+    messages:
+      userUpdated:
+        $ref: '#/components/messages/userUpdated'
+    bindings:
+      kafka:
+        topic: user.events.updated
+        partitions: 5
+        topicConfiguration:
+          retry.backoff.ms: 5000
+          retries: 5
+          dead.letter.queue.topic.name: user.events.updated.dlq
+
+  # Pattern: DLQ without retries (WARN severity)
+  orderEventsCreated:
+    address: order.events.created
+    messages:
+      orderCreated:
+        $ref: '#/components/messages/orderCreated'
+    bindings:
+      kafka:
+        topic: order.events.created
+        partitions: 1
+        topicConfiguration:
+          dead.letter.queue.topic.name: order.events.created.dlq
+
+  # Pattern: Exponential retry without backoff config (WARN severity)
+  paymentEventsFailed:
+    address: payment.events.failed
+    messages:
+      paymentFailed:
+        $ref: '#/components/messages/paymentFailed'
+    bindings:
+      kafka:
+        topic: payment.events.failed
+        partitions: 3
+        topicConfiguration:
+          retries: 3
+
+  # Pattern: Multi-partition without key (WARN severity)
+  analyticsEventsTracked:
+    address: analytics.events.tracked
+    messages:
+      eventTracked:
+        $ref: '#/components/messages/eventTracked'
+    bindings:
+      kafka:
+        topic: analytics.events.tracked
+        partitions: 10
+
+  # Pattern: High fanout (>3 subscribers, INFO severity)
+  notificationEventsSent:
+    address: notification.events.sent
+    messages:
+      notificationSent:
+        $ref: '#/components/messages/notificationSent'
+    bindings:
+      kafka:
+        topic: notification.events.sent
+        partitions: 1
+
+operations:
+  receiveUserDeleted:
+    action: receive
+    channel:
+      $ref: '#/channels/userEventsDeleted'
+
+  receiveUserUpdated:
+    action: receive
+    channel:
+      $ref: '#/channels/userEventsUpdated'
+
+  receiveOrderCreated:
+    action: receive
+    channel:
+      $ref: '#/channels/orderEventsCreated'
+
+  receivePaymentFailed:
+    action: receive
+    channel:
+      $ref: '#/channels/paymentEventsFailed'
+
+  receiveEventTracked:
+    action: receive
+    channel:
+      $ref: '#/channels/analyticsEventsTracked'
+
+  # High fanout: 4 subscribers
+  emailSubscriber:
+    action: receive
+    channel:
+      $ref: '#/channels/notificationEventsSent'
+  smsSubscriber:
+    action: receive
+    channel:
+      $ref: '#/channels/notificationEventsSent'
+  pushSubscriber:
+    action: receive
+    channel:
+      $ref: '#/channels/notificationEventsSent'
+  webhookSubscriber:
+    action: receive
+    channel:
+      $ref: '#/channels/notificationEventsSent'
+
+components:
+  messages:
+    userDeleted:
+      name: UserDeleted
+      title: User Deleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/userDeletedPayload'
+
+    userUpdated:
+      name: UserUpdated
+      title: User Updated Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/userUpdatedPayload'
+
+    orderCreated:
+      name: OrderCreated
+      title: Order Created Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/orderCreatedPayload'
+
+    paymentFailed:
+      name: PaymentFailed
+      title: Payment Failed Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/paymentFailedPayload'
+
+    eventTracked:
+      name: EventTracked
+      title: Analytics Event Tracked
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/eventTrackedPayload'
+
+    notificationSent:
+      name: NotificationSent
+      title: Notification Sent Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/notificationSentPayload'
+
+  schemas:
+    userDeletedPayload:
+      type: object
+      required:
+        - user_id
+        - deleted_at
+        - email
+      properties:
+        user_id:
+          type: string
+          description: User identifier
+        deleted_at:
+          type: string
+          format: date-time
+        email:
+          type: string
+          description: User email (PII)
+        reason:
+          type: string
+          description: Deletion reason
+
+    userUpdatedPayload:
+      type: object
+      required:
+        - user_id
+        - updated_at
+      properties:
+        user_id:
+          type: string
+          description: User identifier
+        updated_at:
+          type: string
+          format: date-time
+        email:
+          type: string
+          description: User email (PII)
+        phone:
+          type: string
+          description: User phone (PII)
+        changes:
+          type: object
+          description: Changed fields
+
+    orderCreatedPayload:
+      type: object
+      required:
+        - order_id
+        - created_at
+        - total
+      properties:
+        order_id:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        total:
+          type: number
+        items:
+          type: array
+          items:
+            type: object
+
+    paymentFailedPayload:
+      type: object
+      required:
+        - payment_id
+        - failed_at
+        - error_code
+      properties:
+        payment_id:
+          type: string
+        failed_at:
+          type: string
+          format: date-time
+        error_code:
+          type: string
+        error_message:
+          type: string
+        retry_count:
+          type: integer
+
+    eventTrackedPayload:
+      type: object
+      required:
+        - event_id
+        - tracked_at
+      properties:
+        event_id:
+          type: string
+        tracked_at:
+          type: string
+          format: date-time
+        event_type:
+          type: string
+        properties:
+          type: object
+
+    notificationSentPayload:
+      type: object
+      required:
+        - notification_id
+        - sent_at
+      properties:
+        notification_id:
+          type: string
+        sent_at:
+          type: string
+          format: date-time
+        recipient:
+          type: string
+        channel:
+          type: string
+        content:
+          type: string

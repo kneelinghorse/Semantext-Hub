@@ -1,0 +1,18 @@
+{
+  "id": "sakila-db",
+  "type": "database",
+  "version": "1.0.0",
+  "name": "Sakila Database",
+  "description": "DVD rental store sample database with customers, films, rentals, and payments",
+  "tags": ["database", "sql", "sample", "sakila", "postgres"],
+  "metadata": {
+    "database": "postgresql",
+    "tables": 16,
+    "sample_rows": 5000,
+    "protocol_count": 16,
+    "port": 5433,
+    "default_database": "sakila"
+  },
+  "docker_compose_path": "./docker-compose.yml",
+  "demo_description": "DVD rental database with rich relational data including customer rentals, film inventory, and payment history"
+}

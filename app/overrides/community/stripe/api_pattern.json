@@ -1,0 +1,125 @@
+[
+  {
+    "id": "stripe-list-customers-pagination",
+    "type": "api_pattern",
+    "pattern": {
+      "endpoint": "/v1/customers",
+      "method": "GET",
+      "parameters": ["limit", "starting_after"],
+      "response": {
+        "properties": ["has_more", "data"]
+      }
+    },
+    "classification": "pagination",
+    "confidence": 0.95,
+    "metadata": {
+      "source": "community",
+      "author": "stripe-patterns",
+      "created": "2025-01-15T00:00:00Z",
+      "verified_by": 250,
+      "description": "Stripe cursor-based pagination for customers",
+      "tags": ["stripe", "pagination", "cursor"],
+      "protocol_hints": ["stripe"]
+    }
+  },
+  {
+    "id": "stripe-list-charges-pagination",
+    "type": "api_pattern",
+    "pattern": {
+      "endpoint": "/v1/charges",
+      "method": "GET",
+      "parameters": ["limit", "starting_after"],
+      "response": {
+        "properties": ["has_more", "data"]
+      }
+    },
+    "classification": "pagination",
+    "confidence": 0.95,
+    "metadata": {
+      "source": "community",
+      "author": "stripe-patterns",
+      "created": "2025-01-15T00:00:00Z",
+      "verified_by": 220,
+      "description": "Stripe cursor-based pagination for charges",
+      "tags": ["stripe", "pagination", "cursor"],
+      "protocol_hints": ["stripe", "payment"]
+    }
+  },
+  {
+    "id": "stripe-rate-limiting",
+    "type": "api_pattern",
+    "pattern": {
+      "endpoint": { "regex": "^/v1/.*" },
+      "method": "GET"
+    },
+    "classification": "rate_limiting",
+    "confidence": 0.90,
+    "metadata": {
+      "source": "community",
+      "author": "stripe-patterns",
+      "created": "2025-01-15T00:00:00Z",
+      "verified_by": 180,
+      "description": "Stripe API rate limiting headers",
+      "tags": ["stripe", "rate-limiting"],
+      "protocol_hints": ["stripe"]
+    }
+  },
+  {
+    "id": "stripe-idempotency",
+    "type": "api_pattern",
+    "pattern": {
+      "endpoint": { "regex": "^/v1/.*" },
+      "method": "POST",
+      "parameters": ["idempotency_key"]
+    },
+    "classification": "idempotency",
+    "confidence": 0.88,
+    "metadata": {
+      "source": "community",
+      "author": "stripe-patterns",
+      "created": "2025-01-15T00:00:00Z",
+      "verified_by": 165,
+      "description": "Stripe idempotency key pattern",
+      "tags": ["stripe", "idempotency"],
+      "protocol_hints": ["stripe"]
+    }
+  },
+  {
+    "id": "stripe-expandable-objects",
+    "type": "api_pattern",
+    "pattern": {
+      "endpoint": { "regex": "^/v1/.*" },
+      "parameters": ["expand"]
+    },
+    "classification": "expandable",
+    "confidence": 0.85,
+    "metadata": {
+      "source": "community",
+      "author": "stripe-patterns",
+      "created": "2025-01-15T00:00:00Z",
+      "verified_by": 140,
+      "description": "Stripe expandable object pattern",
+      "tags": ["stripe", "expansion"],
+      "protocol_hints": ["stripe"]
+    }
+  },
+  {
+    "id": "stripe-metadata-fields",
+    "type": "api_pattern",
+    "pattern": {
+      "endpoint": { "regex": "^/v1/.*" },
+      "parameters": ["metadata"]
+    },
+    "classification": "metadata",
+    "confidence": 0.82,
+    "metadata": {
+      "source": "community",
+      "author": "stripe-patterns",
+      "created": "2025-01-15T00:00:00Z",
+      "verified_by": 125,
+      "description": "Stripe metadata pattern for custom fields",
+      "tags": ["stripe", "metadata"],
+      "protocol_hints": ["stripe"]
+    }
+  }
+]

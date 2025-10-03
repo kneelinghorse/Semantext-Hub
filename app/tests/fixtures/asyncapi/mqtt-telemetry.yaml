@@ -1,0 +1,90 @@
+asyncapi: '2.6.0'
+info:
+  title: IoT Device Telemetry
+  version: '1.0.0'
+  description: MQTT-based IoT device telemetry and monitoring
+
+servers:
+  production:
+    url: mqtt://mqtt.example.com:1883
+    protocol: mqtt
+    description: Production MQTT broker
+
+channels:
+  devices/{deviceId}/telemetry:
+    description: Device telemetry data stream
+    parameters:
+      deviceId:
+        description: Unique device identifier
+        schema:
+          type: string
+    bindings:
+      mqtt:
+        qos: 1
+        retain: false
+    publish:
+      message:
+        name: DeviceTelemetry
+        contentType: application/json
+        payload:
+          type: object
+          properties:
+            deviceId:
+              type: string
+            temperature:
+              type: number
+              description: Temperature in Celsius
+            humidity:
+              type: number
+              description: Humidity percentage
+            battery:
+              type: number
+              description: Battery level percentage
+            location:
+              type: object
+              properties:
+                latitude:
+                  type: number
+                longitude:
+                  type: number
+            timestamp:
+              type: string
+              format: date-time
+          required:
+            - deviceId
+            - timestamp
+
+  devices/{deviceId}/commands:
+    description: Device command channel
+    parameters:
+      deviceId:
+        description: Unique device identifier
+        schema:
+          type: string
+    bindings:
+      mqtt:
+        qos: 2
+        retain: false
+    subscribe:
+      message:
+        name: DeviceCommand
+        contentType: application/json
+        payload:
+          type: object
+          properties:
+            commandId:
+              type: string
+            deviceId:
+              type: string
+            command:
+              type: string
+              enum: [restart, update_firmware, calibrate]
+            parameters:
+              type: object
+            timestamp:
+              type: string
+              format: date-time
+          required:
+            - commandId
+            - deviceId
+            - command

@@ -1,0 +1,159 @@
+[
+  {
+    "id": "github-pagination-link-header",
+    "type": "api_pattern",
+    "pattern": {
+      "endpoint": { "regex": "^/.*" },
+      "method": "GET",
+      "parameters": ["page", "per_page"]
+    },
+    "classification": "pagination",
+    "confidence": 0.92,
+    "metadata": {
+      "source": "community",
+      "author": "github-patterns",
+      "created": "2025-01-15T00:00:00Z",
+      "verified_by": 300,
+      "description": "GitHub page-based pagination with Link header",
+      "tags": ["github", "pagination", "page-based"],
+      "protocol_hints": ["github"]
+    }
+  },
+  {
+    "id": "github-rate-limiting",
+    "type": "api_pattern",
+    "pattern": {
+      "endpoint": { "regex": "^/.*" },
+      "method": "GET"
+    },
+    "classification": "rate_limiting",
+    "confidence": 0.95,
+    "metadata": {
+      "source": "community",
+      "author": "github-patterns",
+      "created": "2025-01-15T00:00:00Z",
+      "verified_by": 280,
+      "description": "GitHub rate limiting with X-RateLimit headers",
+      "tags": ["github", "rate-limiting"],
+      "protocol_hints": ["github"]
+    }
+  },
+  {
+    "id": "github-conditional-requests",
+    "type": "api_pattern",
+    "pattern": {
+      "endpoint": { "regex": "^/.*" },
+      "method": "GET",
+      "parameters": ["if-modified-since", "if-none-match"]
+    },
+    "classification": "conditional",
+    "confidence": 0.88,
+    "metadata": {
+      "source": "community",
+      "author": "github-patterns",
+      "created": "2025-01-15T00:00:00Z",
+      "verified_by": 210,
+      "description": "GitHub conditional requests with ETags",
+      "tags": ["github", "caching", "conditional"],
+      "protocol_hints": ["github"]
+    }
+  },
+  {
+    "id": "github-search-pagination",
+    "type": "api_pattern",
+    "pattern": {
+      "endpoint": "/search/",
+      "method": "GET",
+      "parameters": ["q", "page", "per_page"]
+    },
+    "classification": "pagination",
+    "confidence": 0.93,
+    "metadata": {
+      "source": "community",
+      "author": "github-patterns",
+      "created": "2025-01-15T00:00:00Z",
+      "verified_by": 260,
+      "description": "GitHub search API pagination",
+      "tags": ["github", "search", "pagination"],
+      "protocol_hints": ["github"]
+    }
+  },
+  {
+    "id": "github-graphql-cursor-pagination",
+    "type": "api_pattern",
+    "pattern": {
+      "endpoint": "/graphql",
+      "method": "POST",
+      "parameters": ["after", "before", "first", "last"]
+    },
+    "classification": "pagination",
+    "confidence": 0.90,
+    "metadata": {
+      "source": "community",
+      "author": "github-patterns",
+      "created": "2025-01-15T00:00:00Z",
+      "verified_by": 190,
+      "description": "GitHub GraphQL cursor-based pagination",
+      "tags": ["github", "graphql", "pagination", "cursor"],
+      "protocol_hints": ["github", "graphql"]
+    }
+  },
+  {
+    "id": "github-preview-apis",
+    "type": "api_pattern",
+    "pattern": {
+      "endpoint": { "regex": "^/.*" }
+    },
+    "classification": "versioning",
+    "confidence": 0.80,
+    "metadata": {
+      "source": "community",
+      "author": "github-patterns",
+      "created": "2025-01-15T00:00:00Z",
+      "verified_by": 155,
+      "description": "GitHub API preview features with Accept header",
+      "tags": ["github", "versioning", "preview"],
+      "protocol_hints": ["github"]
+    }
+  },
+  {
+    "id": "github-webhooks",
+    "type": "api_pattern",
+    "pattern": {
+      "endpoint": "/repos/",
+      "method": "POST"
+    },
+    "classification": "webhook",
+    "confidence": 0.85,
+    "metadata": {
+      "source": "community",
+      "author": "github-patterns",
+      "created": "2025-01-15T00:00:00Z",
+      "verified_by": 175,
+      "description": "GitHub webhook patterns for repositories",
+      "tags": ["github", "webhook", "events"],
+      "protocol_hints": ["github"]
+    }
+  },
+  {
+    "id": "github-abuse-rate-limits",
+    "type": "api_pattern",
+    "pattern": {
+      "endpoint": { "regex": "^/.*" },
+      "response": {
+        "status": 403
+      }
+    },
+    "classification": "rate_limiting",
+    "confidence": 0.87,
+    "metadata": {
+      "source": "community",
+      "author": "github-patterns",
+      "created": "2025-01-15T00:00:00Z",
+      "verified_by": 140,
+      "description": "GitHub abuse detection rate limits",
+      "tags": ["github", "rate-limiting", "abuse"],
+      "protocol_hints": ["github"]
+    }
+  }
+]

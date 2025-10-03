@@ -1,0 +1,10 @@
+{
+  "name": "stripe",
+  "version": "1.0.0",
+  "description": "Override rules for Stripe API patterns and PII detection",
+  "author": "OSS Protocols Community",
+  "created": "2025-01-15T00:00:00Z",
+  "rules_count": 12,
+  "tags": ["payment", "stripe", "api", "pii"],
+  "protocol_hints": ["stripe", "payment"]
+}

@@ -1,0 +1,94 @@
+asyncapi: '2.6.0'
+info:
+  title: Notification Service
+  version: '1.0.0'
+  description: AMQP-based notification delivery system
+
+servers:
+  production:
+    url: amqp://rabbitmq.example.com:5672
+    protocol: amqp
+    description: Production RabbitMQ server
+
+channels:
+  notifications/email:
+    description: Email notification queue
+    bindings:
+      amqp:
+        is:
+          name: notifications.exchange
+          type: topic
+          durable: true
+        queue:
+          name: email.notifications
+          durable: true
+          exclusive: false
+          autoDelete: false
+          arguments:
+            x-message-ttl: 3600000
+            x-dead-letter-exchange: notifications.dlx
+            x-max-length: 10000
+        routingKey: notification.email
+    subscribe:
+      message:
+        name: EmailNotification
+        contentType: application/json
+        payload:
+          type: object
+          properties:
+            notificationId:
+              type: string
+            recipientEmail:
+              type: string
+              format: email
+            recipientName:
+              type: string
+            subject:
+              type: string
+            body:
+              type: string
+            priority:
+              type: string
+              enum: [low, medium, high, urgent]
+            timestamp:
+              type: string
+              format: date-time
+          required:
+            - notificationId
+            - recipientEmail
+            - subject
+            - body
+
+  notifications/sms:
+    description: SMS notification queue
+    bindings:
+      amqp:
+        is:
+          name: notifications.exchange
+          type: topic
+        queue:
+          name: sms.notifications
+          durable: true
+          arguments:
+            x-dead-letter-exchange: notifications.dlx
+        routingKey: notification.sms
+    subscribe:
+      message:
+        name: SMSNotification
+        contentType: application/json
+        payload:
+          type: object
+          properties:
+            notificationId:
+              type: string
+            recipientPhone:
+              type: string
+            message:
+              type: string
+            timestamp:
+              type: string
+              format: date-time
+          required:
+            - notificationId
+            - recipientPhone
+            - message

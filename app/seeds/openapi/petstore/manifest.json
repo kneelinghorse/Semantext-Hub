@@ -1,0 +1,17 @@
+{
+  "id": "petstore-api",
+  "type": "openapi",
+  "version": "1.0.0",
+  "name": "Petstore API Seed",
+  "description": "Classic Swagger Petstore example API - baseline demonstration without overrides",
+  "spec_path": "./spec.json",
+  "tags": ["api", "example", "pet", "baseline"],
+  "metadata": {
+    "protocol_count": 10,
+    "pii_fields": 2,
+    "override_rules": 0,
+    "api_endpoints": 8,
+    "api_version": "1.0.0"
+  },
+  "demo_description": "Baseline OpenAPI example for testing basic import functionality without complexity"
+}
