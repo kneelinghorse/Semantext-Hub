@@ -49,7 +49,7 @@ export class HttpAdapter extends WorkflowAdapter {
       errors.push(new ValidationError('Body must be string or object', 'body'));
     }
 
-    if (input.timeout && (typeof input.timeout !== 'number' || input.timeout <= 0)) {
+    if (input.timeout !== undefined && (typeof input.timeout !== 'number' || input.timeout <= 0)) {
       errors.push(new ValidationError('Timeout must be a positive number', 'timeout'));
     }
 
@@ -148,7 +148,9 @@ export class HttpAdapter extends WorkflowAdapter {
         
         // Don't retry on client errors (4xx)
         if (response.status >= 400 && response.status < 500) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          const clientError = new Error(`HTTP ${response.status}: ${response.statusText}`);
+          clientError.retryable = false;
+          throw clientError;
         }
         
         // Retry on server errors (5xx) or network errors
@@ -157,8 +159,8 @@ export class HttpAdapter extends WorkflowAdapter {
       } catch (error) {
         lastError = error;
         
-        // Don't retry on validation errors
-        if (error instanceof ValidationError) {
+        // Don't retry on validation errors or explicit non-retryable errors
+        if (error instanceof ValidationError || error.retryable === false) {
           throw error;
         }
       }
@@ -224,8 +226,16 @@ export class HttpAdapter extends WorkflowAdapter {
       }
     } else if (contentType.includes('text/')) {
       result.data = await response.text();
-    } else {
+    } else if (typeof response.arrayBuffer === 'function') {
       result.data = await response.arrayBuffer();
+    } else if (typeof response.buffer === 'function') {
+      const buffer = await response.buffer();
+      result.data = buffer;
+    } else if (typeof response.blob === 'function') {
+      const blob = await response.blob();
+      result.data = await blob.arrayBuffer();
+    } else {
+      result.data = null;
     }
 
     return result;

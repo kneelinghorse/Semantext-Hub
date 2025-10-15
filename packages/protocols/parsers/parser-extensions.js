@@ -7,6 +7,7 @@
 import { CircularRefDetector } from './utils/circular-ref-detector.js';
 import { ExternalRefResolver } from './utils/external-ref-resolver.js';
 import { getErrorMeta } from './utils/error-codes.js';
+import { ParserError } from './utils/error-model.js';
 import { EventEmitter } from 'eventemitter3';
 
 class ParserExtensions {
@@ -38,7 +39,22 @@ class ParserExtensions {
 
   // Circular reference detection
   detectCircularRefs(spec, externalRefs = new Map()) {
-    return this._detector.detectCircular(spec, externalRefs);
+    try {
+      return this._detector.detectCircular(spec, externalRefs);
+    } catch (error) {
+      if (error instanceof ParserError || error.code === 'REF_002') {
+        const graph = this._detector.graph;
+        return {
+          hasCircular: true,
+          cycles: error.metadata?.cycles || [],
+          totalRefs: graph ? graph.order : 0,
+          totalDependencies: graph ? graph.size : 0,
+          graph,
+          error
+        };
+      }
+      throw error;
+    }
   }
 
   // External $ref resolution with timeout
@@ -150,4 +166,3 @@ class ParserExtensions {
 }
 
 export { ParserExtensions };
-

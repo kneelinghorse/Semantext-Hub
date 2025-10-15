@@ -4,14 +4,17 @@
  * Tests for the complete registration lifecycle state machine
  */
 
-const fs = require('fs').promises;
-const path = require('path');
-const RegistrationPipeline = require('../../packages/protocols/core/registration/registration-pipeline');
-const {
+import fs from 'fs/promises';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import RegistrationPipeline from '../../packages/protocols/core/registration/registration-pipeline.js';
+import {
   STATES,
   EVENTS
-} = require('../../packages/protocols/core/registration/state-machine-definition');
-const { OptimisticLockException } = require('../../packages/protocols/core/registration/optimistic-lock');
+} from '../../packages/protocols/core/registration/state-machine-definition.js';
+import { OptimisticLockException } from '../../packages/protocols/core/registration/optimistic-lock.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Test base directory
 const TEST_BASE_DIR = path.join(__dirname, '..', '..', 'fixtures', 'registration', 'test-state');

@@ -6,9 +6,9 @@
  */
 
 import { describe, it, expect, beforeEach } from '@jest/globals';
-import { CatalogIndexAdapter, createCatalogAdapter } from '../../../packages/protocols/core/registration/adapters/catalog-index.js';
+import { CatalogIndexAdapter, createCatalogAdapter } from '../../../packages/protocols/core/registration/adapters/catalog-index.mjs';
 import { URNCatalogIndex } from '../../../packages/protocols/src/catalog/index.js';
-import { deflake } from '../util/deflake.js';
+import { deflake } from '../../util/deflake.js';
 
 describe('Catalog Index Adapter Property Tests', () => {
   let adapter;

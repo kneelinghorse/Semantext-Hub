@@ -7,7 +7,7 @@
 
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import { EventAdapter } from '../../../packages/runtime/workflow/adapters/eventAdapter.js';
-import { deflake } from '../util/deflake.js';
+import { deflake } from '../../util/deflake.js';
 
 describe('Event Adapter Property Tests', () => {
   let adapter;

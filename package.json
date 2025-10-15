@@ -12,7 +12,7 @@
   "scripts": {
     "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js",
     "test:watch": "jest --watch",
-    "test:ci": "jest --ci --coverage --maxWorkers=2 --testTimeout=30000",
+    "test:ci": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --ci --coverage --maxWorkers=2 --testTimeout=30000",
     "test:fast": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --config ./jest.fast.config.js --ci --maxWorkers=2 --testTimeout=20000",
     "generate:sprint-summary": "tsx ./scripts/reports/sprint-summary-generator.ts",
     "test:esm:probe": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js -c ./jest.esm.ci.js --runTestsByPath tests/_probe/esm.sample.test.ts",

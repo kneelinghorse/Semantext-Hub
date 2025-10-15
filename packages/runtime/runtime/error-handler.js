@@ -76,6 +76,7 @@ export class MCPError extends RuntimeError {
 export class AuthError extends RuntimeError {
   constructor(message, cause = null, context = {}) {
     super(message, cause, { ...context, type: 'auth' });
+    this.status = context.status ?? null;
   }
 }
 
@@ -85,6 +86,7 @@ export class AuthError extends RuntimeError {
 export class TimeoutError extends RuntimeError {
   constructor(message, cause = null, timeout = null, context = {}) {
     super(message, cause, { ...context, type: 'timeout', timeout });
+    this.timeout = timeout ?? context.timeout ?? null;
   }
 }
 
@@ -121,6 +123,7 @@ export class CircuitBreakerError extends RuntimeError {
 export class RetryError extends RuntimeError {
   constructor(message, cause = null, attempts = null, context = {}) {
     super(message, cause, { ...context, type: 'retry', attempts });
+    this.attempts = attempts ?? context.attempts ?? null;
   }
 }
 

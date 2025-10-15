@@ -197,10 +197,6 @@ class CrossValidator {
     const manifestUrn = manifest.metadata?.urn || manifest.urn;
 
     for (const { urn, field } of urns) {
-      if (manifestUrn && urn === manifestUrn) {
-        continue;
-      }
-
       // Check URN format using enhanced validation for all 18 protocol types
       const formatValidation = this._validateURNFormat(urn);
       if (!formatValidation.valid) {
@@ -211,6 +207,10 @@ class CrossValidator {
           severity: Severity.ERROR,
           suggestion: formatValidation.suggestion
         });
+        continue;
+      }
+
+      if (manifestUrn && urn === manifestUrn) {
         continue;
       }
 

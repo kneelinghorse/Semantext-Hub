@@ -156,6 +156,9 @@ class RegistrationPipeline extends EventEmitter {
         // Check if transition is allowed
         const transitionCheck = canTransition(fromState, event);
         if (!transitionCheck.allowed) {
+          if (isTerminalState(fromState)) {
+            throw new Error(`No transitions defined for state ${fromState}`);
+          }
           throw new Error(transitionCheck.reason);
         }
 
@@ -237,13 +240,23 @@ class RegistrationPipeline extends EventEmitter {
    *
    * @param {string} manifestId - Manifest identifier
    * @returns {Promise<Object|null>} Versioned state or null if not found
-   */
+  */
   async loadState(manifestId) {
-    return await loadStateWithRecovery(
+    const versionedState = await loadStateWithRecovery(
       manifestId,
       { currentState: getInitialState() },
       this.baseDir
     );
+
+    if (
+      !versionedState ||
+      !versionedState.state ||
+      !versionedState.state.manifestId
+    ) {
+      return null;
+    }
+
+    return versionedState;
   }
 
   /**

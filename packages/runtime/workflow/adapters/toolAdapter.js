@@ -60,10 +60,19 @@ export class ToolAdapter extends WorkflowAdapter {
       getTool: (name) => tools.get(name),
       listTools: () => Array.from(tools.keys()),
       registerTool: (name, tool) => {
+        if (!tool || typeof tool !== 'object') {
+          throw new Error('Tool must have execute function');
+        }
         if (typeof tool.execute !== 'function') {
           throw new Error('Tool must have execute function');
         }
-        tools.set(name, tool);
+        if (typeof tool.name !== 'string' || tool.name.trim() === '') {
+          throw new Error('Tool must have execute function');
+        }
+        const resolvedName = typeof name === 'string' && name.trim()
+          ? name.trim()
+          : tool.name.trim();
+        tools.set(resolvedName, tool);
       },
       hasTool: (name) => tools.has(name)
     };
@@ -90,14 +99,22 @@ export class ToolAdapter extends WorkflowAdapter {
       errors.push(new ValidationError('Tool name must be a non-empty string', 'tool'));
     }
 
-    if (input.timeout !== undefined) {
-      if (typeof input.timeout !== 'number' || input.timeout <= 0) {
+    if ('timeout' in input) {
+      const timeout = input.timeout;
+      if (typeof timeout !== 'number' || !Number.isFinite(timeout) || timeout <= 0) {
         errors.push(new ValidationError('Timeout must be a positive number', 'timeout'));
       }
     }
 
-    if (input.maxRetries !== undefined) {
-      if (typeof input.maxRetries !== 'number' || input.maxRetries < 0 || input.maxRetries > 10) {
+    if ('maxRetries' in input) {
+      const maxRetries = input.maxRetries;
+      if (
+        typeof maxRetries !== 'number' ||
+        !Number.isFinite(maxRetries) ||
+        !Number.isInteger(maxRetries) ||
+        maxRetries < 0 ||
+        maxRetries > 10
+      ) {
         errors.push(new ValidationError('Max retries must be a number between 0 and 10', 'maxRetries'));
       }
     }
@@ -202,7 +219,8 @@ export class ToolAdapter extends WorkflowAdapter {
 
       // Wait before retry (except on last attempt)
       if (attempt < maxRetries) {
-        const delay = Math.min(1000 * Math.pow(2, attempt), 10000); // Exponential backoff, max 10s
+        const baseDelay = this.config.retryDelay;
+        const delay = Math.min(baseDelay * Math.pow(2, attempt), baseDelay * 10);
         await new Promise(resolve => setTimeout(resolve, delay));
       }
     }
@@ -248,7 +266,7 @@ export class ToolAdapter extends WorkflowAdapter {
       result: result.result || result,
       metadata: {
         traceId: context.traceId,
-        elapsedTime: context.getElapsedTime(),
+        elapsedTime: typeof context.getElapsedTime === 'function' ? context.getElapsedTime() : null,
         adapterKind: 'tool',
         toolName: input.tool,
         timestamp: new Date().toISOString()

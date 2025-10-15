@@ -150,7 +150,7 @@ export class ACMGenerator {
         console.error('[ACM Generator]', logEntry);
       }
 
-      if (error instanceof ACMValidationError) {
+      if (error instanceof ACMValidationError || error instanceof ACMSchemaError) {
         throw error;
       }
 

@@ -7,8 +7,8 @@
  * - Validate all event governance sections present
  */
 
-import governance from '../../packages/protocols/core/governance/index.js';
-import graphCore from '../../packages/protocols/core/graph/index.js';
+import governance from '../../packages/protocols/core/governance/index.mjs';
+import graphCore from '../../packages/protocols/core/graph/index.mjs';
 import overrides from '../../packages/protocols/core/overrides/index.js';
 
 const { GovernanceGenerator } = governance;

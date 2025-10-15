@@ -5,6 +5,14 @@
  * Provides typed error handling with structured error information.
  */
 
+import {
+  A2AError as BaseA2AError,
+  AuthError as BaseAuthError,
+  TimeoutError as BaseTimeoutError,
+  NetworkError as BaseNetworkError,
+  RetryError as BaseRetryError
+} from './error-handler.js';
+
 /**
  * A2A Request Configuration
  * @typedef {Object} A2ARequestConfig
@@ -41,63 +49,14 @@ export function generateRequestId() {
 }
 
 /**
- * Base A2A Error class
+ * Re-export structured error classes from the centralized error handler so
+ * runtime code and tests share the same class identities.
  */
-export class A2AError extends Error {
-  constructor(message, cause = null, status = null) {
-    super(message);
-    this.name = 'A2AError';
-    this.cause = cause;
-    this.status = status;
-    this.timestamp = new Date().toISOString();
-  }
-}
-
-/**
- * Authentication Error
- * Thrown when authentication fails (401, 403)
- */
-export class AuthError extends A2AError {
-  constructor(message, cause = null, status = null) {
-    super(message, cause, status);
-    this.name = 'AuthError';
-  }
-}
-
-/**
- * Timeout Error
- * Thrown when request times out
- */
-export class TimeoutError extends A2AError {
-  constructor(message, cause = null, timeout = null) {
-    super(message, cause);
-    this.name = 'TimeoutError';
-    this.timeout = timeout;
-  }
-}
-
-/**
- * Network Error
- * Thrown when network operations fail
- */
-export class NetworkError extends A2AError {
-  constructor(message, cause = null) {
-    super(message, cause);
-    this.name = 'NetworkError';
-  }
-}
-
-/**
- * Retry Error
- * Thrown when all retry attempts are exhausted
- */
-export class RetryError extends A2AError {
-  constructor(message, cause = null, attempts = 0) {
-    super(message, cause);
-    this.name = 'RetryError';
-    this.attempts = attempts;
-  }
-}
+export const A2AError = BaseA2AError;
+export const AuthError = BaseAuthError;
+export const TimeoutError = BaseTimeoutError;
+export const NetworkError = BaseNetworkError;
+export const RetryError = BaseRetryError;
 
 /**
  * Default configuration for A2A client

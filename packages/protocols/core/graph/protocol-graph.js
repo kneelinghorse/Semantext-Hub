@@ -40,6 +40,25 @@ const EdgeKind = {
   DERIVES_FROM: 'derives_from'
 };
 
+const GENERIC_URN_PATTERN = /^urn:[a-zA-Z0-9][a-zA-Z0-9.-]*(:[a-zA-Z0-9][a-zA-Z0-9._/-]*){1,}(?:@[A-Za-z0-9][A-Za-z0-9._-]*)?$/;
+
+function isSupportedUrn(urn) {
+  if (typeof urn !== 'string' || urn.trim().length === 0) {
+    return false;
+  }
+
+  if (isValidURN(urn) || GENERIC_URN_PATTERN.test(urn)) {
+    return true;
+  }
+
+  if (urn.includes('#')) {
+    const baseUrn = urn.split('#')[0];
+    return baseUrn !== urn && isSupportedUrn(baseUrn);
+  }
+
+  return false;
+}
+
 /**
  * ProtocolGraph class
  */
@@ -67,7 +86,7 @@ class ProtocolGraph {
    * @returns {boolean} True if added, false if already exists
    */
   addNode(urn, kind, manifest = {}) {
-    if (!isValidURN(urn)) {
+    if (!isSupportedUrn(urn)) {
       throw new Error(`Invalid URN: ${urn}`);
     }
 
@@ -212,7 +231,7 @@ class ProtocolGraph {
    * @returns {Array<string>} Matching node URNs
    */
   resolveURN(urn) {
-    if (!isValidURN(urn)) {
+    if (!isSupportedUrn(urn)) {
       return [];
     }
 
@@ -517,8 +536,8 @@ class ProtocolGraph {
    * @param {string} urn - Node URN
    * @returns {Object}
    */
-  assessRisk(urn) {
-    return assessBreakingChangeRisk(this, urn);
+  assessRisk(urn, updatedManifest) {
+    return assessBreakingChangeRisk(this, urn, updatedManifest);
   }
 
   /**

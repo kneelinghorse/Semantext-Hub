@@ -184,7 +184,8 @@ export class TraceEntry {
    */
   complete(status = 'completed', result = {}) {
     this.endTime = Date.now();
-    this.duration = this.endTime - this.startTime;
+    const rawDuration = this.endTime - this.startTime;
+    this.duration = rawDuration > 0 ? rawDuration : 1;
     this.status = status;
     this.result = result;
   }
@@ -236,7 +237,7 @@ export class StructuredLogger extends EventEmitter {
    * @param {Object} context - Log context
    */
   log(level, message, context = {}) {
-    if (level < this.config.level) {
+    if (!this._shouldLog(level)) {
       return;
     }
 
@@ -265,7 +266,9 @@ export class StructuredLogger extends EventEmitter {
    * @param {Object} context - Log context
    */
   trace(message, context = {}) {
-    this.log(LOG_LEVELS.TRACE, message, context);
+    if (this._shouldLog(LOG_LEVELS.TRACE)) {
+      this.log(LOG_LEVELS.TRACE, message, context);
+    }
   }
 
   /**
@@ -274,7 +277,9 @@ export class StructuredLogger extends EventEmitter {
    * @param {Object} context - Log context
    */
   debug(message, context = {}) {
-    this.log(LOG_LEVELS.DEBUG, message, context);
+    if (this._shouldLog(LOG_LEVELS.DEBUG)) {
+      this.log(LOG_LEVELS.DEBUG, message, context);
+    }
   }
 
   /**
@@ -283,7 +288,9 @@ export class StructuredLogger extends EventEmitter {
    * @param {Object} context - Log context
    */
   info(message, context = {}) {
-    this.log(LOG_LEVELS.INFO, message, context);
+    if (this._shouldLog(LOG_LEVELS.INFO)) {
+      this.log(LOG_LEVELS.INFO, message, context);
+    }
   }
 
   /**
@@ -292,7 +299,9 @@ export class StructuredLogger extends EventEmitter {
    * @param {Object} context - Log context
    */
   warn(message, context = {}) {
-    this.log(LOG_LEVELS.WARN, message, context);
+    if (this._shouldLog(LOG_LEVELS.WARN)) {
+      this.log(LOG_LEVELS.WARN, message, context);
+    }
   }
 
   /**
@@ -301,7 +310,9 @@ export class StructuredLogger extends EventEmitter {
    * @param {Object} context - Log context
    */
   error(message, context = {}) {
-    this.log(LOG_LEVELS.ERROR, message, context);
+    if (this._shouldLog(LOG_LEVELS.ERROR)) {
+      this.log(LOG_LEVELS.ERROR, message, context);
+    }
   }
 
   /**
@@ -310,7 +321,9 @@ export class StructuredLogger extends EventEmitter {
    * @param {Object} context - Log context
    */
   fatal(message, context = {}) {
-    this.log(LOG_LEVELS.FATAL, message, context);
+    if (this._shouldLog(LOG_LEVELS.FATAL)) {
+      this.log(LOG_LEVELS.FATAL, message, context);
+    }
   }
 
   /**
@@ -484,6 +497,14 @@ export class StructuredLogger extends EventEmitter {
   }
 
   /**
+   * Check if log level passes filters
+   * @private
+   */
+  _shouldLog(level) {
+    return level >= this.config.level;
+  }
+
+  /**
    * Output to console
    * @private
    * @param {LogEntry} entry - Log entry
@@ -526,8 +547,9 @@ export class StructuredLogger extends EventEmitter {
 /**
  * Logger manager for multiple loggers
  */
-export class LoggerManager {
+export class LoggerManager extends EventEmitter {
   constructor(options = {}) {
+    super();
     this.loggers = new Map();
     this.defaultConfig = { ...DEFAULT_CONFIG, ...options };
     this.enableLogging = options.enableLogging !== false;

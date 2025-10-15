@@ -261,7 +261,7 @@ describe('HttpAdapter', () => {
       };
 
       await expect(adapter.execute(context, input)).rejects.toThrow(AdapterExecutionError);
-      expect(fetch).toHaveBeenCalledTimes(4); // 1 initial + 3 retries
+      expect(fetch).toHaveBeenCalledTimes(1); // Client errors should not be retried
     });
   });
 

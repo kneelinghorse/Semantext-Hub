@@ -2,11 +2,15 @@
  * Postgres Workflow End-to-End Tests
  */
 
-const fs = require('fs-extra');
-const os = require('os');
-const path = require('path');
+import fs from 'fs-extra';
+import os from 'os';
+import path from 'path';
+import { discoverCommand } from '../../packages/runtime/cli/commands/discover.js';
+import { reviewCommand } from '../../packages/runtime/cli/commands/review.js';
+import { approveCommand } from '../../packages/runtime/cli/commands/approve.js';
+import { PostgresImporter } from '../../packages/runtime/importers/postgres/importer.js';
 
-jest.mock('../../packages/runtime/importers/postgres/importer', () => {
+jest.mock('../../packages/runtime/importers/postgres/importer.js', () => {
   const importMock = jest.fn();
   const PostgresImporter = jest.fn().mockImplementation(() => ({
     import: importMock
@@ -14,11 +18,6 @@ jest.mock('../../packages/runtime/importers/postgres/importer', () => {
   PostgresImporter.__importMock = importMock;
   return { PostgresImporter };
 });
-
-const { discoverCommand } = require('../../packages/runtime/cli/commands/discover');
-const { reviewCommand } = require('../../packages/runtime/cli/commands/review');
-const { approveCommand } = require('../../packages/runtime/cli/commands/approve');
-const { PostgresImporter } = require('../../packages/runtime/importers/postgres/importer');
 
 function withMockedExit(fn, { throwOnExit = false } = {}) {
   const originalExit = process.exit;

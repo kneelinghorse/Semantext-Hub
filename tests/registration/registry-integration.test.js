@@ -14,9 +14,9 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import RegistrationOrchestrator from '../../packages/protocols/core/registration/registration-orchestrator.js';
-import { RegistryWriter } from '../../packages/protocols/core/registration/registry-writer.js';
-import { CatalogIndexAdapter } from '../../packages/protocols/core/registration/adapters/catalog-index.js';
+import RegistrationOrchestrator from '../../packages/protocols/core/registration/registration-orchestrator.mjs';
+import { RegistryWriter } from '../../packages/protocols/core/registration/registry-writer.mjs';
+import { CatalogIndexAdapter } from '../../packages/protocols/core/registration/adapters/catalog-index.mjs';
 import { URNCatalogIndex } from '../../packages/protocols/src/catalog/index.js';
 import { ProtocolGraph } from '../../packages/protocols/core/graph/protocol-graph.js';
 import { STATES } from '../../packages/protocols/core/registration/state-machine-definition.js';

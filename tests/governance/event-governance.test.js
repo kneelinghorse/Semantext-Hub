@@ -10,8 +10,8 @@
  * - Event flow diagrams
  */
 
-import eventGen from '../../packages/protocols/core/governance/event-section-generator.js';
-import graphCore from '../../packages/protocols/core/graph/index.js';
+import eventGen from '../../packages/protocols/core/governance/event-section-generator.mjs';
+import graphCore from '../../packages/protocols/core/graph/index.mjs';
 import overrides from '../../packages/protocols/core/overrides/index.js';
 
 const { EventSectionGenerators } = eventGen;

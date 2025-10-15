@@ -7,12 +7,25 @@
 import fs from 'fs-extra';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import {
+  discoverCommand,
+  detectSourceType,
+  determineManifestType,
+  generateOutputFilename
+} from '../../packages/runtime/cli/commands/discover.js';
+import { reviewCommand } from '../../packages/runtime/cli/commands/review.js';
+import { approveCommand } from '../../packages/runtime/cli/commands/approve.js';
+import { governanceCommand } from '../../packages/runtime/cli/commands/governance.js';
+import { formatOutput } from '../../packages/runtime/cli/utils/output.js';
+import { isCI } from '../../packages/runtime/cli/utils/detect-ci.js';
+import { OpenAPIImporter } from '../../packages/runtime/importers/openapi/importer.js';
+import { PostgresImporter } from '../../packages/runtime/importers/postgres/importer.js';
 
 // ESM-safe __dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-jest.mock('../../packages/runtime/importers/openapi/importer', () => {
+jest.mock('../../packages/runtime/importers/openapi/importer.js', () => {
   const importMock = jest.fn();
   const OpenAPIImporter = jest.fn().mockImplementation(() => ({
     import: importMock
@@ -21,7 +34,7 @@ jest.mock('../../packages/runtime/importers/openapi/importer', () => {
   return { OpenAPIImporter };
 });
 
-jest.mock('../../packages/runtime/importers/postgres/importer', () => {
+jest.mock('../../packages/runtime/importers/postgres/importer.js', () => {
   const importMock = jest.fn();
   const PostgresImporter = jest.fn().mockImplementation(() => ({
     import: importMock
@@ -29,20 +42,6 @@ jest.mock('../../packages/runtime/importers/postgres/importer', () => {
   PostgresImporter.__importMock = importMock;
   return { PostgresImporter };
 });
-
-const {
-  discoverCommand,
-  detectSourceType,
-  determineManifestType,
-  generateOutputFilename
-} = require('../../packages/runtime/cli/commands/discover');
-const { reviewCommand } = require('../../packages/runtime/cli/commands/review');
-const { approveCommand } = require('../../packages/runtime/cli/commands/approve');
-const { governanceCommand } = require('../../packages/runtime/cli/commands/governance');
-const { formatOutput } = require('../../packages/runtime/cli/utils/output');
-const { isCI } = require('../../packages/runtime/cli/utils/detect-ci');
-const { OpenAPIImporter } = require('../../packages/runtime/importers/openapi/importer');
-const { PostgresImporter } = require('../../packages/runtime/importers/postgres/importer');
 
 const TEST_OUTPUT_DIR = path.join(__dirname, '../../..', 'test-artifacts');
 

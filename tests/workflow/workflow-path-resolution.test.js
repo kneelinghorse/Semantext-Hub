@@ -7,7 +7,7 @@
  * of the path-resolution bug identified in Sprint 9.
  */
 
-import { runWorkflow } from '../../packages/protocols/src/agents/runtime.js';
+import { runWorkflow } from '../../packages/runtime/src/agents/runtime.js';
 import { runFullValidation } from '../../packages/runtime/workflow/validation-service.js';
 import { parseURN, isValidURN } from '../../packages/protocols/core/graph/urn-utils.js';
 import fs from 'fs-extra';

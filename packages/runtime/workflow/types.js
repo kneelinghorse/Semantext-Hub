@@ -73,6 +73,7 @@ export class ToolAdapterConfig {
     this.toolRegistry = options.toolRegistry || null;
     this.timeout = options.timeout || 30000;
     this.maxRetries = options.maxRetries || 3;
+    this.retryDelay = options.retryDelay || 50;
   }
 }
 

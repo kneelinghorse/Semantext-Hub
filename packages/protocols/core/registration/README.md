@@ -70,7 +70,7 @@ Atomic Updates   URN Lookups    Batch Updates
 ### Basic Registration Flow
 
 ```javascript
-import RegistrationOrchestrator from './registration-orchestrator.js';
+import RegistrationOrchestrator from './registration-orchestrator.mjs';
 import { URNCatalogIndex } from '../../src/catalog/index.js';
 import { ProtocolGraph } from '../graph/protocol-graph.js';
 
@@ -131,7 +131,7 @@ async function registerManifest() {
 ### Direct Registry Writer Usage
 
 ```javascript
-import { RegistryWriter } from './registry-writer.js';
+import { RegistryWriter } from './registry-writer.mjs';
 
 const registryWriter = new RegistryWriter({
   catalogIndex,
@@ -160,7 +160,7 @@ console.log('Registry stats:', stats.metrics);
 ### URN Conflict Detection
 
 ```javascript
-import { CatalogIndexAdapter } from './adapters/catalog-index.js';
+import { CatalogIndexAdapter } from './adapters/catalog-index.mjs';
 
 const adapter = new CatalogIndexAdapter(catalogIndex);
 
@@ -323,10 +323,10 @@ console.log({
 
 ```
 app/core/registration/
-├── registry-writer.js                 # Registry + graph integration
-├── registration-orchestrator.js       # Full lifecycle coordinator
+├── registry-writer.mjs                # Registry + graph integration
+├── registration-orchestrator.mjs      # Full lifecycle coordinator
 └── adapters/
-    └── catalog-index.js               # URN conflict checks (B5.1 integration)
+    └── catalog-index.mjs              # URN conflict checks (B5.1 integration)
 
 app/tests/registration/
 └── registry-integration.test.js       # Integration tests

@@ -130,9 +130,9 @@
         "version": "5.0.1",
         "reason": "no ESM export; type!=module",
         "import_sites": [
-          "packages/protocols/core/registration/registration-orchestrator.js",
+          "packages/protocols/core/registration/registration-orchestrator.mjs",
           "packages/protocols/core/registration/registration-pipeline.js",
-          "packages/protocols/core/registration/registry-writer.js",
+          "packages/protocols/core/registration/registry-writer.mjs",
           "packages/protocols/parsers/parser-extensions.js",
           "packages/protocols/parsers/utils/progress-tracker.js"
         ]

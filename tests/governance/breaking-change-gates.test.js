@@ -6,9 +6,9 @@
  */
 
 import { describe, it, expect, beforeEach } from '@jest/globals';
-import graphCore from '../../packages/protocols/core/graph/index.js';
+import graphCore from '../../packages/protocols/core/graph/index.mjs';
 import overrides from '../../packages/protocols/core/overrides/index.js';
-import governance from '../../packages/protocols/core/governance/index.js';
+import governance from '../../packages/protocols/core/governance/index.mjs';
 import { deflake } from '../util/deflake.js';
 
 const { ProtocolGraph, NodeKind, EdgeKind } = graphCore;

@@ -7,7 +7,7 @@
 
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import { ToolAdapter } from '../../../packages/runtime/workflow/adapters/toolAdapter.js';
-import { deflake } from '../util/deflake.js';
+import { deflake } from '../../util/deflake.js';
 
 describe('Tool Adapter Property Tests', () => {
   let adapter;

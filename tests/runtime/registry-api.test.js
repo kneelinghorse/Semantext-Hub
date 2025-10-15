@@ -57,7 +57,7 @@ describe('Registry API Server', () => {
   let mockDiscoveryService;
   let mockAgentData;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     mockAgentData = {
       urn: 'urn:agent:ai:ml-agent@1.0.0',
       name: 'ml-agent',

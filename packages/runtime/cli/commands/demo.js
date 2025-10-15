@@ -141,7 +141,7 @@ async function demoRunCommand(seedId, options = {}) {
         spinner = ora('Generating governance report').start();
 
         try {
-          const { GovernanceGenerator } = await import('../../core/governance/index.js');
+          const { GovernanceGenerator } = await import('../../core/governance/index.mjs');
           const generator = new GovernanceGenerator();
 
           const governancePath = path.join(workspace, 'GOVERNANCE.md');

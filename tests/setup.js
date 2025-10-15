@@ -13,24 +13,21 @@ import path from 'path';
 
 // Ensure global jest is available in ESM tests
 // (Jest recommends importing from @jest/globals in ESM, but many tests assume a global)
-// eslint-disable-next-line no-undef
 global.jest = global.jest || jestGlobals;
 
 // Provide a require() bridge for tests using CommonJS style under ESM
-// eslint-disable-next-line no-undef
 global.require = global.require || createRequire(path.join(process.cwd(), 'tests', 'setup.js'));
 
 // Set test timeout
-// eslint-disable-next-line no-undef
-jest.setTimeout(30000);
+jestGlobals.setTimeout(30000);
 
 // Mock console methods in tests to reduce noise
 global.console = {
   ...console,
   // Keep error and warn for debugging
-  log: jest.fn(),
-  debug: jest.fn(),
-  info: jest.fn(),
+  log: jestGlobals.fn(),
+  debug: jestGlobals.fn(),
+  info: jestGlobals.fn()
 };
 
 // Performance monitoring for tests
@@ -54,7 +51,7 @@ global.testUtils = {
   // Mock performance.now for consistent testing
   mockPerformanceNow: (mockTime = 0) => {
     let currentTime = mockTime;
-    performance.now = jest.fn(() => {
+    performance.now = jestGlobals.fn(() => {
       currentTime += 1;
       return currentTime;
     });

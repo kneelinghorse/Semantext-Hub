@@ -6,7 +6,7 @@
  */
 
 import { EventEmitter } from 'events';
-import { RetryError, TimeoutError } from './error-handler.js';
+import { RetryError, TimeoutError } from './a2a-types.js';
 
 /**
  * Retry policy types

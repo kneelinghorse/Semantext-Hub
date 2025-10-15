@@ -9,17 +9,28 @@ export default {
     '**/tests/**/*.test.(ts|js)',
     '**/tests/**/*.spec.(ts|js)'
   ],
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    '/artifacts/',
+    '/\\.artifacts/',
+    '/coverage/',
+    '/cmos/'
+  ],
   collectCoverageFrom: [
     '**/*.js',
     '!**/node_modules/**',
     '!**/coverage/**',
+    '!**/artifacts/**',
+    '!**/.artifacts/**',
+    '!**/cmos/**',
     '!**/tests/**',
     '!**/scripts/**',
     '!**/bin/**',
-    '!**/examples/**'
+    '!**/examples/**',
+    '!**/templates/**'
   ],
   coverageDirectory: 'coverage',
-  coverageReporters: ['text', 'lcov', 'html'],
+  coverageReporters: ['text', 'text-summary', 'lcov'],
   coverageThreshold: {
     global: {
       branches: 80,
@@ -38,6 +49,8 @@ export default {
     // Extensionless ESM paths used in tests
     '^\\.\\./\\.\\./packages/runtime/importers/openapi/importer$': '<rootDir>/packages/runtime/importers/openapi/importer.js',
     '^\\.\\./\\.\\./packages/runtime/importers/postgres/importer$': '<rootDir>/packages/runtime/importers/postgres/importer.js',
+    '^\\.\\./\\.\\./packages/runtime/importers/openapi/importer\\.js$': '<rootDir>/packages/runtime/importers/openapi/importer.js',
+    '^\\.\\./\\.\\./packages/runtime/importers/postgres/importer\\.js$': '<rootDir>/packages/runtime/importers/postgres/importer.js',
     // Map CLI commands in tests to CJS shims for isolation
     '^\\.\\./\\.\\./packages/runtime/cli/commands/discover$': '<rootDir>/tests/_shims/commands/discover.cjs',
     '^\\.\\./\\.\\./packages/runtime/cli/commands/review$': '<rootDir>/tests/_shims/commands/review.cjs',

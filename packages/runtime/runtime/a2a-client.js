@@ -133,9 +133,10 @@ export class A2AClient {
       // Execute with circuit breaker protection
       const response = await this.circuitBreaker.execute(async () => {
         // Execute with retry policy
-        return await this.retryPolicy.execute(async () => {
-          return await this._makeRequestWithRetry(requestId, targetUrn, route, init);
-        });
+        return await this.retryPolicy.execute(
+          () => this._makeRequestWithRetry(requestId, targetUrn, route, init),
+          { maxRetries: 0 }
+        );
       });
       
       const latency = Date.now() - startTime;

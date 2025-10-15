@@ -142,7 +142,7 @@ describe('Trace Entry', () => {
     expect(trace.component).toBe('TestComponent');
   });
 
-  test('should complete trace entry', () => {
+  test('should complete trace entry', async () => {
     const trace = new TraceEntry('test-operation', {
       correlationId: 'corr-123'
     });
@@ -150,9 +150,12 @@ describe('Trace Entry', () => {
     const startTime = trace.startTime;
     
     // Simulate some time passing
-    setTimeout(() => {
-      trace.complete('completed', { result: 'success' });
-    }, 10);
+    await new Promise(resolve => {
+      setTimeout(() => {
+        trace.complete('completed', { result: 'success' });
+        resolve();
+      }, 10);
+    });
 
     expect(trace.endTime).toBeGreaterThan(startTime);
     expect(trace.duration).toBeGreaterThan(0);
@@ -200,6 +203,7 @@ describe('Structured Logger', () => {
   describe('Logging Methods', () => {
     test('should log trace message', () => {
       const logSpy = jest.spyOn(logger, 'log');
+      logger.setLevel(LOG_LEVELS.TRACE);
       logger.trace('Trace message', { test: true });
 
       expect(logSpy).toHaveBeenCalledWith(LOG_LEVELS.TRACE, 'Trace message', { test: true });
@@ -207,6 +211,7 @@ describe('Structured Logger', () => {
 
     test('should log debug message', () => {
       const logSpy = jest.spyOn(logger, 'log');
+      logger.setLevel(LOG_LEVELS.DEBUG);
       logger.debug('Debug message', { test: true });
 
       expect(logSpy).toHaveBeenCalledWith(LOG_LEVELS.DEBUG, 'Debug message', { test: true });
@@ -428,7 +433,7 @@ describe('Logger Manager', () => {
     manager = createLoggerManager({
       level: LOG_LEVELS.INFO,
       enableConsole: false,
-      enableLogging: false
+      enableLogging: true
     });
   });
 
@@ -536,13 +541,19 @@ describe('Default Logger', () => {
 describe('Convenience Functions', () => {
   test('should provide convenience log functions', () => {
     const logSpy = jest.spyOn(defaultLogger, 'log');
+    const originalLevel = defaultLogger.getLevel();
+    defaultLogger.setLevel(LOG_LEVELS.TRACE);
 
-    log.trace('Trace message');
-    log.debug('Debug message');
-    log.info('Info message');
-    log.warn('Warn message');
-    log.error('Error message');
-    log.fatal('Fatal message');
+    try {
+      log.trace('Trace message');
+      log.debug('Debug message');
+      log.info('Info message');
+      log.warn('Warn message');
+      log.error('Error message');
+      log.fatal('Fatal message');
+    } finally {
+      defaultLogger.setLevel(originalLevel);
+    }
 
     expect(logSpy).toHaveBeenCalledTimes(6);
   });

@@ -206,7 +206,7 @@ export class EventAdapter extends WorkflowAdapter {
       listenerCount: result.listenerCount,
       metadata: {
         contextTraceId: context.traceId,
-        elapsedTime: context.getElapsedTime(),
+        elapsedTime: typeof context?.getElapsedTime === 'function' ? context.getElapsedTime() : null,
         adapterKind: 'event'
       }
     };

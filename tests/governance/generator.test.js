@@ -2,8 +2,8 @@
  * Tests for GovernanceGenerator
  */
 
-import governance from '../../packages/protocols/core/governance/index.js';
-import graphCore from '../../packages/protocols/core/graph/index.js';
+import governance from '../../packages/protocols/core/governance/index.mjs';
+import graphCore from '../../packages/protocols/core/graph/index.mjs';
 import overrides from '../../packages/protocols/core/overrides/index.js';
 import fs from 'fs-extra';
 import path from 'path';

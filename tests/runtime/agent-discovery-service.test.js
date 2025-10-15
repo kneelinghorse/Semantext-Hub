@@ -47,7 +47,7 @@ describe('Agent Discovery Service', () => {
   let mockRegistry;
   let mockAgentData;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     mockAgentData = {
       urn: 'urn:agent:ai:ml-agent@1.0.0',
       name: 'ml-agent',

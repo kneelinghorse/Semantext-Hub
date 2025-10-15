@@ -2,20 +2,19 @@
  * OpenAPI Workflow End-to-End Tests
  */
 
-const fs = require('fs-extra');
-const os = require('os');
-const path = require('path');
-// ESM/CJS-safe __dirname resolution
-const __dirnameResolved = (typeof __dirname !== 'undefined')
-  ? __dirname
-  : (() => { const { fileURLToPath } = require('url'); const __filename = fileURLToPath(import.meta.url); return path.dirname(__filename); })();
+import fs from 'fs-extra';
+import os from 'os';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { discoverCommand } from '../../packages/runtime/cli/commands/discover.js';
+import { reviewCommand } from '../../packages/runtime/cli/commands/review.js';
+import { approveCommand } from '../../packages/runtime/cli/commands/approve.js';
+import { formatOutput } from '../../packages/runtime/cli/utils/output.js';
 
-const { discoverCommand } = require('../../packages/runtime/cli/commands/discover');
-const { reviewCommand } = require('../../packages/runtime/cli/commands/review');
-const { approveCommand } = require('../../packages/runtime/cli/commands/approve');
-const { formatOutput } = require('../../packages/runtime/cli/utils/output');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-const FIXTURES_DIR = path.join(__dirnameResolved, 'fixtures');
+const FIXTURES_DIR = path.join(__dirname, 'fixtures');
 const PETSTORE_SPEC = path.join(FIXTURES_DIR, 'petstore-mini.json');
 
 function withMockedExit(fn, { throwOnExit = false } = {}) {

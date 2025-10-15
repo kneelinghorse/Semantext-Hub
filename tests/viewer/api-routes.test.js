@@ -1,7 +1,9 @@
-const { inject } = require('light-my-request');
-const { ProtocolViewerServer } = require('../../packages/runtime/viewer/server.js');
-const path = require('path');
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { inject } from 'light-my-request';
+import { ProtocolViewerServer } from '../../packages/runtime/viewer/server.js';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const FIXTURES_DIR = path.join(__dirname, '../fixtures/manifests');
 
 async function makeRequest(app, url) {
