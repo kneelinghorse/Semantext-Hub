@@ -1,0 +1,171 @@
+name: Deflake Test Suite
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+    inputs:
+      test_pattern:
+        description: 'Test pattern to run (default: property tests)'
+        required: false
+        default: 'tests/property/**/*.test.js'
+      iterations:
+        description: 'Number of iterations to run'
+        required: false
+        default: '10'
+      max_retries:
+        description: 'Maximum retries per test'
+        required: false
+        default: '3'
+
+jobs:
+  deflake:
+    name: Deflake Test Suite
+    runs-on: ubuntu-latest
+    
+    # Only run on PRs with 'deflake' label or manual trigger
+    if: |
+      github.event_name == 'workflow_dispatch' || 
+      contains(github.event.pull_request.labels.*.name, 'deflake')
+    
+    strategy:
+      matrix:
+        node-version: [20.x]
+        iteration: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: |
+        cd .
+        npm ci
+        
+    - name: Run deflake test suite
+      run: |
+        cd .
+        npm run test:deflake -- \
+          --testPathPattern="${{ github.event.inputs.test_pattern || 'tests/property/**/*.test.js' }}" \
+          --maxRetries=${{ github.event.inputs.max_retries || '3' }} \
+          --iteration=${{ matrix.iteration }} \
+          --reportFlakiness=true
+      env:
+        CI: true
+        NODE_ENV: test
+        
+    - name: Upload deflake results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: deflake-results-${{ matrix.iteration }}
+        path: deflake-results-*.json
+        retention-days: 30
+        
+    - name: Generate flakiness report
+      if: matrix.iteration == 10
+      run: |
+        cd .
+        npm run test:deflake:report
+        
+    - name: Upload flakiness report
+      uses: actions/upload-artifact@v4
+      if: matrix.iteration == 10
+      with:
+        name: flakiness-report
+        path: flakiness-report.json
+        retention-days: 90
+        
+    - name: Comment PR with results
+      if: matrix.iteration == 10 && github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const path = require('path');
+          
+          try {
+            const reportPath = path.join('.', 'flakiness-report.json');
+            if (fs.existsSync(reportPath)) {
+              const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
+              
+              const comment = `## Deflake Test Results
+              
+              **Overall Flake Rate**: ${(report.summary.overallFailureRate * 100).toFixed(2)}%
+              **Total Tests**: ${report.summary.totalRuns}
+              **Total Failures**: ${report.summary.totalFailures}
+              
+              ${report.summary.overallFailureRate < 0.01 ? '✅' : '❌'} **Status**: ${report.summary.overallFailureRate < 0.01 ? 'PASSED' : 'FAILED'} (Target: <1%)
+              
+              ### Flaky Tests
+              ${report.flakyTests.length > 0 ? 
+                report.flakyTests.map(test => `- ${test}`).join('\n') : 
+                'No flaky tests detected'
+              }
+              
+              ### Test Statistics
+              ${Object.entries(report.testStats)
+                .filter(([_, stats]) => stats.isFlaky)
+                .map(([test, stats]) => 
+                  `- **${test}**: ${(stats.failureRate * 100).toFixed(2)}% failure rate (${stats.failures}/${stats.recentRuns} recent runs)`
+                ).join('\n')
+              }
+              `;
+              
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: comment
+              });
+            }
+          } catch (error) {
+            console.error('Failed to create comment:', error);
+          }
+
+  # Optional: Run focused deflake on specific test patterns
+  focused-deflake:
+    name: Focused Deflake
+    runs-on: ubuntu-latest
+    if: github.event.inputs.test_pattern != 'tests/property/**/*.test.js'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: |
+        cd .
+        npm ci
+        
+    - name: Run focused deflake tests
+      run: |
+        cd .
+        npm run test:deflake -- \
+          --testPathPattern="${{ github.event.inputs.test_pattern }}" \
+          --maxRetries=${{ github.event.inputs.max_retries || '5' }} \
+          --iterations=${{ github.event.inputs.iterations || '5' }} \
+          --reportFlakiness=true
+      env:
+        CI: true
+        NODE_ENV: test
+        
+    - name: Upload focused results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: focused-deflake-results
+        path: deflake-results-*.json
+        retention-days: 30

@@ -1,0 +1,239 @@
+{
+  "version": "1.0.0",
+  "format": "catalog-snapshot-v1",
+  "created": "2025-01-10T12:00:00.000Z",
+  "workspace": {
+    "name": "default",
+    "path": "/app",
+    "description": "Default OSSP workspace with sample protocols",
+    "tags": ["default", "sample", "demo"]
+  },
+  "artifacts": {
+    "urn:proto:api:github:v3.0.0": {
+      "urn": "urn:proto:api:github:v3.0.0",
+      "name": "github",
+      "version": "v3.0.0",
+      "namespace": "urn:protocol:api",
+      "type": "api-protocol",
+      "manifest": {
+        "urn": "urn:proto:api:github:v3.0.0",
+        "metadata": {
+          "name": "GitHub API",
+          "version": "v3.0.0",
+          "description": "GitHub REST API protocol definition",
+          "tags": ["api", "github", "rest", "version-control"]
+        },
+        "api": {
+          "openapi": "3.0.0",
+          "info": {
+            "title": "GitHub API",
+            "version": "v3.0.0",
+            "description": "GitHub REST API"
+          },
+          "servers": [
+            {
+              "url": "https://api.github.com",
+              "description": "GitHub API server"
+            }
+          ],
+          "paths": {
+            "/user": {
+              "get": {
+                "summary": "Get authenticated user",
+                "responses": {
+                  "200": {
+                    "description": "User information",
+                    "content": {
+                      "application/json": {
+                        "schema": {
+                          "type": "object",
+                          "properties": {
+                            "id": { "type": "integer" },
+                            "login": { "type": "string" },
+                            "name": { "type": "string" }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "dependencies": [],
+      "metadata": {
+        "tags": ["api", "github", "rest", "version-control"],
+        "description": "GitHub REST API protocol definition",
+        "governance": {
+          "classification": "public",
+          "owner": "github",
+          "pii": false
+        }
+      }
+    },
+    "urn:proto:api:stripe:v2023.0.0": {
+      "urn": "urn:proto:api:stripe:v2023.0.0",
+      "name": "stripe",
+      "version": "v2023.0.0",
+      "namespace": "urn:protocol:api",
+      "type": "api-protocol",
+      "manifest": {
+        "urn": "urn:proto:api:stripe:v2023.0.0",
+        "metadata": {
+          "name": "Stripe API",
+          "version": "v2023.0.0",
+          "description": "Stripe payment processing API",
+          "tags": ["api", "stripe", "payments", "fintech"]
+        },
+        "api": {
+          "openapi": "3.0.0",
+          "info": {
+            "title": "Stripe API",
+            "version": "v2023.0.0",
+            "description": "Stripe payment processing API"
+          },
+          "servers": [
+            {
+              "url": "https://api.stripe.com/v1",
+              "description": "Stripe API server"
+            }
+          ],
+          "paths": {
+            "/charges": {
+              "post": {
+                "summary": "Create a charge",
+                "requestBody": {
+                  "content": {
+                    "application/x-www-form-urlencoded": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "amount": { "type": "integer" },
+                          "currency": { "type": "string" },
+                          "source": { "type": "string" }
+                        }
+                      }
+                    }
+                  }
+                },
+                "responses": {
+                  "200": {
+                    "description": "Charge created",
+                    "content": {
+                      "application/json": {
+                        "schema": {
+                          "type": "object",
+                          "properties": {
+                            "id": { "type": "string" },
+                            "amount": { "type": "integer" },
+                            "currency": { "type": "string" },
+                            "status": { "type": "string" }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "dependencies": [],
+      "metadata": {
+        "tags": ["api", "stripe", "payments", "fintech"],
+        "description": "Stripe payment processing API",
+        "governance": {
+          "classification": "public",
+          "owner": "stripe",
+          "pii": true
+        }
+      }
+    },
+    "urn:proto:workflow:payment-flow:v1.0.0": {
+      "urn": "urn:proto:workflow:payment-flow:v1.0.0",
+      "name": "payment-flow",
+      "version": "v1.0.0",
+      "namespace": "urn:protocol:workflow",
+      "type": "workflow-protocol",
+      "manifest": {
+        "urn": "urn:proto:workflow:payment-flow:v1.0.0",
+        "metadata": {
+          "name": "Payment Processing Workflow",
+          "version": "v1.0.0",
+          "description": "End-to-end payment processing workflow",
+          "tags": ["workflow", "payments", "ecommerce"]
+        },
+        "workflow": {
+          "name": "Payment Processing Workflow",
+          "version": "v1.0.0",
+          "description": "Complete payment processing workflow",
+          "steps": [
+            {
+              "id": "validate-payment",
+              "name": "Validate Payment",
+              "description": "Validate payment details",
+              "type": "validation"
+            },
+            {
+              "id": "process-payment",
+              "name": "Process Payment",
+              "description": "Process payment via Stripe",
+              "type": "api-call",
+              "api": "urn:proto:api:stripe:v2023.0.0"
+            },
+            {
+              "id": "send-confirmation",
+              "name": "Send Confirmation",
+              "description": "Send confirmation email",
+              "type": "notification"
+            }
+          ]
+        }
+      },
+      "dependencies": ["urn:proto:api:stripe:v2023.0.0"],
+      "metadata": {
+        "tags": ["workflow", "payments", "ecommerce"],
+        "description": "End-to-end payment processing workflow",
+        "governance": {
+          "classification": "internal",
+          "owner": "platform-team",
+          "pii": true
+        }
+      }
+    }
+  },
+  "relationships": {
+    "dependencies": {
+      "urn:proto:workflow:payment-flow:v1.0.0": ["urn:proto:api:stripe:v2023.0.0"]
+    },
+    "consumers": {
+      "urn:proto:api:stripe:v2023.0.0": ["urn:proto:workflow:payment-flow:v1.0.0"]
+    },
+    "providers": {}
+  },
+  "statistics": {
+    "totalArtifacts": 3,
+    "byType": {
+      "api-protocol": 2,
+      "workflow-protocol": 1
+    },
+    "byClassification": {
+      "public": 2,
+      "internal": 1
+    },
+    "totalDependencies": 1,
+    "totalConsumers": 1
+  },
+  "exportMetadata": {
+    "exportedBy": "ossp-cli",
+    "exportTool": "ossp-cli-catalog-export",
+    "exportOptions": {
+      "includeManifests": true,
+      "includeRelationships": true,
+      "offlineMode": false
+    }
+  }
+}

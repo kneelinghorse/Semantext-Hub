@@ -1,0 +1,233 @@
+{
+  "esm": {
+    "stack": "babel-jest",
+    "stack_executed": true,
+    "dirname_hits": {
+      "count": 65,
+      "files": [
+        "cli/commands/protocol-wizard.js",
+        "packages/protocols/core/overrides/loader.js",
+        "packages/runtime/bin/protocol-mcp-server.js",
+        "packages/runtime/bin/workflow-run.js",
+        "packages/runtime/cli/commands/demo.js",
+        "packages/runtime/cli/commands/quickstart.js",
+        "packages/runtime/cli/commands/scaffold.js",
+        "packages/runtime/cli/scaffold-only.mjs",
+        "packages/runtime/examples/mcp-client-demo.js",
+        "packages/runtime/examples/mcp-client-demo.mjs",
+        "packages/runtime/examples/multi-agent-e2e-demo.js",
+        "packages/runtime/examples/registration-demo.js",
+        "packages/runtime/examples/seeds-demo.js",
+        "packages/runtime/feedback/feedback.js",
+        "packages/runtime/generators/scaffold/protocol-scaffolder.js",
+        "packages/runtime/runtime/urn-registry.js",
+        "packages/runtime/scripts/benchmark-e2e-performance.js",
+        "packages/runtime/scripts/ci-artifact-exporter.js",
+        "packages/runtime/scripts/test-scaffold.js",
+        "packages/runtime/scripts/validate-ci-workflow.js",
+        "packages/runtime/scripts/validate-e2e-workflow.js",
+        "packages/runtime/test-infrastructure/contract-tester.js",
+        "packages/runtime/test-infrastructure/coverage-reporter.js",
+        "packages/runtime/test-infrastructure/performance-benchmarks.js",
+        "packages/runtime/test-infrastructure/property-tester.js",
+        "packages/runtime/test-infrastructure/test-fixtures.js",
+        "packages/runtime/viewer/client/vite.config.js",
+        "packages/runtime/viewer/server.js",
+        "packages/runtime/workflow-library/validator.js",
+        "scripts/check-layer-boundaries.js",
+        "scripts/probe/pre12.collect.js",
+        "seeds/curator.js",
+        "tests/catalog/index.test.js",
+        "tests/cli/commands.test.js",
+        "tests/cli/scaffold-feedback.test.js",
+        "tests/cli/scaffold-interactive.test.js",
+        "tests/e2e/openapi-workflow.test.js",
+        "tests/generators/scaffold.test.js",
+        "tests/importers/asyncapi-bindings.test.js",
+        "tests/importers/asyncapi-patterns.test.js",
+        "tests/importers/asyncapi-pii.test.js",
+        "tests/importers/asyncapi-urn.test.js",
+        "tests/importers/asyncapi.test.js",
+        "tests/integration/workflow-adapter-integration.test.js",
+        "tests/overrides/integration.test.js",
+        "tests/parsers/openapi-parser.test.js",
+        "tests/parsers/parser-extensions.test.js",
+        "tests/parsers/parser-integration.test.js",
+        "tests/parsers/performance.test.js",
+        "tests/registration/concurrency.test.js",
+        "tests/registration/registration-pipeline.test.js",
+        "tests/runtime/multi-agent-e2e.test.js",
+        "tests/runtime/urn-registry.test.js",
+        "tests/seeds/curator.test.js",
+        "tests/test-infrastructure/contract-tester.test.js",
+        "tests/test-infrastructure/performance-benchmarks.test.js",
+        "tests/test-infrastructure/test-fixtures.test.js",
+        "tests/util/deflake-reporter.js",
+        "tests/util/deflake-runner.js",
+        "tests/versioning-migration.test.js",
+        "tests/viewer/api-routes.test.js",
+        "tests/viewer/security.test.js",
+        "tests/viewer/server.test.js",
+        "tests/workflow-library/workflow-library.test.js",
+        "utils/protocol-generator.js"
+      ]
+    },
+    "cjs_deps": [
+      {
+        "name": "ajv",
+        "version": "8.17.1",
+        "reason": "no ESM export; type!=module",
+        "import_sites": [
+          "packages/runtime/feedback/feedback.js",
+          "packages/runtime/generators/scaffold/protocol-scaffolder.js",
+          "packages/runtime/test-infrastructure/contract-tester.js",
+          "packages/runtime/workflow-library/validator.js"
+        ]
+      },
+      {
+        "name": "ajv-formats",
+        "version": "3.0.1",
+        "reason": "no ESM export; type!=module",
+        "import_sites": [
+          "packages/runtime/feedback/feedback.js",
+          "packages/runtime/generators/scaffold/protocol-scaffolder.js",
+          "packages/runtime/test-infrastructure/contract-tester.js",
+          "packages/runtime/workflow-library/validator.js"
+        ]
+      },
+      {
+        "name": "cli-table3",
+        "version": "0.6.5",
+        "reason": "no ESM export; type!=module",
+        "import_sites": [
+          "packages/runtime/cli/commands/feedback.js"
+        ]
+      },
+      {
+        "name": "commander",
+        "version": "11.1.0",
+        "reason": "no ESM export; type!=module",
+        "import_sites": [
+          "packages/runtime/bin/migrate-cli.js",
+          "packages/runtime/cli/commands/feedback.js",
+          "packages/runtime/cli/commands/migrate.js",
+          "packages/runtime/cli/generate-cli.js",
+          "packages/runtime/cli/index-enhanced.js",
+          "packages/runtime/cli/index.cjs",
+          "packages/runtime/cli/index.js"
+        ]
+      },
+      {
+        "name": "cors",
+        "version": "2.8.5",
+        "reason": "no ESM export; type!=module",
+        "import_sites": [
+          "packages/runtime/viewer/server.js"
+        ]
+      },
+      {
+        "name": "eventemitter3",
+        "version": "5.0.1",
+        "reason": "no ESM export; type!=module",
+        "import_sites": [
+          "packages/protocols/core/registration/registration-orchestrator.js",
+          "packages/protocols/core/registration/registration-pipeline.js",
+          "packages/protocols/core/registration/registry-writer.js",
+          "packages/protocols/parsers/parser-extensions.js",
+          "packages/protocols/parsers/utils/progress-tracker.js"
+        ]
+      },
+      {
+        "name": "express",
+        "version": "5.1.0",
+        "reason": "no ESM export; type!=module",
+        "import_sites": [
+          "packages/runtime/viewer/routes/static.js",
+          "packages/runtime/viewer/server.js"
+        ]
+      },
+      {
+        "name": "fs-extra",
+        "version": "11.3.2",
+        "reason": "no ESM export; type!=module",
+        "import_sites": [
+          "packages/protocols/core/governance/generator.js",
+          "packages/runtime/bin/workflow-run.js",
+          "packages/runtime/cli/commands/approve.js",
+          "packages/runtime/cli/commands/demo.js",
+          "packages/runtime/cli/commands/discover.js",
+          "packages/runtime/cli/commands/governance.js",
+          "packages/runtime/cli/commands/protocols.js",
+          "packages/runtime/cli/commands/review.js",
+          "packages/runtime/examples/generate-governance.js",
+          "packages/runtime/examples/validate-examples.js",
+          "packages/runtime/examples/validate-examples.mjs",
+          "packages/runtime/workflow/graph-builder.js",
+          "packages/runtime/workflow/overrides.js",
+          "packages/runtime/workflow/validation-service.js",
+          "scripts/check-layer-boundaries.js",
+          "seeds/curator.js",
+          "tests/_shims/commands/approve.cjs",
+          "tests/_shims/commands/discover.cjs",
+          "tests/_shims/commands/governance.cjs",
+          "tests/_shims/commands/review.cjs",
+          "tests/cli/commands.test.js",
+          "tests/e2e/openapi-workflow.test.js",
+          "tests/e2e/postgres-workflow.test.js",
+          "tests/governance/generator.test.js",
+          "tests/integration/workflow-adapter-integration.test.js",
+          "tests/seeds/curator.test.js",
+          "tests/workflow/validation-service.test.js",
+          "tests/workflow/workflow-path-resolution.test.js",
+          "tests/workflow/workflow.test.js"
+        ]
+      },
+      {
+        "name": "graphology-traversal",
+        "version": "0.3.1",
+        "reason": "no ESM export; type!=module",
+        "import_sites": []
+      },
+      {
+        "name": "pg",
+        "version": "8.16.3",
+        "reason": "no ESM export; type!=module",
+        "import_sites": [
+          "packages/runtime/importers/postgres/importer.js"
+        ]
+      },
+      {
+        "name": "xxhash-addon",
+        "version": "2.0.3",
+        "reason": "no ESM export; type!=module",
+        "import_sites": [
+          "packages/protocols/parsers/utils/hash-generator.js"
+        ]
+      }
+    ],
+    "stack_exit_code": 1
+  },
+  "perf": {
+    "baseline": {
+      "esm_probe_ms": 309,
+      "mcp_smoke_ms": 125
+    }
+  },
+  "redaction": {
+    "ok": true
+  },
+  "mcp": {
+    "port": 0,
+    "tools": {
+      "protocol_discover_local": {
+        "ok": true
+      },
+      "docs_mermaid": {
+        "ok": true
+      },
+      "agent_or_workflow_stub": {
+        "ok": true
+      }
+    }
+  }
+}

@@ -1,0 +1,77 @@
+# Node.js dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Coverage reports
+coverage/
+*.lcov
+
+# Test artifacts
+test-results/
+performance-results.json
+
+# Build artifacts
+dist/
+build/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Documentation (not needed in container)
+docs/
+*.md
+!README.md
+
+# Development files
+.env
+.env.local
+.env.development
+.env.test
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+tmp/
+temp/
+
+# CI/CD files
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# Mission files (not needed in runtime)
+missions/
+
+# Archive files
+archive/
+
+# Context files (not needed in runtime)
+context/
+
+# Session logs
+SESSIONS.jsonl
+
+# Project context (not needed in runtime)
+PROJECT_CONTEXT.json
+
+# Installation scripts
+install.sh
+smart_migrate.js
+
+# Package files (will be copied separately)
+package*.json

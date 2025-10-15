@@ -1,0 +1,16 @@
+{
+  "type": "{{type}}",
+  "name": "{{name}}",
+  "version": "{{version}}",
+  "description": "{{description}}",
+  "protocol": {
+    "workflow_type": "{{workflow_type}}",
+    "steps": {{steps}},
+    "trigger": "{{trigger}}",
+    "nodes": []
+  },
+  "metadata": {
+    "created": "{{timestamp}}",
+    "author": "{{author}}"
+  }
+}

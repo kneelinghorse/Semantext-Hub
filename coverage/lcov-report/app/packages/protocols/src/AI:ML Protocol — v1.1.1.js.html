@@ -1,0 +1,550 @@
+
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>Code coverage report for app/packages/protocols/src/AI:ML Protocol — v1.1.1.js</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../../../prettify.css" />
+    <link rel="stylesheet" href="../../../../base.css" />
+    <link rel="shortcut icon" type="image/x-icon" href="../../../../favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../../../../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+    
+<body>
+<div class='wrapper'>
+    <div class='pad1'>
+        <h1><a href="../../../../index.html">All files</a> / <a href="index.html">app/packages/protocols/src</a> AI:ML Protocol — v1.1.1.js</h1>
+        <div class='clearfix'>
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">0% </span>
+                <span class="quiet">Statements</span>
+                <span class='fraction'>0/173</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">0% </span>
+                <span class="quiet">Branches</span>
+                <span class='fraction'>0/120</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">0% </span>
+                <span class="quiet">Functions</span>
+                <span class='fraction'>0/46</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">0% </span>
+                <span class="quiet">Lines</span>
+                <span class='fraction'>0/71</span>
+            </div>
+        
+            
+        </div>
+        <p class="quiet">
+            Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
+        </p>
+        <template id="filterTemplate">
+            <div class="quiet">
+                Filter:
+                <input type="search" id="fileSearch">
+            </div>
+        </template>
+    </div>
+    <div class='status-line low'></div>
+    <pre><table class="coverage">
+<tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
+<a name='L2'></a><a href='#L2'>2</a>
+<a name='L3'></a><a href='#L3'>3</a>
+<a name='L4'></a><a href='#L4'>4</a>
+<a name='L5'></a><a href='#L5'>5</a>
+<a name='L6'></a><a href='#L6'>6</a>
+<a name='L7'></a><a href='#L7'>7</a>
+<a name='L8'></a><a href='#L8'>8</a>
+<a name='L9'></a><a href='#L9'>9</a>
+<a name='L10'></a><a href='#L10'>10</a>
+<a name='L11'></a><a href='#L11'>11</a>
+<a name='L12'></a><a href='#L12'>12</a>
+<a name='L13'></a><a href='#L13'>13</a>
+<a name='L14'></a><a href='#L14'>14</a>
+<a name='L15'></a><a href='#L15'>15</a>
+<a name='L16'></a><a href='#L16'>16</a>
+<a name='L17'></a><a href='#L17'>17</a>
+<a name='L18'></a><a href='#L18'>18</a>
+<a name='L19'></a><a href='#L19'>19</a>
+<a name='L20'></a><a href='#L20'>20</a>
+<a name='L21'></a><a href='#L21'>21</a>
+<a name='L22'></a><a href='#L22'>22</a>
+<a name='L23'></a><a href='#L23'>23</a>
+<a name='L24'></a><a href='#L24'>24</a>
+<a name='L25'></a><a href='#L25'>25</a>
+<a name='L26'></a><a href='#L26'>26</a>
+<a name='L27'></a><a href='#L27'>27</a>
+<a name='L28'></a><a href='#L28'>28</a>
+<a name='L29'></a><a href='#L29'>29</a>
+<a name='L30'></a><a href='#L30'>30</a>
+<a name='L31'></a><a href='#L31'>31</a>
+<a name='L32'></a><a href='#L32'>32</a>
+<a name='L33'></a><a href='#L33'>33</a>
+<a name='L34'></a><a href='#L34'>34</a>
+<a name='L35'></a><a href='#L35'>35</a>
+<a name='L36'></a><a href='#L36'>36</a>
+<a name='L37'></a><a href='#L37'>37</a>
+<a name='L38'></a><a href='#L38'>38</a>
+<a name='L39'></a><a href='#L39'>39</a>
+<a name='L40'></a><a href='#L40'>40</a>
+<a name='L41'></a><a href='#L41'>41</a>
+<a name='L42'></a><a href='#L42'>42</a>
+<a name='L43'></a><a href='#L43'>43</a>
+<a name='L44'></a><a href='#L44'>44</a>
+<a name='L45'></a><a href='#L45'>45</a>
+<a name='L46'></a><a href='#L46'>46</a>
+<a name='L47'></a><a href='#L47'>47</a>
+<a name='L48'></a><a href='#L48'>48</a>
+<a name='L49'></a><a href='#L49'>49</a>
+<a name='L50'></a><a href='#L50'>50</a>
+<a name='L51'></a><a href='#L51'>51</a>
+<a name='L52'></a><a href='#L52'>52</a>
+<a name='L53'></a><a href='#L53'>53</a>
+<a name='L54'></a><a href='#L54'>54</a>
+<a name='L55'></a><a href='#L55'>55</a>
+<a name='L56'></a><a href='#L56'>56</a>
+<a name='L57'></a><a href='#L57'>57</a>
+<a name='L58'></a><a href='#L58'>58</a>
+<a name='L59'></a><a href='#L59'>59</a>
+<a name='L60'></a><a href='#L60'>60</a>
+<a name='L61'></a><a href='#L61'>61</a>
+<a name='L62'></a><a href='#L62'>62</a>
+<a name='L63'></a><a href='#L63'>63</a>
+<a name='L64'></a><a href='#L64'>64</a>
+<a name='L65'></a><a href='#L65'>65</a>
+<a name='L66'></a><a href='#L66'>66</a>
+<a name='L67'></a><a href='#L67'>67</a>
+<a name='L68'></a><a href='#L68'>68</a>
+<a name='L69'></a><a href='#L69'>69</a>
+<a name='L70'></a><a href='#L70'>70</a>
+<a name='L71'></a><a href='#L71'>71</a>
+<a name='L72'></a><a href='#L72'>72</a>
+<a name='L73'></a><a href='#L73'>73</a>
+<a name='L74'></a><a href='#L74'>74</a>
+<a name='L75'></a><a href='#L75'>75</a>
+<a name='L76'></a><a href='#L76'>76</a>
+<a name='L77'></a><a href='#L77'>77</a>
+<a name='L78'></a><a href='#L78'>78</a>
+<a name='L79'></a><a href='#L79'>79</a>
+<a name='L80'></a><a href='#L80'>80</a>
+<a name='L81'></a><a href='#L81'>81</a>
+<a name='L82'></a><a href='#L82'>82</a>
+<a name='L83'></a><a href='#L83'>83</a>
+<a name='L84'></a><a href='#L84'>84</a>
+<a name='L85'></a><a href='#L85'>85</a>
+<a name='L86'></a><a href='#L86'>86</a>
+<a name='L87'></a><a href='#L87'>87</a>
+<a name='L88'></a><a href='#L88'>88</a>
+<a name='L89'></a><a href='#L89'>89</a>
+<a name='L90'></a><a href='#L90'>90</a>
+<a name='L91'></a><a href='#L91'>91</a>
+<a name='L92'></a><a href='#L92'>92</a>
+<a name='L93'></a><a href='#L93'>93</a>
+<a name='L94'></a><a href='#L94'>94</a>
+<a name='L95'></a><a href='#L95'>95</a>
+<a name='L96'></a><a href='#L96'>96</a>
+<a name='L97'></a><a href='#L97'>97</a>
+<a name='L98'></a><a href='#L98'>98</a>
+<a name='L99'></a><a href='#L99'>99</a>
+<a name='L100'></a><a href='#L100'>100</a>
+<a name='L101'></a><a href='#L101'>101</a>
+<a name='L102'></a><a href='#L102'>102</a>
+<a name='L103'></a><a href='#L103'>103</a>
+<a name='L104'></a><a href='#L104'>104</a>
+<a name='L105'></a><a href='#L105'>105</a>
+<a name='L106'></a><a href='#L106'>106</a>
+<a name='L107'></a><a href='#L107'>107</a>
+<a name='L108'></a><a href='#L108'>108</a>
+<a name='L109'></a><a href='#L109'>109</a>
+<a name='L110'></a><a href='#L110'>110</a>
+<a name='L111'></a><a href='#L111'>111</a>
+<a name='L112'></a><a href='#L112'>112</a>
+<a name='L113'></a><a href='#L113'>113</a>
+<a name='L114'></a><a href='#L114'>114</a>
+<a name='L115'></a><a href='#L115'>115</a>
+<a name='L116'></a><a href='#L116'>116</a>
+<a name='L117'></a><a href='#L117'>117</a>
+<a name='L118'></a><a href='#L118'>118</a>
+<a name='L119'></a><a href='#L119'>119</a>
+<a name='L120'></a><a href='#L120'>120</a>
+<a name='L121'></a><a href='#L121'>121</a>
+<a name='L122'></a><a href='#L122'>122</a>
+<a name='L123'></a><a href='#L123'>123</a>
+<a name='L124'></a><a href='#L124'>124</a>
+<a name='L125'></a><a href='#L125'>125</a>
+<a name='L126'></a><a href='#L126'>126</a>
+<a name='L127'></a><a href='#L127'>127</a>
+<a name='L128'></a><a href='#L128'>128</a>
+<a name='L129'></a><a href='#L129'>129</a>
+<a name='L130'></a><a href='#L130'>130</a>
+<a name='L131'></a><a href='#L131'>131</a>
+<a name='L132'></a><a href='#L132'>132</a>
+<a name='L133'></a><a href='#L133'>133</a>
+<a name='L134'></a><a href='#L134'>134</a>
+<a name='L135'></a><a href='#L135'>135</a>
+<a name='L136'></a><a href='#L136'>136</a>
+<a name='L137'></a><a href='#L137'>137</a>
+<a name='L138'></a><a href='#L138'>138</a>
+<a name='L139'></a><a href='#L139'>139</a>
+<a name='L140'></a><a href='#L140'>140</a>
+<a name='L141'></a><a href='#L141'>141</a>
+<a name='L142'></a><a href='#L142'>142</a>
+<a name='L143'></a><a href='#L143'>143</a>
+<a name='L144'></a><a href='#L144'>144</a>
+<a name='L145'></a><a href='#L145'>145</a>
+<a name='L146'></a><a href='#L146'>146</a>
+<a name='L147'></a><a href='#L147'>147</a>
+<a name='L148'></a><a href='#L148'>148</a>
+<a name='L149'></a><a href='#L149'>149</a>
+<a name='L150'></a><a href='#L150'>150</a>
+<a name='L151'></a><a href='#L151'>151</a>
+<a name='L152'></a><a href='#L152'>152</a>
+<a name='L153'></a><a href='#L153'>153</a>
+<a name='L154'></a><a href='#L154'>154</a>
+<a name='L155'></a><a href='#L155'>155</a>
+<a name='L156'></a><a href='#L156'>156</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/*
+ * AI/ML Protocol — v1.1.1 (stand-alone)
+ * Minimal, self-describing ML model manifest + helpers
+ *
+ * Goals
+ * - Mirror protocol family ergonomics: manifest + validate + query + diff + generate
+ * - Add essentials: lifecycle, governance, training/eval metadata, cross-links
+ * - Zero deps; stays lightweight
+ */
+&nbsp;
+// ————————————————————————————————————————————————————————————————
+// Utilities
+// ————————————————————————————————————————————————————————————————
+function <span class="fstat-no" title="function not covered" >jsonCanon(</span>v){ <span class="cstat-no" title="statement not covered" >if(v===null||typeof v!=='object') <span class="cstat-no" title="statement not covered" >return JSON.stringify(v);</span></span>
+<span class="cstat-no" title="statement not covered" >  if(Array.isArray(v)) <span class="cstat-no" title="statement not covered" >return '['+v.map(jsonCanon).join(',')+']';</span></span>
+  const k=<span class="cstat-no" title="statement not covered" >Object.keys(v).sort();</span> <span class="cstat-no" title="statement not covered" >return '{'+k.map(<span class="fstat-no" title="function not covered" >x=</span>&gt;<span class="cstat-no" title="statement not covered" >JSON.stringify(x)+':'+jsonCanon(v[x]))</span>.join(',')+'}'; </span>}
+function <span class="fstat-no" title="function not covered" >dget(</span>o,p){ <span class="cstat-no" title="statement not covered" >if(!p) <span class="cstat-no" title="statement not covered" >return o; </span></span>const parts=<span class="cstat-no" title="statement not covered" >String(p).replace(/\[(\d+)\]/g,'.$1').split('.');</span> let cur=<span class="cstat-no" title="statement not covered" >o;</span> <span class="cstat-no" title="statement not covered" >for(const k of parts){ <span class="cstat-no" title="statement not covered" >if(cur==null) <span class="cstat-no" title="statement not covered" >return; <span class="cstat-no" title="statement not covered" ></span></span>cur=cur[k]; </span>} <span class="cstat-no" title="statement not covered" ></span>return cur; </span>}
+function <span class="fstat-no" title="function not covered" >dset(</span>o,p,v){ const parts=<span class="cstat-no" title="statement not covered" >String(p).split('.');</span> let cur=<span class="cstat-no" title="statement not covered" >o;</span> <span class="cstat-no" title="statement not covered" >while(parts.length&gt;1){ const k=<span class="cstat-no" title="statement not covered" >parts.shift();</span> <span class="cstat-no" title="statement not covered" >if(!(k in cur)||typeof cur[k]!=='object') <span class="cstat-no" title="statement not covered" >cur[k]={}; <span class="cstat-no" title="statement not covered" ></span></span>cur=cur[k]; </span>} <span class="cstat-no" title="statement not covered" ></span>cur[parts[0]]=v; </span>}
+const clone=<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >x=</span>&gt;<span class="cstat-no" title="statement not covered" >JSON.parse(JSON.stringify(x));</span></span>
+function <span class="fstat-no" title="function not covered" >hash(</span>v){ const str=<span class="cstat-no" title="statement not covered" >jsonCanon(v);</span> let h=<span class="cstat-no" title="statement not covered" >BigInt('0xcbf29ce484222325');</span> const p=<span class="cstat-no" title="statement not covered" >BigInt('0x100000001b3');</span> <span class="cstat-no" title="statement not covered" >for(let i=<span class="cstat-no" title="statement not covered" >0;</span>i&lt;str.length;i++){ <span class="cstat-no" title="statement not covered" >h^=BigInt(str.charCodeAt(i)); <span class="cstat-no" title="statement not covered" ></span>h=(h*p)&amp;BigInt('0xFFFFFFFFFFFFFFFF'); </span>} <span class="cstat-no" title="statement not covered" ></span>return 'fnv1a64-'+h.toString(16).padStart(16,'0'); </span>}
+const isURN=<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >s=</span>&gt;<span class="cstat-no" title="statement not covered" >typeof s==='string' &amp;&amp; /^urn:proto:[a-z]+:[a-zA-Z0-9._-]+@[\d.]+/.test(s);</span></span>
+&nbsp;
+// ————————————————————————————————————————————————————————————————
+// Manifest Shape
+// ————————————————————————————————————————————————————————————————
+/**
+ * @typedef {Object} ModelManifest
+ * @property {Object} model {id,name,type,version,framework}
+ * @property {{status:'defined'|'training'|'deployed'|'serving'|'retired'}} [model.lifecycle]
+ * @property {Object} training {data_urns:string[], method:string, hyperparams:Object}
+ * @property {Object} evaluation {metrics:Object&lt;string,number&gt;, thresholds:Object&lt;string,number&gt;}
+ * @property {Object} serving {endpoint?:string, batch?:boolean, latency_sla?:string}
+ * @property {Object} governance {fairness?:string, bias?:string, pii?:boolean, compliance?:string[]}
+ * @property {Object} relationships {consumes_events?:string[], produces_events?:string[], infra_host?:string}
+ * @property {Object} contextCapabilities {tools?:Array&lt;{name:string, inputSchema?:Object, outputSchema?:Object, urn?:string}&gt;, resources?:Array&lt;{uri:string, name?:string, mimeType?:string, urn?:string}&gt;, prompts?:Array&lt;{name:string, arguments?:Array&lt;any&gt;, urn?:string}&gt;, sampling?:{enabled?:boolean, maxTokens?:number}}
+ * @property {Object} metadata {owner?:string,tags?:string[]}
+ */
+&nbsp;
+// ————————————————————————————————————————————————————————————————
+// Validator Registry
+// ————————————————————————————————————————————————————————————————
+const Validators=<span class="cstat-no" title="statement not covered" >new Map();</span>
+function <span class="fstat-no" title="function not covered" >registerValidator(</span>n,fn){ <span class="cstat-no" title="statement not covered" >Validators.set(n,fn); </span>}
+function <span class="fstat-no" title="function not covered" >runValidators(</span>m,sel=<span class="branch-0 cbranch-no" title="branch not covered" >[])</span>{ const names=<span class="cstat-no" title="statement not covered" >sel.length?sel:Array.from(Validators.keys());</span>
+  const results=<span class="cstat-no" title="statement not covered" >names.map(<span class="fstat-no" title="function not covered" >n=</span>&gt;(<span class="cstat-no" title="statement not covered" >{name:n,...(Validators.get(n)?.(m)||{ok:true})})</span>);</span>
+<span class="cstat-no" title="statement not covered" >  return {ok:results.every(<span class="fstat-no" title="function not covered" >r=</span>&gt;<span class="cstat-no" title="statement not covered" >r.ok)</span>,results}; </span>}
+&nbsp;
+<span class="cstat-no" title="statement not covered" >registerValidator('core.shape',<span class="fstat-no" title="function not covered" >m=</span>&gt;{</span>
+  const issues=<span class="cstat-no" title="statement not covered" >[];</span> <span class="cstat-no" title="statement not covered" >if(!m?.model?.id) <span class="cstat-no" title="statement not covered" >issues.push({path:'model.id',msg:'required',level:'error'});</span></span>
+<span class="cstat-no" title="statement not covered" >  if(!m?.model?.name) <span class="cstat-no" title="statement not covered" >issues.push({path:'model.name',msg:'required',level:'error'});</span></span>
+<span class="cstat-no" title="statement not covered" >  if(!['defined','training','deployed','serving','retired'].includes(m?.model?.lifecycle?.status||'defined'))</span>
+<span class="cstat-no" title="statement not covered" >    issues.push({path:'model.lifecycle.status',msg:'invalid status',level:'error'});</span>
+<span class="cstat-no" title="statement not covered" >  if(!Array.isArray(m?.training?.data_urns)||m.training.data_urns.length===0)</span>
+<span class="cstat-no" title="statement not covered" >    issues.push({path:'training.data_urns',msg:'at least one training dataset URN required',level:'error'});</span>
+<span class="cstat-no" title="statement not covered" >  return {ok:issues.length===0,issues};</span>
+});
+&nbsp;
+<span class="cstat-no" title="statement not covered" >registerValidator('evaluation.thresholds',<span class="fstat-no" title="function not covered" >m=</span>&gt;{</span>
+  const issues=<span class="cstat-no" title="statement not covered" >[];</span> const mets=<span class="cstat-no" title="statement not covered" >m?.evaluation?.metrics||{};</span> const th=<span class="cstat-no" title="statement not covered" >m?.evaluation?.thresholds||{};</span>
+<span class="cstat-no" title="statement not covered" >  for(const [k,v] of Object.entries(th)){ <span class="cstat-no" title="statement not covered" >if(mets[k]!=null &amp;&amp; mets[k]&lt;v) <span class="cstat-no" title="statement not covered" >issues.push({path:`evaluation.metrics.${k}`,msg:`metric '${k}' below threshold ${v}`,level:'warn'}); </span></span>}</span>
+<span class="cstat-no" title="statement not covered" >  return {ok:issues.length===0,issues};</span>
+});
+&nbsp;
+<span class="cstat-no" title="statement not covered" >registerValidator('governance.policy',<span class="fstat-no" title="function not covered" >m=</span>&gt;{</span>
+  const issues=<span class="cstat-no" title="statement not covered" >[];</span> <span class="cstat-no" title="statement not covered" >if(m.governance?.pii &amp;&amp; !m.governance?.fairness) <span class="cstat-no" title="statement not covered" >issues.push({path:'governance.fairness',msg:'PII models should declare fairness policy',level:'warn'});</span></span>
+<span class="cstat-no" title="statement not covered" >  return {ok:issues.length===0,issues};</span>
+});
+&nbsp;
+<span class="cstat-no" title="statement not covered" >registerValidator('context.capabilities', <span class="fstat-no" title="function not covered" >m </span>=&gt; {</span>
+  const issues=<span class="cstat-no" title="statement not covered" >[];</span> const cc=<span class="cstat-no" title="statement not covered" >m?.contextCapabilities;</span> <span class="cstat-no" title="statement not covered" >if(!cc) <span class="cstat-no" title="statement not covered" >return {ok:true};</span></span>
+<span class="cstat-no" title="statement not covered" >  for(const [i,t] of (cc.tools||[]).entries()) <span class="cstat-no" title="statement not covered" >if(!t.name) <span class="cstat-no" title="statement not covered" >issues.push({path:`contextCapabilities.tools[${i}].name`, msg:'name required', level:'error'});</span></span></span>
+<span class="cstat-no" title="statement not covered" >  for(const [i,r] of (cc.resources||[]).entries()) <span class="cstat-no" title="statement not covered" >if(!r.uri) <span class="cstat-no" title="statement not covered" >issues.push({path:`contextCapabilities.resources[${i}].uri`, msg:'uri required', level:'error'});</span></span></span>
+<span class="cstat-no" title="statement not covered" >  return { ok:issues.length===0, issues };</span>
+});
+&nbsp;
+// ————————————————————————————————————————————————————————————————
+// Query + Diff
+// ————————————————————————————————————————————————————————————————
+function <span class="fstat-no" title="function not covered" >query(</span>m,expr){ const [rawPath,op,...rest]=<span class="cstat-no" title="statement not covered" >String(expr).split(':');</span> const rhs=<span class="cstat-no" title="statement not covered" >rest.join(':');</span> <span class="cstat-no" title="statement not covered" >if(!rawPath||!op) <span class="cstat-no" title="statement not covered" >return false;</span></span>
+  const lhs=<span class="cstat-no" title="statement not covered" >dget(m,rawPath.replace(/\[(\d+)\]/g,'.$1'));</span> <span class="cstat-no" title="statement not covered" >switch(op){</span>
+    case ':=:': <span class="cstat-no" title="statement not covered" >return String(lhs)===rhs; </span>case 'contains': <span class="cstat-no" title="statement not covered" >return String(lhs??'').includes(rhs);</span>
+    case '&gt;': <span class="cstat-no" title="statement not covered" >return Number(lhs)&gt;Number(rhs); </span>case '&lt;': <span class="cstat-no" title="statement not covered" >return Number(lhs)&lt;Number(rhs);</span>
+    case '&gt;=': <span class="cstat-no" title="statement not covered" >return Number(lhs)&gt;=Number(rhs); </span>case '&lt;=': <span class="cstat-no" title="statement not covered" >return Number(lhs)&lt;=Number(rhs);</span>
+    default: <span class="cstat-no" title="statement not covered" >return false; </span>} }
+&nbsp;
+function <span class="fstat-no" title="function not covered" >normalize(</span>m){ const n=<span class="cstat-no" title="statement not covered" >clone(m||{});</span> <span class="cstat-no" title="statement not covered" >n.sig_hash=hash({id:n.model?.id,type:n.model?.type,fw:n.model?.framework,train:n.training,eval:n.evaluation,context:n.contextCapabilities}); <span class="cstat-no" title="statement not covered" ></span>n.gov_hash=hash(n.governance||{}); <span class="cstat-no" title="statement not covered" ></span>return n; </span>}
+function <span class="fstat-no" title="function not covered" >diff(</span>a,b){ const A=<span class="cstat-no" title="statement not covered" >normalize(a),</span>B=<span class="cstat-no" title="statement not covered" >normalize(b);</span> const changes=<span class="cstat-no" title="statement not covered" >[];</span> <span class="cstat-no" title="statement not covered" >(function <span class="fstat-no" title="function not covered" >walk(</span>p,va,vb){ <span class="cstat-no" title="statement not covered" >if(JSON.stringify(va)===JSON.stringify(vb)) <span class="cstat-no" title="statement not covered" >return;</span></span></span>
+  const isObj=<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >v=</span>&gt;<span class="cstat-no" title="statement not covered" >v&amp;&amp;typeof v==='object';</span></span> <span class="cstat-no" title="statement not covered" >if(!isObj(va)||!isObj(vb)){ <span class="cstat-no" title="statement not covered" >changes.push({path:p,from:va,to:vb}); <span class="cstat-no" title="statement not covered" ></span>return; </span>}</span>
+  const keys=<span class="cstat-no" title="statement not covered" >new Set([...Object.keys(va||{}),...Object.keys(vb||{})]);</span> <span class="cstat-no" title="statement not covered" >for(const k of keys) <span class="cstat-no" title="statement not covered" >walk(p?`${p}.${k}`:k,va?.[k],vb?.[k]); </span></span>})('',A,B);
+  const breaking=<span class="cstat-no" title="statement not covered" >[],</span>significant=<span class="cstat-no" title="statement not covered" >[];</span> <span class="cstat-no" title="statement not covered" >for(const c of changes){ <span class="cstat-no" title="statement not covered" >if(c.path==='sig_hash') <span class="cstat-no" title="statement not covered" >breaking.push({...c,reason:'model signature changed'}); <span class="cstat-no" title="statement not covered" ></span></span>if(c.path==='gov_hash') <span class="cstat-no" title="statement not covered" >significant.push({...c,reason:'governance changed'}); </span></span>}</span>
+<span class="cstat-no" title="statement not covered" >  return {changes,breaking,significant}; </span>}
+&nbsp;
+// ————————————————————————————————————————————————————————————————
+// Generators
+// ————————————————————————————————————————————————————————————————
+function <span class="fstat-no" title="function not covered" >generateTrainingPipeline(</span>m){
+<span class="cstat-no" title="statement not covered" >  return `# Training pipeline for ${m.model?.name}</span>
+datasets: ${m.training?.data_urns?.join(', ')}
+method: ${m.training?.method}
+hyperparams: ${JSON.stringify(m.training?.hyperparams||{})}`;
+}
+function <span class="fstat-no" title="function not covered" >generateEvalTests(</span>m){ const tests=<span class="cstat-no" title="statement not covered" >[];</span> <span class="cstat-no" title="statement not covered" >for(const [k,v] of Object.entries(m?.evaluation?.thresholds||{})){ <span class="cstat-no" title="statement not covered" >tests.push({name:`metric:${k}`,expect:`&gt;=${v}`,actual:m.evaluation?.metrics?.[k]}); </span>} <span class="cstat-no" title="statement not covered" ></span>return tests; </span>}
+function <span class="fstat-no" title="function not covered" >generateLineage(</span>m){ const lines=<span class="cstat-no" title="statement not covered" >['graph TD','  subgraph Model'];</span> const id=<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >s=</span>&gt;<span class="cstat-no" title="statement not covered" >String(s||'').replace(/[^a-zA-Z0-9_]/g,'_');</span></span> const me=<span class="cstat-no" title="statement not covered" >id(m.model?.id||'model');</span> <span class="cstat-no" title="statement not covered" >lines.push(`  ${me}[[${m.model?.name}]]`);</span>
+<span class="cstat-no" title="statement not covered" >  for(const u of (m.training?.data_urns||[])){ <span class="cstat-no" title="statement not covered" >lines.push(`  "${u}" --&gt; ${me}`); </span>} <span class="cstat-no" title="statement not covered" ></span>for(const e of (m.relationships?.produces_events||[])){ <span class="cstat-no" title="statement not covered" >lines.push(`  ${me} --&gt; "${e}"`); </span>}</span>
+<span class="cstat-no" title="statement not covered" >  lines.push('  end'); <span class="cstat-no" title="statement not covered" ></span>return lines.join('\n'); </span>}
+&nbsp;
+// ————————————————————————————————————————————————————————————————
+// Cross-protocol helpers
+// ————————————————————————————————————————————————————————————————
+function <span class="fstat-no" title="function not covered" >crossCheckWithData(</span>modelManifest,dataManifest){ const issues=<span class="cstat-no" title="statement not covered" >[];</span> <span class="cstat-no" title="statement not covered" >for(const u of (modelManifest.training?.data_urns||[])){ <span class="cstat-no" title="statement not covered" >if(!isURN(u)) <span class="cstat-no" title="statement not covered" >issues.push({msg:`invalid training data URN: ${u}`,level:'error'}); </span></span>} <span class="cstat-no" title="statement not covered" ></span>return {ok:issues.length===0,issues}; </span>}
+function <span class="fstat-no" title="function not covered" >crossCheckWithEvent(</span>modelManifest,eventManifest){ const issues=<span class="cstat-no" title="statement not covered" >[];</span> <span class="cstat-no" title="statement not covered" >for(const e of (modelManifest.relationships?.consumes_events||[])){ <span class="cstat-no" title="statement not covered" >if(!eventManifest?.event?.name===e) <span class="cstat-no" title="statement not covered" >issues.push({msg:`model expects event '${e}' not found`,level:'warn'}); </span></span>} <span class="cstat-no" title="statement not covered" ></span>return {ok:issues.length===0,issues}; </span>}
+function <span class="fstat-no" title="function not covered" >crossCheckWithInfra(</span>modelManifest,infraManifest){ const issues=<span class="cstat-no" title="statement not covered" >[];</span> <span class="cstat-no" title="statement not covered" >if(modelManifest.model?.type==='deep-learning' &amp;&amp; infraManifest?.specification?.vm?.gpu!==true) <span class="cstat-no" title="statement not covered" >issues.push({msg:'DL model requires GPU infra',level:'warn'}); <span class="cstat-no" title="statement not covered" ></span></span>return {ok:issues.length===0,issues}; </span>}
+&nbsp;
+// ————————————————————————————————————————————————————————————————
+// Protocol Factory
+// ————————————————————————————————————————————————————————————————
+function <span class="fstat-no" title="function not covered" >createAIProtocol(</span>manifestInput=<span class="branch-0 cbranch-no" title="branch not covered" >{})</span>{
+  const manifest=<span class="cstat-no" title="statement not covered" >normalize(manifestInput);</span>
+<span class="cstat-no" title="statement not covered" >  return Object.freeze({</span>
+    manifest:<span class="fstat-no" title="function not covered" >()</span>=&gt;<span class="cstat-no" title="statement not covered" >clone(manifest),</span>
+    validate:<span class="fstat-no" title="function not covered" >(n</span>ames=<span class="branch-0 cbranch-no" title="branch not covered" >[])</span>=&gt;<span class="cstat-no" title="statement not covered" >runValidators(manifest,names),</span>
+    match:<span class="fstat-no" title="function not covered" >(e</span>xpr)=&gt;<span class="cstat-no" title="statement not covered" >query(manifest,expr),</span>
+    diff:<span class="fstat-no" title="function not covered" >(o</span>ther)=&gt;<span class="cstat-no" title="statement not covered" >diff(manifest,other?.manifest?other.manifest():other),</span>
+    generateTrainingPipeline:<span class="fstat-no" title="function not covered" >()</span>=&gt;<span class="cstat-no" title="statement not covered" >generateTrainingPipeline(manifest),</span>
+    generateEvalTests:<span class="fstat-no" title="function not covered" >()</span>=&gt;<span class="cstat-no" title="statement not covered" >generateEvalTests(manifest),</span>
+    generateLineage:<span class="fstat-no" title="function not covered" >()</span>=&gt;<span class="cstat-no" title="statement not covered" >generateLineage(manifest),</span>
+    crossCheckWithData:<span class="fstat-no" title="function not covered" >(d</span>)=&gt;<span class="cstat-no" title="statement not covered" >crossCheckWithData(manifest,d),</span>
+    crossCheckWithEvent:<span class="fstat-no" title="function not covered" >(e</span>)=&gt;<span class="cstat-no" title="statement not covered" >crossCheckWithEvent(manifest,e),</span>
+    crossCheckWithInfra:<span class="fstat-no" title="function not covered" >(i</span>)=&gt;<span class="cstat-no" title="statement not covered" >crossCheckWithInfra(manifest,i),</span>
+    set:<span class="fstat-no" title="function not covered" >(p</span>,v)=&gt;{const m=<span class="cstat-no" title="statement not covered" >clone(manifest);</span> <span class="cstat-no" title="statement not covered" >dset(m,p,v); <span class="cstat-no" title="statement not covered" ></span>return createAIProtocol(m);}</span>
+  });
+}
+&nbsp;
+function <span class="fstat-no" title="function not covered" >createAICatalog(</span>protocols=<span class="branch-0 cbranch-no" title="branch not covered" >[])</span>{
+  const items=<span class="cstat-no" title="statement not covered" >protocols;</span> const asManifests=<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >()</span>=&gt;<span class="cstat-no" title="statement not covered" >items.map(<span class="fstat-no" title="function not covered" >p=</span>&gt;<span class="cstat-no" title="statement not covered" >p.manifest())</span>;</span></span>
+  function <span class="fstat-no" title="function not covered" >find(</span>expr){ <span class="cstat-no" title="statement not covered" >return items.filter(<span class="fstat-no" title="function not covered" >p=</span>&gt;<span class="cstat-no" title="statement not covered" >p.match(expr))</span>; </span>}
+  function <span class="fstat-no" title="function not covered" >validateAll(</span>names=<span class="branch-0 cbranch-no" title="branch not covered" >[])</span> { <span class="cstat-no" title="statement not covered" >return asManifests().map(<span class="fstat-no" title="function not covered" >m=</span>&gt;(<span class="cstat-no" title="statement not covered" >{id:m.model?.id,...runValidators(m,names)})</span>); </span>}
+<span class="cstat-no" title="statement not covered" >  return Object.freeze({items,find,validateAll});</span>
+}
+&nbsp;
+// ————————————————————————————————————————————————————————————————
+// Exports
+// ————————————————————————————————————————————————————————————————
+<span class="cstat-no" title="statement not covered" >module.exports={</span>
+  createAIProtocol,
+  createAICatalog,
+  registerValidator,
+  Validators,
+  generateTrainingPipeline,
+  generateEvalTests,
+  generateLineage,
+  crossCheckWithData,
+  crossCheckWithEvent,
+  crossCheckWithInfra
+};
+&nbsp;</pre></td></tr></table></pre>
+
+                <div class='push'></div><!-- for sticky footer -->
+            </div><!-- /wrapper -->
+            <div class='footer quiet pad2 space-top1 center small'>
+                Code coverage generated by
+                <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
+                at 2025-10-13T19:01:23.402Z
+            </div>
+        <script src="../../../../prettify.js"></script>
+        <script>
+            window.onload = function () {
+                prettyPrint();
+            };
+        </script>
+        <script src="../../../../sorter.js"></script>
+        <script src="../../../../block-navigation.js"></script>
+    </body>
+</html>
+    

@@ -1,0 +1,14 @@
+apiVersion: iam/v1.1.2
+kind: DelegationManifest
+iam: { kind: DelegationManifest, id: "delegation.writer", lifecycle: { status: "active" } }
+principal: { type: "user", urn: "urn:proto:iam:user@1.1.1#u123" }
+delegate:  { type: "agent", urn: "urn:proto:agent:writer@1.1.1" }
+authorization:
+  scope: "content.create"
+  constraints:
+    - type: budget
+      maxAmount: 0
+      currency: USD
+validity:
+  notBefore: "2025-10-01T00:00:00Z"
+  notAfter: "2025-12-31T23:59:59Z"

@@ -1,0 +1,40 @@
+{
+  "timestamp": "2025-10-08T21:52:58.965Z",
+  "targets": {
+    "prompt_latency": 100,
+    "generation_write": 50,
+    "validation_time": 50,
+    "cli_render": 20
+  },
+  "results": {
+    "prompt_latency": {
+      "target": 100,
+      "p95": 10.12,
+      "passed": true,
+      "description": "Time to process a single prompt"
+    },
+    "generation_write": {
+      "target": 50,
+      "p95": 0.68,
+      "passed": true,
+      "description": "Time to generate and write a single file"
+    },
+    "validation_time": {
+      "target": 50,
+      "p95": 4.56,
+      "passed": true,
+      "description": "Time to validate a single manifest"
+    },
+    "cli_render": {
+      "target": 20,
+      "p95": 1.33,
+      "passed": true,
+      "description": "Time to render 50 CLI events"
+    }
+  },
+  "summary": {
+    "total": 4,
+    "passed": 4,
+    "failed": 0
+  }
+}

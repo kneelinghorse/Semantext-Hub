@@ -1,0 +1,113 @@
+{
+  "workflowId": "data-processing-pipeline",
+  "name": "Sequential Data Processing Pipeline",
+  "version": "1.0.0",
+  "description": "Demonstrates sequential step execution for data processing",
+  "metadata": {
+    "author": "OSSP-AGI",
+    "tags": ["sequential", "data-processing", "example"],
+    "created": "2025-10-06T00:00:00Z"
+  },
+  "timeout": 30000,
+  "retryPolicy": {
+    "maxAttempts": 3,
+    "backoffMs": 1000,
+    "backoffMultiplier": 2,
+    "maxBackoffMs": 10000
+  },
+  "steps": [
+    {
+      "stepId": "fetch-data",
+      "name": "Fetch Raw Data",
+      "type": "task",
+      "task": {
+        "action": "urn:ossp:action:fetch-data",
+        "inputs": {
+          "source": "api.example.com/data",
+          "format": "json"
+        },
+        "outputs": {
+          "data": "result.data"
+        }
+      },
+      "timeout": 5000,
+      "onFailure": "fail"
+    },
+    {
+      "stepId": "validate-data",
+      "name": "Validate Data Schema",
+      "type": "task",
+      "dependsOn": ["fetch-data"],
+      "task": {
+        "action": "urn:ossp:action:validate-schema",
+        "inputs": {
+          "data": "$fetch-data",
+          "schema": "data-schema-v1"
+        },
+        "outputs": {
+          "valid": "result.valid",
+          "errors": "result.errors"
+        }
+      },
+      "timeout": 2000
+    },
+    {
+      "stepId": "transform-data",
+      "name": "Transform to Target Format",
+      "type": "task",
+      "dependsOn": ["validate-data"],
+      "condition": "validate-data.valid === true",
+      "task": {
+        "action": "urn:ossp:action:transform",
+        "inputs": {
+          "data": "$fetch-data",
+          "transformation": "normalize-fields"
+        },
+        "outputs": {
+          "transformed": "result"
+        }
+      },
+      "timeout": 3000
+    },
+    {
+      "stepId": "enrich-data",
+      "name": "Enrich with Metadata",
+      "type": "task",
+      "dependsOn": ["transform-data"],
+      "task": {
+        "action": "urn:ossp:action:enrich",
+        "inputs": {
+          "data": "$transform-data",
+          "enrichments": ["timestamps", "source-info"]
+        },
+        "outputs": {
+          "enriched": "result"
+        }
+      },
+      "timeout": 2000
+    },
+    {
+      "stepId": "store-data",
+      "name": "Store Processed Data",
+      "type": "task",
+      "dependsOn": ["enrich-data"],
+      "task": {
+        "action": "urn:ossp:action:store",
+        "inputs": {
+          "data": "$enrich-data",
+          "destination": "database.processed_data",
+          "mode": "append"
+        },
+        "outputs": {
+          "recordId": "result.id",
+          "stored": "result.success"
+        }
+      },
+      "timeout": 5000,
+      "retryPolicy": {
+        "maxAttempts": 5,
+        "backoffMs": 2000
+      }
+    }
+  ]
+}

@@ -1,0 +1,108 @@
+apiVersion: workflow.v1
+kind: Workflow
+metadata:
+  name: microservices-integration
+  description: Cross-service integration workflow for user order processing
+  version: "1.0.0"
+
+spec:
+  inputs:
+    userId:
+      type: string
+      description: User ID for the order
+      required: true
+    items:
+      type: array
+      description: Order items
+      required: true
+      items:
+        type: object
+        properties:
+          productId:
+            type: string
+          quantity:
+            type: integer
+
+  steps:
+    # Step 1: Validate user exists
+    validate-user:
+      type: agent
+      agent: "urn:agent:user-management:validator"
+      tool: "get_user"
+      args:
+        userId: "{{ inputs.userId }}"
+      outputs:
+        user: "{{ result.user }}"
+      onError: fail
+
+    # Step 2: Create order
+    create-order:
+      type: agent
+      agent: "urn:agent:order-management:processor"
+      tool: "create_order"
+      args:
+        userId: "{{ inputs.userId }}"
+        items: "{{ inputs.items }}"
+      outputs:
+        order: "{{ result.order }}"
+      onError: fail
+
+    # Step 3: Process payment
+    process-payment:
+      type: agent
+      agent: "urn:agent:payment-processing:processor"
+      tool: "process_payment"
+      args:
+        orderId: "{{ steps.create-order.outputs.order.id }}"
+        amount: "{{ steps.create-order.outputs.order.total }}"
+        method: "credit_card"
+      outputs:
+        payment: "{{ result.payment }}"
+      onError: rollback-order
+
+    # Step 4: Update order status
+    update-order-status:
+      type: agent
+      agent: "urn:agent:order-management:processor"
+      tool: "update_order_status"
+      args:
+        orderId: "{{ steps.create-order.outputs.order.id }}"
+        status: "confirmed"
+      outputs:
+        order: "{{ result.order }}"
+      onError: rollback-payment
+
+  outputs:
+    order:
+      type: object
+      value: "{{ steps.update-order-status.outputs.order }}"
+    payment:
+      type: object
+      value: "{{ steps.process-payment.outputs.payment }}"
+    user:
+      type: object
+      value: "{{ steps.validate-user.outputs.user }}"
+
+  errorHandlers:
+    rollback-order:
+      type: agent
+      agent: "urn:agent:order-management:processor"
+      tool: "cancel_order"
+      args:
+        orderId: "{{ steps.create-order.outputs.order.id }}"
+      continue: false
+
+    rollback-payment:
+      type: agent
+      agent: "urn:agent:payment-processing:processor"
+      tool: "refund_payment"
+      args:
+        paymentId: "{{ steps.process-payment.outputs.payment.id }}"
+      continue: false
+
+  retryPolicy:
+    maxRetries: 3
+    backoffMultiplier: 2
+    initialDelay: 1000
+
+  timeout: 30000

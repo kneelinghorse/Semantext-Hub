@@ -1,0 +1,16 @@
+apiVersion: ai-ml/v1.1.2
+kind: ModelManifest
+model: { id: "llm.writer", name: "Writer LLM", type: "llm", version: "1.1.2" }
+
+contextCapabilities:
+  tools:
+    - name: search_corpus
+      inputSchema: { type: object, properties: { query: { type: "string" } }, required: ["query"] }
+  resources:
+    - uri: "file://{repositoryPath}"
+      name: "Repo Files"
+      mimeType: "text/plain"
+  prompts:
+    - name: outline
+      arguments: [{ name: topic, required: true }]
+  sampling: { enabled: true, maxTokens: 2000 }

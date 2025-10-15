@@ -1,0 +1,229 @@
+cli/commands/protocol-wizard.js:13:const __filename = fileURLToPath(import.meta.url);
+cli/commands/protocol-wizard.js:14:const __dirname = path.dirname(__filename);
+cli/commands/protocol-wizard.js:23:this.templatesPath = path.join(__dirname, '../../templates/protocol-templates');
+cli/commands/protocol-wizard.js:160:const validationScript = path.join(__dirname, '../../scripts/validate-manifest.js');
+packages/protocols/core/overrides/loader.js:261:const communityPath = path.join(__dirname, '../../overrides/community');
+packages/runtime/bin/protocol-mcp-server.js:29:const __dirname = path.dirname(fileURLToPath(import.meta.url));
+packages/runtime/bin/workflow-run.js:16:const __filename = fileURLToPath(import.meta.url);
+packages/runtime/bin/workflow-run.js:17:const __dirname = path.dirname(__filename);
+packages/runtime/cli/commands/demo.js:83:seedsDir: path.join(__dirname, '../../seeds')
+packages/runtime/cli/commands/demo.js:280:seedsDir: path.join(__dirname, '../../seeds')
+packages/runtime/cli/commands/demo.js:306:seedPath = path.join(__dirname, '../../seeds/databases', seedId);
+packages/runtime/cli/commands/quickstart.js:16:const __filename = fileURLToPath(import.meta.url);
+packages/runtime/cli/commands/quickstart.js:17:const __dirname = path.dirname(__filename);
+packages/runtime/cli/commands/quickstart.js:184:const templateDir = path.join(__dirname, '../../examples/microservices-pattern');
+packages/runtime/cli/commands/quickstart.js:317:path.join(__dirname, '../../cli/index.js'),
+packages/runtime/cli/commands/quickstart.js:329:path.join(__dirname, '../../cli/index.js'),
+packages/runtime/cli/commands/scaffold.js:17:const __filename = fileURLToPath(import.meta.url);
+packages/runtime/cli/commands/scaffold.js:18:const __dirname = path.dirname(__filename);
+packages/runtime/cli/commands/scaffold.js:333:: path.join(__dirname, '../../', output);
+packages/runtime/cli/commands/scaffold.js:427:const templateDir = path.join(__dirname, '../../templates');
+packages/runtime/cli/scaffold-only.mjs:10:const __filename = fileURLToPath(import.meta.url);
+packages/runtime/cli/scaffold-only.mjs:11:const __dirname = path.dirname(__filename);
+packages/runtime/cli/scaffold-only.mjs:66:output: opts.output || path.join(__dirname, '../artifacts/scaffolds'),
+packages/runtime/examples/mcp-client-demo.js:20:const __dirname = path.dirname(fileURLToPath(import.meta.url));
+packages/runtime/examples/mcp-client-demo.js:31:args: [path.join(__dirname, '../bin/protocol-mcp-server.js')],
+packages/runtime/examples/mcp-client-demo.js:33:PROTOCOL_ROOT: path.join(__dirname, '..')
+packages/runtime/examples/mcp-client-demo.js:82:args: [path.join(__dirname, '../bin/protocol-mcp-server.js')],
+packages/runtime/examples/mcp-client-demo.js:84:PROTOCOL_ROOT: path.join(__dirname, '..')
+packages/runtime/examples/mcp-client-demo.js:186:args: [path.join(__dirname, '../bin/protocol-mcp-server.js')],
+packages/runtime/examples/mcp-client-demo.js:188:PROTOCOL_ROOT: path.join(__dirname, '..')
+packages/runtime/examples/mcp-client-demo.mjs:20:const __dirname = path.dirname(fileURLToPath(import.meta.url));
+packages/runtime/examples/mcp-client-demo.mjs:31:args: [path.join(__dirname, '../bin/protocol-mcp-server.js')],
+packages/runtime/examples/mcp-client-demo.mjs:33:PROTOCOL_ROOT: path.join(__dirname, '..')
+packages/runtime/examples/mcp-client-demo.mjs:82:args: [path.join(__dirname, '../bin/protocol-mcp-server.js')],
+packages/runtime/examples/mcp-client-demo.mjs:84:PROTOCOL_ROOT: path.join(__dirname, '..')
+packages/runtime/examples/mcp-client-demo.mjs:186:args: [path.join(__dirname, '../bin/protocol-mcp-server.js')],
+packages/runtime/examples/mcp-client-demo.mjs:188:PROTOCOL_ROOT: path.join(__dirname, '..')
+packages/runtime/examples/multi-agent-e2e-demo.js:33:const __filename = fileURLToPath(import.meta.url);
+packages/runtime/examples/multi-agent-e2e-demo.js:34:const __dirname = dirname(__filename);
+packages/runtime/examples/multi-agent-e2e-demo.js:39:dataDir: join(__dirname, '../data/demo-registry'),
+packages/runtime/examples/registration-demo.js:19:const baseDir = path.join(__dirname, '..', 'fixtures', 'registration', 'demo-state');
+packages/runtime/examples/registration-demo.js:116:const baseDir = path.join(__dirname, '..', 'fixtures', 'registration', 'demo-rejection');
+packages/runtime/examples/seeds-demo.js:55:seedsDir: path.join(__dirname, '../seeds')
+packages/runtime/examples/seeds-demo.js:97:seedsDir: path.join(__dirname, '../seeds')
+packages/runtime/examples/seeds-demo.js:148:seedsDir: path.join(__dirname, '../seeds')
+packages/runtime/feedback/feedback.js:14:const __filename = fileURLToPath(import.meta.url);
+packages/runtime/feedback/feedback.js:15:const __dirname = dirname(__filename);
+packages/runtime/feedback/feedback.js:21:readFileSync(join(__dirname, 'schema', 'feedback.schema.json'), 'utf-8')
+packages/runtime/generators/scaffold/protocol-scaffolder.js:25:const __filename = fileURLToPath(import.meta.url);
+packages/runtime/generators/scaffold/protocol-scaffolder.js:26:const __dirname = path.dirname(__filename);
+packages/runtime/generators/scaffold/protocol-scaffolder.js:27:this.outputDir = path.join(__dirname, '../../artifacts/scaffolds');
+packages/runtime/runtime/urn-registry.js:27:const __filename = fileURLToPath(import.meta.url);
+packages/runtime/runtime/urn-registry.js:28:const __dirname = dirname(__filename);
+packages/runtime/runtime/urn-registry.js:75:dataDir: options.dataDir || join(__dirname, '../../data/registry'),
+packages/runtime/scripts/benchmark-e2e-performance.js:15:const __filename = fileURLToPath(import.meta.url);
+packages/runtime/scripts/benchmark-e2e-performance.js:16:const __dirname = dirname(__filename);
+packages/runtime/scripts/benchmark-e2e-performance.js:501:outputPath = join(__dirname, `../data/benchmark-results-${timestamp}.json`);
+packages/runtime/scripts/ci-artifact-exporter.js:20:const __filename = fileURLToPath(import.meta.url);
+packages/runtime/scripts/ci-artifact-exporter.js:21:const __dirname = dirname(__filename);
+packages/runtime/scripts/ci-artifact-exporter.js:25:artifactsDir: join(__dirname, '../artifacts'),
+packages/runtime/scripts/ci-artifact-exporter.js:147:const testResultsPath = join(__dirname, '../test-results');
+packages/runtime/scripts/ci-artifact-exporter.js:154:const coveragePath = join(__dirname, '../coverage');
+packages/runtime/scripts/ci-artifact-exporter.js:161:const jestCachePath = join(__dirname, '../node_modules/.cache/jest');
+packages/runtime/scripts/ci-artifact-exporter.js:191:const a2aLogsPath = join(__dirname, '../runtime/a2a-logs');
+packages/runtime/scripts/ci-artifact-exporter.js:198:const a2aSamplesPath = join(__dirname, '../runtime/a2a-samples');
+packages/runtime/scripts/ci-artifact-exporter.js:205:const a2aTestPath = join(__dirname, '../tests/runtime/a2a-artifacts');
+packages/runtime/scripts/ci-artifact-exporter.js:232:const mcpLogsPath = join(__dirname, '../runtime/mcp-logs');
+packages/runtime/scripts/ci-artifact-exporter.js:239:const mcpSamplesPath = join(__dirname, '../runtime/mcp-samples');
+packages/runtime/scripts/ci-artifact-exporter.js:246:const mcpTestPath = join(__dirname, '../tests/runtime/mcp-artifacts');
+packages/runtime/scripts/ci-artifact-exporter.js:273:const acmPath = join(__dirname, '../runtime/acm-manifests');
+packages/runtime/scripts/ci-artifact-exporter.js:280:const urnRegistryPath = join(__dirname, '../runtime/urn-registry');
+packages/runtime/scripts/ci-artifact-exporter.js:287:const wellKnownPath = join(__dirname, '../runtime/well-known-logs');
+packages/runtime/scripts/ci-artifact-exporter.js:294:const discoveryTestPath = join(__dirname, '../tests/runtime/discovery-artifacts');
+packages/runtime/scripts/ci-artifact-exporter.js:321:const e2eResultsPath = join(__dirname, '../data');
+packages/runtime/scripts/ci-artifact-exporter.js:328:const e2eDemoPath = join(__dirname, '../examples/e2e-artifacts');
+packages/runtime/scripts/ci-artifact-exporter.js:335:const e2eTestPath = join(__dirname, '../tests/e2e/e2e-artifacts');
+packages/runtime/scripts/ci-artifact-exporter.js:362:const perfResultsPath = join(__dirname, '../runtime/performance-results');
+packages/runtime/scripts/ci-artifact-exporter.js:369:const perfTestPath = join(__dirname, '../tests/performance/performance-artifacts');
+packages/runtime/scripts/ci-artifact-exporter.js:495:const relativePath = filePath.replace(__dirname, '');
+packages/runtime/scripts/test-scaffold.js:11:const __filename = fileURLToPath(import.meta.url);
+packages/runtime/scripts/test-scaffold.js:12:const __dirname = path.dirname(__filename);
+packages/runtime/scripts/test-scaffold.js:18:const templateDir = path.join(__dirname, '../templates');
+packages/runtime/scripts/test-scaffold.js:19:const outputDir = path.join(__dirname, '../artifacts/scaffolds');
+packages/runtime/scripts/validate-ci-workflow.js:14:const __filename = fileURLToPath(import.meta.url);
+packages/runtime/scripts/validate-ci-workflow.js:15:const __dirname = dirname(__filename);
+packages/runtime/scripts/validate-ci-workflow.js:117:const workflowPath = path.join(__dirname, '../../.github/workflows/runtime-integration.yml');
+packages/runtime/scripts/validate-ci-workflow.js:159:const exporterPath = path.join(__dirname, 'ci-artifact-exporter.js');
+packages/runtime/scripts/validate-ci-workflow.js:200:const testDir = path.join(__dirname, '../tests/runtime');
+packages/runtime/scripts/validate-ci-workflow.js:270:const docsDir = path.join(__dirname, '../docs');
+packages/runtime/scripts/validate-ci-workflow.js:420:const outputPath = args[0] || join(__dirname, '../data/ci-validation-results.json');
+packages/runtime/scripts/validate-e2e-workflow.js:15:const __filename = fileURLToPath(import.meta.url);
+packages/runtime/scripts/validate-e2e-workflow.js:16:const __dirname = dirname(__filename);
+packages/runtime/scripts/validate-e2e-workflow.js:402:const outputPath = args[0] || join(__dirname, '../data/validation-results.json');
+packages/runtime/test-infrastructure/contract-tester.js:13:const __filename = fileURLToPath(import.meta.url);
+packages/runtime/test-infrastructure/contract-tester.js:14:const __dirname = path.dirname(__filename);
+packages/runtime/test-infrastructure/contract-tester.js:22:this.fixturesDir = options.fixturesDir || path.join(__dirname, '../tests/fixtures/generated');
+packages/runtime/test-infrastructure/coverage-reporter.js:11:const __filename = fileURLToPath(import.meta.url);
+packages/runtime/test-infrastructure/coverage-reporter.js:12:const __dirname = path.dirname(__filename);
+packages/runtime/test-infrastructure/coverage-reporter.js:20:this.outputDir = options.outputDir || path.join(__dirname, '../coverage');
+packages/runtime/test-infrastructure/performance-benchmarks.js:12:const __filename = fileURLToPath(import.meta.url);
+packages/runtime/test-infrastructure/performance-benchmarks.js:13:const __dirname = path.dirname(__filename);
+packages/runtime/test-infrastructure/performance-benchmarks.js:21:this.outputDir = options.outputDir || path.join(__dirname, '../tests/performance');
+packages/runtime/test-infrastructure/performance-benchmarks.js:89:const testDir = path.join(__dirname, '../tests/performance/temp');
+packages/runtime/test-infrastructure/property-tester.js:11:const __filename = fileURLToPath(import.meta.url);
+packages/runtime/test-infrastructure/property-tester.js:12:const __dirname = path.dirname(__filename);
+packages/runtime/test-infrastructure/property-tester.js:20:this.outputDir = options.outputDir || path.join(__dirname, '../tests/property');
+packages/runtime/test-infrastructure/property-tester.js:558:const fixturesDir = path.join(__dirname, '../tests/fixtures/generated');
+packages/runtime/test-infrastructure/test-fixtures.js:11:const __filename = fileURLToPath(import.meta.url);
+packages/runtime/test-infrastructure/test-fixtures.js:12:const __dirname = path.dirname(__filename);
+packages/runtime/test-infrastructure/test-fixtures.js:20:this.outputDir = options.outputDir || path.join(__dirname, '../tests/fixtures/generated');
+packages/runtime/viewer/client/vite.config.js:6:const __filename = fileURLToPath(import.meta.url);
+packages/runtime/viewer/client/vite.config.js:7:const __dirname = path.dirname(__filename);
+packages/runtime/viewer/client/vite.config.js:13:outDir: path.resolve(__dirname, '../public'),
+packages/runtime/viewer/server.js:78:const publicDir = path.join(__dirname, 'public');
+packages/runtime/workflow-library/validator.js:12:const __filename = fileURLToPath(import.meta.url);
+packages/runtime/workflow-library/validator.js:13:const __dirname = dirname(__filename);
+packages/runtime/workflow-library/validator.js:15:readFileSync(join(__dirname, 'schema/workflow.schema.json'), 'utf-8')
+scripts/check-layer-boundaries.js:14:const __filename = fileURLToPath(import.meta.url);
+scripts/check-layer-boundaries.js:15:const __dirname = path.dirname(__filename);
+scripts/check-layer-boundaries.js:17:const PROTOCOLS_DIR = path.join(__dirname, '../packages/protocols');
+scripts/check-layer-boundaries.js:18:const RUNTIME_DIR = path.join(__dirname, '../packages/runtime');
+scripts/probe/pre12.collect.js:11:const __filename = fileURLToPath(import.meta.url);
+scripts/probe/pre12.collect.js:12:const __dirname = path.dirname(__filename);
+scripts/probe/pre12.collect.js:13:const APP_ROOT = path.resolve(__dirname, '../../');
+scripts/probe/pre12.collect.js:175:// __dirname/__filename scan and file list
+scripts/probe/pre12.collect.js:210:const hit = txt.includes('__dirname') || txt.includes('__filename');
+scripts/probe/pre12.collect.js:216:if (ln.includes('__dirname') || ln.includes('__filename')) {
+scripts/probe/pre12.collect.js:490:- ESM stack: **${state?.esm?.stack || 'unknown'}**\n- __dirname sites: ${state?.esm?.dirname_hits?.count || 0}\n- CJS-only deps: ${(state?.esm?.cjs_deps || []).length}\n- MCP smoke: ${state?.mcp ? 'OK' : 'N/A'} (stdio)\n- Perf baseline(ms): ${JSON.stringify(state?.perf?.baseline || {})}\n- Redaction: ${state?.redaction?.ok ? 'OK' : 'Check'}\n`;
+seeds/curator.js:20:seedsDir: options.seedsDir || path.join(__dirname),
+tests/catalog/index.test.js:13:const __filename = fileURLToPath(import.meta.url);
+tests/catalog/index.test.js:14:const __dirname = dirname(__filename);
+tests/catalog/index.test.js:411:const testFilePath = path.join(__dirname, 'test-catalog.json');
+tests/cli/commands.test.js:11:// ESM-safe __dirname
+tests/cli/commands.test.js:12:const __filename = fileURLToPath(import.meta.url);
+tests/cli/commands.test.js:13:const __dirname = path.dirname(__filename);
+tests/cli/commands.test.js:47:const TEST_OUTPUT_DIR = path.join(__dirname, '../../..', 'test-artifacts');
+tests/cli/scaffold-feedback.test.js:14:const __filename = fileURLToPath(import.meta.url);
+tests/cli/scaffold-feedback.test.js:15:const __dirname = path.dirname(__filename);
+tests/cli/scaffold-feedback.test.js:18:const testOutputDir = path.join(__dirname, '../fixtures/test-scaffolds-feedback');
+tests/cli/scaffold-feedback.test.js:34:templateDir = path.join(__dirname, '../../templates');
+tests/cli/scaffold-interactive.test.js:12:const __filename = fileURLToPath(import.meta.url);
+tests/cli/scaffold-interactive.test.js:13:const __dirname = path.dirname(__filename);
+tests/cli/scaffold-interactive.test.js:16:const testOutputDir = path.join(__dirname, '../fixtures/test-scaffolds-interactive');
+tests/cli/scaffold-interactive.test.js:418:const templateDir = path.join(__dirname, '../../templates');
+tests/cli/scaffold-interactive.test.js:452:const templateDir = path.join(__dirname, '../../templates');
+tests/e2e/openapi-workflow.test.js:8:// ESM/CJS-safe __dirname resolution
+tests/e2e/openapi-workflow.test.js:9:const __dirnameResolved = (typeof __dirname !== 'undefined')
+tests/e2e/openapi-workflow.test.js:10:? __dirname
+tests/e2e/openapi-workflow.test.js:11:: (() => { const { fileURLToPath } = require('url'); const __filename = fileURLToPath(import.meta.url); return path.dirname(__filename); })();
+tests/e2e/openapi-workflow.test.js:18:const FIXTURES_DIR = path.join(__dirnameResolved, 'fixtures');
+tests/generators/scaffold.test.js:12:const __filename = fileURLToPath(import.meta.url);
+tests/generators/scaffold.test.js:13:const __dirname = path.dirname(__filename);
+tests/generators/scaffold.test.js:16:const TEST_TEMPLATE_DIR = path.join(__dirname, '../fixtures/templates');
+tests/generators/scaffold.test.js:17:const TEST_OUTPUT_DIR = path.join(__dirname, '../fixtures/output');
+tests/generators/scaffold.test.js:23:engine = new TemplateEngine(path.join(__dirname, '../../templates'));
+tests/generators/scaffold.test.js:183:engine = new TemplateEngine(path.join(__dirname, '../../templates'));
+tests/generators/scaffold.test.js:496:engine = new TemplateEngine(path.join(__dirname, '../../templates'));
+tests/importers/asyncapi-bindings.test.js:9:const fixturesPath = path.join(__dirname, '../fixtures/asyncapi');
+tests/importers/asyncapi-patterns.test.js:18:const specPath = path.join(__dirname, '../fixtures/asyncapi/kafka-patterns.yaml');
+tests/importers/asyncapi-patterns.test.js:124:const specPath = path.join(__dirname, '../fixtures/asyncapi/amqp-patterns.yaml');
+tests/importers/asyncapi-patterns.test.js:163:const specPath = path.join(__dirname, '../fixtures/asyncapi/mqtt-patterns.yaml');
+tests/importers/asyncapi-patterns.test.js:226:const specPath = path.join(__dirname, '../fixtures/asyncapi/kafka-patterns.yaml');
+tests/importers/asyncapi-pii.test.js:12:const fixturesPath = path.join(__dirname, '../fixtures/asyncapi');
+tests/importers/asyncapi-urn.test.js:13:const fixturesPath = path.join(__dirname, '../fixtures/asyncapi');
+tests/importers/asyncapi.test.js:5:const fixturesPath = path.join(__dirname, '../fixtures/asyncapi');
+tests/integration/workflow-adapter-integration.test.js:15:const __filename = fileURLToPath(import.meta.url);
+tests/integration/workflow-adapter-integration.test.js:16:const __dirname = path.dirname(__filename);
+tests/integration/workflow-adapter-integration.test.js:231:const workflowPath = path.join(__dirname, 'test-workflow.json');
+tests/overrides/integration.test.js:194:const stripePatternsPath = path.join(__dirname, '../../overrides/community/stripe/api_pattern.json');
+tests/parsers/openapi-parser.test.js:11:const __filename = fileURLToPath(import.meta.url);
+tests/parsers/openapi-parser.test.js:12:const __dirname = path.dirname(__filename);
+tests/parsers/openapi-parser.test.js:16:const fixturesPath = path.join(__dirname, '../../fixtures/openapi');
+tests/parsers/parser-extensions.test.js:11:const __filename = fileURLToPath(import.meta.url);
+tests/parsers/parser-extensions.test.js:12:const __dirname = path.dirname(__filename);
+tests/parsers/parser-extensions.test.js:13:const fixturesDir = path.resolve(__dirname, '../../fixtures/openapi');
+tests/parsers/parser-integration.test.js:10:const __filename = fileURLToPath(import.meta.url);
+tests/parsers/parser-integration.test.js:11:const __dirname = path.dirname(__filename);
+tests/parsers/parser-integration.test.js:12:const fixturesDir = path.resolve(__dirname, '../../fixtures/openapi');
+tests/parsers/performance.test.js:16:const __filename = fileURLToPath(import.meta.url);
+tests/parsers/performance.test.js:17:const __dirname = path.dirname(__filename);
+tests/parsers/performance.test.js:23:const fixturesPath = path.join(__dirname, '../../fixtures/openapi');
+tests/registration/concurrency.test.js:12:const TEST_BASE_DIR = path.join(__dirname, '..', '..', 'fixtures', 'registration', 'test-concurrency');
+tests/registration/registration-pipeline.test.js:17:const TEST_BASE_DIR = path.join(__dirname, '..', '..', 'fixtures', 'registration', 'test-state');
+tests/runtime/multi-agent-e2e.test.js:26:const __filename = fileURLToPath(import.meta.url);
+tests/runtime/multi-agent-e2e.test.js:27:const __dirname = dirname(__filename);
+tests/runtime/multi-agent-e2e.test.js:32:dataDir: join(__dirname, '../../data/test-registry'),
+tests/runtime/urn-registry.test.js:31:const __filename = fileURLToPath(import.meta.url);
+tests/runtime/urn-registry.test.js:32:const __dirname = dirname(__filename);
+tests/runtime/urn-registry.test.js:51:testDataDir = join(__dirname, '../../data/test-registry');
+tests/seeds/curator.test.js:14:const __filename = fileURLToPath(import.meta.url);
+tests/seeds/curator.test.js:15:const __dirname = dirname(__filename);
+tests/seeds/curator.test.js:22:seedsDir: path.join(__dirname, '../../seeds')
+tests/test-infrastructure/contract-tester.test.js:12:const __filename = fileURLToPath(import.meta.url);
+tests/test-infrastructure/contract-tester.test.js:13:const __dirname = path.dirname(__filename);
+tests/test-infrastructure/contract-tester.test.js:16:const testFixturesDir = path.join(__dirname, '../fixtures/test-fixtures-output');
+tests/test-infrastructure/contract-tester.test.js:292:fixturesDir: path.join(__dirname, '../fixtures/test-fixtures-output'),
+tests/test-infrastructure/performance-benchmarks.test.js:12:const __filename = fileURLToPath(import.meta.url);
+tests/test-infrastructure/performance-benchmarks.test.js:13:const __dirname = path.dirname(__filename);
+tests/test-infrastructure/performance-benchmarks.test.js:16:const testOutputDir = path.join(__dirname, '../fixtures/test-performance-output');
+tests/test-infrastructure/performance-benchmarks.test.js:195:const tempDir = path.join(__dirname, '../fixtures/test-performance-standalone');
+tests/test-infrastructure/test-fixtures.test.js:12:const __filename = fileURLToPath(import.meta.url);
+tests/test-infrastructure/test-fixtures.test.js:13:const __dirname = path.dirname(__filename);
+tests/test-infrastructure/test-fixtures.test.js:16:const testOutputDir = path.join(__dirname, '../fixtures/test-fixtures-output');
+tests/test-infrastructure/test-fixtures.test.js:175:outputDir: path.join(__dirname, '../fixtures/test-fixtures-function'),
+tests/util/deflake-reporter.js:14:const __filename = fileURLToPath(import.meta.url);
+tests/util/deflake-reporter.js:15:const __dirname = path.dirname(__filename);
+tests/util/deflake-reporter.js:19:this.resultsDir = path.join(__dirname, '../..');
+tests/util/deflake-runner.js:16:const __filename = fileURLToPath(import.meta.url);
+tests/util/deflake-runner.js:17:const __dirname = path.dirname(__filename);
+tests/util/deflake-runner.js:128:cwd: path.join(__dirname, '../..'),
+tests/util/deflake-runner.js:230:const resultsDir = path.join(__dirname, '../..');
+tests/versioning-migration.test.js:20:const __filename = fileURLToPath(import.meta.url);
+tests/versioning-migration.test.js:21:const __dirname = path.dirname(__filename);
+tests/versioning-migration.test.js:195:const testFile = path.join(__dirname, 'temp-test-manifest.json');
+tests/versioning-migration.test.js:213:const testFile = path.join(__dirname, 'temp-no-version.json');
+tests/versioning-migration.test.js:288:const testFile = path.join(__dirname, 'temp-migration-test.json');
+tests/versioning-migration.test.js:328:const testFile = path.join(__dirname, `temp-multi-${i}.json`);
+tests/versioning-migration.test.js:352:const testFile = path.join(__dirname, 'temp-invalid.json');
+tests/versioning-migration.test.js:365:const missingFile = path.join(__dirname, 'non-existent-file.json');
+tests/versioning-migration.test.js:373:const testFile = path.join(__dirname, 'temp-test.txt');
+tests/viewer/api-routes.test.js:5:const FIXTURES_DIR = path.join(__dirname, '../fixtures/manifests');
+tests/viewer/security.test.js:5:const FIXTURES_DIR = path.join(__dirname, '../fixtures/manifests');
+tests/viewer/server.test.js:4:const FIXTURES_DIR = path.join(__dirname, '../fixtures/manifests');
+tests/workflow-library/workflow-library.test.js:13:const __filename = fileURLToPath(import.meta.url);
+tests/workflow-library/workflow-library.test.js:14:const __dirname = dirname(__filename);
+tests/workflow-library/workflow-library.test.js:693:const examplesDir = path.join(__dirname, '../../packages/runtime/workflow-library/examples');
+utils/protocol-generator.js:5:const __filename = fileURLToPath(import.meta.url);
+utils/protocol-generator.js:6:const __dirname = path.dirname(__filename);
+utils/protocol-generator.js:10:this.templatesPath = path.join(__dirname, '../templates/protocol-templates');

@@ -1,0 +1,247 @@
+{
+  "workflowId": "dynamic-content-processor",
+  "name": "Conditional Content Processing",
+  "version": "1.0.0",
+  "description": "Demonstrates conditional execution based on content type and size",
+  "metadata": {
+    "author": "OSSP-AGI",
+    "tags": ["conditional", "content-processing", "example"],
+    "created": "2025-10-06T00:00:00Z"
+  },
+  "timeout": 60000,
+  "steps": [
+    {
+      "stepId": "analyze-content",
+      "name": "Analyze Content Properties",
+      "type": "task",
+      "task": {
+        "action": "urn:ossp:action:analyze-content",
+        "inputs": {
+          "contentId": "input.contentId"
+        },
+        "outputs": {
+          "type": "result.contentType",
+          "size": "result.sizeBytes",
+          "metadata": "result.metadata"
+        }
+      },
+      "timeout": 5000
+    },
+    {
+      "stepId": "process-by-type",
+      "name": "Process Based on Content Type",
+      "type": "conditional",
+      "dependsOn": ["analyze-content"],
+      "cases": [
+        {
+          "condition": "analyze-content.type === 'image'",
+          "name": "Image Processing Pipeline",
+          "steps": [
+            {
+              "stepId": "check-image-size",
+              "name": "Check Image Size",
+              "type": "conditional",
+              "cases": [
+                {
+                  "condition": "analyze-content.size > 5000000",
+                  "name": "Large Image Processing",
+                  "steps": [
+                    {
+                      "stepId": "compress-image",
+                      "name": "Compress Large Image",
+                      "type": "task",
+                      "task": {
+                        "action": "urn:ossp:action:compress-image",
+                        "inputs": {
+                          "contentId": "input.contentId",
+                          "quality": 85,
+                          "maxDimension": 2048
+                        },
+                        "outputs": {
+                          "compressed": "result"
+                        }
+                      },
+                      "timeout": 10000
+                    }
+                  ]
+                }
+              ],
+              "default": [
+                {
+                  "stepId": "optimize-image",
+                  "name": "Optimize Image",
+                  "type": "task",
+                  "task": {
+                    "action": "urn:ossp:action:optimize-image",
+                    "inputs": {
+                      "contentId": "input.contentId"
+                    },
+                    "outputs": {
+                      "optimized": "result"
+                    }
+                  },
+                  "timeout": 5000
+                }
+              ]
+            },
+            {
+              "stepId": "generate-thumbnails",
+              "name": "Generate Thumbnails",
+              "type": "task",
+              "dependsOn": ["check-image-size"],
+              "task": {
+                "action": "urn:ossp:action:generate-thumbnails",
+                "inputs": {
+                  "contentId": "input.contentId",
+                  "sizes": [100, 200, 400]
+                },
+                "outputs": {
+                  "thumbnails": "result"
+                }
+              },
+              "timeout": 5000
+            }
+          ]
+        },
+        {
+          "condition": "analyze-content.type === 'video'",
+          "name": "Video Processing Pipeline",
+          "steps": [
+            {
+              "stepId": "transcode-video",
+              "name": "Transcode Video",
+              "type": "task",
+              "task": {
+                "action": "urn:ossp:action:transcode-video",
+                "inputs": {
+                  "contentId": "input.contentId",
+                  "formats": ["mp4", "webm"],
+                  "resolutions": ["720p", "1080p"]
+                },
+                "outputs": {
+                  "transcoded": "result"
+                }
+              },
+              "timeout": 30000
+            },
+            {
+              "stepId": "extract-video-thumbnail",
+              "name": "Extract Video Thumbnail",
+              "type": "task",
+              "dependsOn": ["transcode-video"],
+              "task": {
+                "action": "urn:ossp:action:extract-frame",
+                "inputs": {
+                  "contentId": "input.contentId",
+                  "timestamp": 5
+                },
+                "outputs": {
+                  "thumbnail": "result"
+                }
+              },
+              "timeout": 5000
+            }
+          ]
+        },
+        {
+          "condition": "analyze-content.type === 'document'",
+          "name": "Document Processing Pipeline",
+          "steps": [
+            {
+              "stepId": "extract-text",
+              "name": "Extract Text from Document",
+              "type": "task",
+              "task": {
+                "action": "urn:ossp:action:extract-text",
+                "inputs": {
+                  "contentId": "input.contentId",
+                  "preserveFormatting": false
+                },
+                "outputs": {
+                  "text": "result.text",
+                  "pageCount": "result.pages"
+                }
+              },
+              "timeout": 10000
+            },
+            {
+              "stepId": "index-document",
+              "name": "Index Document Content",
+              "type": "task",
+              "dependsOn": ["extract-text"],
+              "task": {
+                "action": "urn:ossp:action:index-content",
+                "inputs": {
+                  "contentId": "input.contentId",
+                  "text": "$extract-text",
+                  "index": "documents"
+                },
+                "outputs": {
+                  "indexed": "result.success"
+                }
+              },
+              "timeout": 5000
+            }
+          ]
+        }
+      ],
+      "default": [
+        {
+          "stepId": "generic-storage",
+          "name": "Store as Generic Content",
+          "type": "task",
+          "task": {
+            "action": "urn:ossp:action:store-generic",
+            "inputs": {
+              "contentId": "input.contentId",
+              "storage": "raw"
+            },
+            "outputs": {
+              "stored": "result.success"
+            }
+          },
+          "timeout": 5000
+        }
+      ]
+    },
+    {
+      "stepId": "update-metadata",
+      "name": "Update Content Metadata",
+      "type": "task",
+      "dependsOn": ["process-by-type"],
+      "task": {
+        "action": "urn:ossp:action:update-metadata",
+        "inputs": {
+          "contentId": "input.contentId",
+          "metadata": {
+            "processed": true,
+            "processedAt": "{{timestamp}}"
+          }
+        },
+        "outputs": {
+          "updated": "result.success"
+        }
+      },
+      "timeout": 2000
+    },
+    {
+      "stepId": "notify-completion",
+      "name": "Send Completion Notification",
+      "type": "task",
+      "dependsOn": ["update-metadata"],
+      "task": {
+        "action": "urn:ossp:action:send-notification",
+        "inputs": {
+          "channel": "content-processing",
+          "message": "Content processing completed",
+          "contentId": "input.contentId"
+        },
+        "outputs": {
+          "sent": "result.success"
+        }
+      },
+      "timeout": 2000,
+      "onFailure": "continue"
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "urn": "urn:proto:api:sample.set/customer-api@v1.0.0",
+  "metadata": {
+    "urn": "urn:proto:api:sample.set/customer-api@v1.0.0",
+    "name": "Sample Customer API",
+    "kind": "api",
+    "version": "1.0.0",
+    "description": "Public API for creating and retrieving customer profiles within the sample set.",
+    "status": "approved",
+    "visibility": "internal",
+    "tags": ["sample", "catalog", "api"],
+    "created_at": "2025-01-10T00:00:00Z",
+    "updated_at": "2025-01-10T00:00:00Z"
+  },
+  "catalog": {
+    "endpoints": [
+      {
+        "path": "/customers",
+        "method": "POST",
+        "summary": "Create a new customer profile record.",
+        "reads_from": ["urn:proto:data:sample.set/customer-db@v1.0.0"],
+        "produces": ["urn:proto:event:sample.set/customer-created@v1.0.0"]
+      },
+      {
+        "path": "/customers/{customerId}",
+        "method": "GET",
+        "summary": "Retrieve a customer profile by identifier.",
+        "reads_from": ["urn:proto:data:sample.set/customer-db@v1.0.0"]
+      }
+    ]
+  },
+  "relationships": {
+    "depends_on": ["urn:proto:data:sample.set/customer-db@v1.0.0"],
+    "produces": ["urn:proto:event:sample.set/customer-created@v1.0.0"]
+  }
+}
+

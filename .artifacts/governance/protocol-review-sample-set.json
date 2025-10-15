@@ -1,0 +1,11 @@
+{
+  "success": true,
+  "valid": true,
+  "totalIssues": 0,
+  "issues": {
+    "errors": [],
+    "warnings": [],
+    "info": []
+  },
+  "manifest_path": "/Users/d/portfolio/OSSP-AGI/examples/catalogs/sample-set/customer-api.json"
+}

@@ -1,0 +1,183 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://ossp-agi.dev/schemas/feedback.schema.json",
+  "title": "OSSP-AGI Structured Feedback Schema",
+  "description": "Unified schema for errors, hints, and progress events",
+
+  "definitions": {
+    "errorCode": {
+      "type": "object",
+      "required": ["code", "category", "message"],
+      "properties": {
+        "code": {
+          "type": "integer",
+          "description": "Numeric error code"
+        },
+        "category": {
+          "type": "string",
+          "enum": ["CLIENT_ERROR", "SERVER_ERROR", "BUSINESS_LOGIC"],
+          "description": "High-level error classification"
+        },
+        "message": {
+          "type": "string",
+          "description": "Human-readable error message (stable, for grouping)"
+        },
+        "type": {
+          "type": "string",
+          "format": "uri",
+          "description": "URI identifying the problem type (RFC 7807 style)"
+        },
+        "detail": {
+          "type": "string",
+          "description": "Occurrence-specific explanation with dynamic info"
+        },
+        "suggestedFix": {
+          "type": "string",
+          "description": "Actionable suggestion to resolve the error"
+        },
+        "details": {
+          "type": "object",
+          "description": "Structured, machine-readable context",
+          "additionalProperties": true
+        },
+        "stack": {
+          "type": "string",
+          "description": "Stack trace (internal errors only)"
+        },
+        "instance": {
+          "type": "string",
+          "format": "uri",
+          "description": "URI identifying this specific error occurrence"
+        }
+      }
+    },
+
+    "progressEvent": {
+      "type": "object",
+      "required": ["taskId", "status", "timestamp"],
+      "properties": {
+        "taskId": {
+          "type": "string",
+          "description": "Unique identifier for the task"
+        },
+        "correlationId": {
+          "type": "string",
+          "description": "W3C trace-id for request correlation"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["PENDING", "IN_PROGRESS", "COMPLETED", "FAILED"],
+          "description": "Current task status"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO8601 timestamp"
+        },
+        "progress": {
+          "type": "object",
+          "properties": {
+            "percent": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "currentStep": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "totalSteps": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "description": {
+              "type": "string",
+              "description": "Human-readable progress description"
+            }
+          }
+        },
+        "resultUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL to retrieve final result (COMPLETED status only)"
+        },
+        "error": {
+          "$ref": "#/definitions/errorCode",
+          "description": "Error details (FAILED status only)"
+        }
+      }
+    },
+
+    "hint": {
+      "type": "object",
+      "required": ["code", "message"],
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "Unique hint identifier"
+        },
+        "message": {
+          "type": "string",
+          "description": "Hint message"
+        },
+        "context": {
+          "type": "object",
+          "description": "Additional context for the hint",
+          "additionalProperties": true
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["INFO", "WARNING", "ERROR"],
+          "default": "INFO"
+        },
+        "documentationUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "Link to relevant documentation"
+        }
+      }
+    },
+
+    "feedbackMessage": {
+      "type": "object",
+      "required": ["type", "timestamp"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["error", "hint", "progress"],
+          "description": "Feedback message type"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "correlationId": {
+          "type": "string",
+          "description": "W3C trace-id for distributed tracing"
+        },
+        "spanId": {
+          "type": "string",
+          "description": "W3C span-id for operation tracking"
+        },
+        "service": {
+          "type": "string",
+          "description": "Service name that generated this feedback"
+        },
+        "payload": {
+          "oneOf": [
+            { "$ref": "#/definitions/errorCode" },
+            { "$ref": "#/definitions/hint" },
+            { "$ref": "#/definitions/progressEvent" }
+          ]
+        }
+      }
+    }
+  },
+
+  "oneOf": [
+    { "$ref": "#/definitions/feedbackMessage" },
+    { "$ref": "#/definitions/errorCode" },
+    { "$ref": "#/definitions/hint" },
+    { "$ref": "#/definitions/progressEvent" }
+  ]
+}

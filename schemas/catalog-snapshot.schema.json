@@ -1,0 +1,269 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:protocol:catalog-snapshot:v1.0.0",
+  "title": "Catalog Snapshot Schema",
+  "description": "Schema for exporting and importing protocol catalog snapshots",
+  "type": "object",
+  "version": "1.0.0",
+  "format": "catalog-snapshot-v1",
+  "required": [
+    "version",
+    "format",
+    "created",
+    "workspace",
+    "artifacts",
+    "relationships"
+  ],
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Schema version",
+      "const": "1.0.0"
+    },
+    "format": {
+      "type": "string",
+      "description": "Snapshot format identifier",
+      "const": "catalog-snapshot-v1"
+    },
+    "created": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when snapshot was created"
+    },
+    "workspace": {
+      "type": "object",
+      "description": "Workspace metadata",
+      "required": ["name", "path"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Workspace name"
+        },
+        "path": {
+          "type": "string",
+          "description": "Workspace root path"
+        },
+        "description": {
+          "type": "string",
+          "description": "Workspace description"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Workspace tags"
+        }
+      }
+    },
+    "artifacts": {
+      "type": "object",
+      "description": "Protocol artifacts indexed by URN",
+      "patternProperties": {
+        "^urn:": {
+          "type": "object",
+          "description": "Protocol artifact",
+          "required": [
+            "urn",
+            "name",
+            "version",
+            "type",
+            "manifest"
+          ],
+          "properties": {
+            "urn": {
+              "type": "string",
+              "description": "Unique Resource Name"
+            },
+            "name": {
+              "type": "string",
+              "description": "Protocol name"
+            },
+            "version": {
+              "type": "string",
+              "description": "Protocol version"
+            },
+            "namespace": {
+              "type": "string",
+              "description": "Protocol namespace"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "api-protocol",
+                "data-protocol",
+                "event-protocol",
+                "workflow-protocol",
+                "ui-protocol",
+                "semantic-protocol"
+              ],
+              "description": "Protocol type"
+            },
+            "manifest": {
+              "type": "object",
+              "description": "Full protocol manifest",
+              "additionalProperties": true
+            },
+            "dependencies": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Protocol dependencies (URNs)"
+            },
+            "metadata": {
+              "type": "object",
+              "description": "Protocol metadata",
+              "properties": {
+                "tags": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Protocol tags"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Protocol description"
+                },
+                "governance": {
+                  "type": "object",
+                  "description": "Governance metadata",
+                  "properties": {
+                    "classification": {
+                      "type": "string",
+                      "enum": ["public", "internal", "confidential", "restricted"],
+                      "description": "Classification level"
+                    },
+                    "owner": {
+                      "type": "string",
+                      "description": "Protocol owner"
+                    },
+                    "pii": {
+                      "type": "boolean",
+                      "description": "Contains personally identifiable information"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "relationships": {
+      "type": "object",
+      "description": "Protocol relationships",
+      "properties": {
+        "dependencies": {
+          "type": "object",
+          "description": "Dependency relationships",
+          "patternProperties": {
+            "^urn:": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "URNs this protocol depends on"
+            }
+          }
+        },
+        "consumers": {
+          "type": "object",
+          "description": "Consumer relationships",
+          "patternProperties": {
+            "^urn:": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "URNs that consume this protocol"
+            }
+          }
+        },
+        "providers": {
+          "type": "object",
+          "description": "Provider relationships",
+          "patternProperties": {
+            "^urn:": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "URNs that provide this protocol"
+            }
+          }
+        }
+      }
+    },
+    "statistics": {
+      "type": "object",
+      "description": "Snapshot statistics",
+      "properties": {
+        "totalArtifacts": {
+          "type": "integer",
+          "description": "Total number of artifacts"
+        },
+        "byType": {
+          "type": "object",
+          "description": "Count by protocol type",
+          "patternProperties": {
+            ".*": {
+              "type": "integer"
+            }
+          }
+        },
+        "byClassification": {
+          "type": "object",
+          "description": "Count by classification",
+          "patternProperties": {
+            ".*": {
+              "type": "integer"
+            }
+          }
+        },
+        "totalDependencies": {
+          "type": "integer",
+          "description": "Total dependency relationships"
+        },
+        "totalConsumers": {
+          "type": "integer",
+          "description": "Total consumer relationships"
+        }
+      }
+    },
+    "exportMetadata": {
+      "type": "object",
+      "description": "Export process metadata",
+      "properties": {
+        "exportedBy": {
+          "type": "string",
+          "description": "User or system that exported"
+        },
+        "exportTool": {
+          "type": "string",
+          "description": "Tool used for export"
+        },
+        "exportOptions": {
+          "type": "object",
+          "description": "Export options used",
+          "properties": {
+            "includeManifests": {
+              "type": "boolean",
+              "description": "Whether manifests were included"
+            },
+            "includeRelationships": {
+              "type": "boolean",
+              "description": "Whether relationships were included"
+            },
+            "offlineMode": {
+              "type": "boolean",
+              "description": "Whether export was done in offline mode"
+            }
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

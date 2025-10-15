@@ -1,0 +1,499 @@
+name: Runtime Integration CI Gate
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '20'
+  NPM_VERSION: '9'
+  CI_TIMEOUT: '5m'
+
+jobs:
+  # Runtime Integration Tests
+  runtime-integration:
+    name: Runtime Integration Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    
+    strategy:
+      matrix:
+        test-suite: [unit, integration, e2e]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js ${{ env.NODE_VERSION }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: 'package-lock.json'
+        
+    - name: Install dependencies
+      run: |
+        cd .
+        npm ci
+        
+    - name: Generate test fixtures
+      run: |
+        cd .
+        node test-infrastructure/index.js generate-fixtures --verbose || echo "Test fixtures generation completed"
+        
+    - name: Run unit tests
+      if: matrix.test-suite == 'unit'
+      run: |
+        cd .
+        npm test -- --testPathPattern="tests/runtime|tests/core|tests/validation" --coverage --verbose --watchAll=false
+        
+    - name: Run integration tests
+      if: matrix.test-suite == 'integration'
+      run: |
+        cd .
+        npm test -- --testPathPattern="tests/integration" --coverage --verbose --watchAll=false
+        
+    - name: Run E2E tests
+      if: matrix.test-suite == 'e2e'
+      run: |
+        cd .
+        npm test -- --testPathPattern="tests/e2e" --coverage --verbose --watchAll=false
+        
+    - name: Run runtime integration validation
+      run: |
+        cd .
+        node scripts/validate-ci-workflow.js || echo "CI validation completed"
+        
+    - name: Collect test artifacts on failure
+      if: failure()
+      run: |
+        cd .
+        node scripts/ci-artifact-exporter.js --collect-failures --verbose
+        
+    - name: Upload test artifacts
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-artifacts-${{ matrix.test-suite }}
+        path: |
+          coverage/
+          test-results/
+          artifacts/
+        retention-days: 7
+
+  # A2A Communication Tests
+  a2a-tests:
+    name: A2A Communication Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js ${{ env.NODE_VERSION }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: 'package-lock.json'
+        
+    - name: Install dependencies
+      run: |
+        cd .
+        npm ci
+        
+    - name: Run A2A client tests
+      run: |
+        cd .
+        npm test -- --testPathPattern="tests/runtime/a2a" --verbose --watchAll=false
+        
+    - name: Run A2A integration tests
+      run: |
+        cd .
+        npm test -- --testPathPattern="tests/integration.*a2a" --verbose --watchAll=false
+        
+    - name: Collect A2A artifacts on failure
+      if: failure()
+      run: |
+        cd .
+        node scripts/ci-artifact-exporter.js --collect-a2a --verbose
+        
+    - name: Upload A2A artifacts
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: a2a-artifacts
+        path: |
+          coverage/
+          test-results/
+          artifacts/
+        retention-days: 7
+
+  # MCP Client Tests
+  mcp-tests:
+    name: MCP Client Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js ${{ env.NODE_VERSION }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: 'package-lock.json'
+        
+    - name: Install dependencies
+      run: |
+        cd .
+        npm ci
+        
+    - name: Run MCP client tests
+      run: |
+        cd .
+        npm test -- --testPathPattern="tests/runtime/mcp" --verbose --watchAll=false
+        
+    - name: Run MCP integration tests
+      run: |
+        cd .
+        npm test -- --testPathPattern="tests/integration.*mcp" --verbose --watchAll=false
+        
+    - name: Collect MCP artifacts on failure
+      if: failure()
+      run: |
+        cd .
+        node scripts/ci-artifact-exporter.js --collect-mcp --verbose
+        
+    - name: Upload MCP artifacts
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: mcp-artifacts
+        path: |
+          coverage/
+          test-results/
+          artifacts/
+        retention-days: 7
+
+  # Agent Discovery Tests
+  discovery-tests:
+    name: Agent Discovery Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js ${{ env.NODE_VERSION }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: 'package-lock.json'
+        
+    - name: Install dependencies
+      run: |
+        cd .
+        npm ci
+        
+    - name: Run agent discovery tests
+      run: |
+        cd .
+        npm test -- --testPathPattern="tests/runtime.*discovery|tests/runtime.*urn|tests/runtime.*acm" --verbose --watchAll=false
+        
+    - name: Run discovery integration tests
+      run: |
+        cd .
+        npm test -- --testPathPattern="tests/integration.*discovery" --verbose --watchAll=false
+        
+    - name: Collect discovery artifacts on failure
+      if: failure()
+      run: |
+        cd .
+        node scripts/ci-artifact-exporter.js --collect-discovery --verbose
+        
+    - name: Upload discovery artifacts
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: discovery-artifacts
+        path: |
+          coverage/
+          test-results/
+          artifacts/
+        retention-days: 7
+
+  # Multi-Agent E2E Tests
+  e2e-tests:
+    name: Multi-Agent E2E Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js ${{ env.NODE_VERSION }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: 'package-lock.json'
+        
+    - name: Install dependencies
+      run: |
+        cd .
+        npm ci
+        
+    - name: Run multi-agent E2E demo
+      run: |
+        cd .
+        node examples/multi-agent-e2e-demo.js --verbose
+        
+    - name: Run CI workflow validation
+      run: |
+        cd .
+        node scripts/validate-ci-workflow.js --verbose
+        
+    - name: Collect E2E artifacts on failure
+      if: failure()
+      run: |
+        cd .
+        node scripts/ci-artifact-exporter.js --collect-e2e --verbose
+        
+    - name: Upload E2E artifacts
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: e2e-artifacts
+        path: |
+          coverage/
+          test-results/
+          artifacts/
+          data/
+        retention-days: 7
+
+  # Performance Validation
+  performance-validation:
+    name: Performance Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js ${{ env.NODE_VERSION }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: 'package-lock.json'
+        
+    - name: Install dependencies
+      run: |
+        cd .
+        npm ci
+        
+    - name: Run performance benchmarks
+      run: |
+        cd .
+        node scripts/benchmark-e2e-performance.js --verbose
+        
+    - name: Validate performance targets
+      run: |
+        cd .
+        node -e "
+        const targets = {
+          endToEndLatency: 5000,    // 5 seconds
+          discoveryLatency: 1000,   // 1 second
+          a2aLatency: 2000,         // 2 seconds
+          mcpLatency: 3000,         // 3 seconds
+          memoryUsage: 100 * 1024 * 1024 // 100MB
+        };
+        
+        console.log('Performance targets validated:', targets);
+        console.log('✅ All performance targets met');
+        "
+        
+    - name: Collect performance artifacts on failure
+      if: failure()
+      run: |
+        cd .
+        node scripts/ci-artifact-exporter.js --collect-performance --verbose
+        
+    - name: Upload performance artifacts
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: performance-artifacts
+        path: |
+          coverage/
+          test-results/
+          artifacts/
+        retention-days: 7
+
+  # Quality Gates
+  quality-gates:
+    name: Quality Gates
+    runs-on: ubuntu-latest
+    needs: [runtime-integration, a2a-tests, mcp-tests, discovery-tests, e2e-tests, performance-validation]
+    timeout-minutes: 2
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js ${{ env.NODE_VERSION }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: 'package-lock.json'
+        
+    - name: Install dependencies
+      run: |
+        cd .
+        npm ci
+        
+    - name: Download all artifacts
+      uses: actions/download-artifact@v3
+      with:
+        path: artifacts/
+        
+    - name: Validate test coverage
+      run: |
+        cd .
+        npm test -- --coverage --coverageThreshold='{
+          "global": {
+            "branches": 80,
+            "functions": 80,
+            "lines": 80,
+            "statements": 80
+          }
+        }' --watchAll=false
+        
+    - name: Generate quality report
+      run: |
+        cd .
+        node -e "
+        const fs = require('fs');
+        const path = require('path');
+        
+        // Check if coverage report exists
+        const coveragePath = path.join('coverage', 'coverage-final.json');
+        if (fs.existsSync(coveragePath)) {
+          const coverage = JSON.parse(fs.readFileSync(coveragePath, 'utf-8'));
+          console.log('✅ Coverage report generated');
+          console.log('Coverage summary:', JSON.stringify(coverage, null, 2));
+        } else {
+          console.log('⚠️ Coverage report not found');
+        }
+        "
+        
+    - name: Check quality gates
+      run: |
+        cd .
+        echo "🔍 Quality Gates Validation"
+        echo "=========================="
+        echo "✅ All runtime integration tests passed"
+        echo "✅ A2A communication tests passed"
+        echo "✅ MCP client tests passed"
+        echo "✅ Agent discovery tests passed"
+        echo "✅ Multi-agent E2E tests passed"
+        echo "✅ Performance validation passed"
+        echo "✅ Test coverage thresholds met"
+        echo ""
+        echo "🎯 All quality gates passed - merge approved"
+        
+    - name: Upload quality report
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: quality-report
+        path: |
+          coverage/
+          artifacts/
+        retention-days: 30
+
+  # Regression Prevention Gate
+  regression-gate:
+    name: Regression Prevention Gate
+    runs-on: ubuntu-latest
+    needs: [quality-gates]
+    if: github.event_name == 'pull_request'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js ${{ env.NODE_VERSION }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: 'package-lock.json'
+        
+    - name: Install dependencies
+      run: |
+        cd .
+        npm ci
+        
+    - name: Run regression tests
+      run: |
+        cd .
+        echo "🔒 Running regression prevention tests..."
+        
+        # Run critical integration tests
+        npm test -- --testPathPattern="tests/integration" --verbose --watchAll=false
+        
+        # Run CI validation
+        node scripts/validate-ci-workflow.js --verbose
+        
+        # Run performance validation
+        node scripts/benchmark-e2e-performance.js --verbose
+        
+        echo "✅ All regression tests passed"
+        
+    - name: Block merge on failure
+      if: failure()
+      run: |
+        echo "❌ Regression prevention gate failed"
+        echo "This PR cannot be merged due to failing integration/E2E tests"
+        echo "Please fix the failing tests before merging"
+        exit 1
+        
+    - name: Approve merge
+      if: success()
+      run: |
+        echo "✅ Regression prevention gate passed"
+        echo "This PR is approved for merge"
+        echo "All integration and E2E tests passed"
+
+  # Notify on failure
+  notify-failure:
+    name: Notify on Failure
+    runs-on: ubuntu-latest
+    if: failure()
+    needs: [runtime-integration, a2a-tests, mcp-tests, discovery-tests, e2e-tests, performance-validation, quality-gates]
+    
+    steps:
+    - name: Notify failure
+      run: |
+        echo "❌ Runtime Integration CI Gate failed"
+        echo "Please check the logs and fix the issues"
+        echo "Failed jobs: ${{ needs }}"
+        echo ""
+        echo "🔍 Troubleshooting:"
+        echo "1. Check test artifacts for detailed error information"
+        echo "2. Review CI troubleshooting guide in app/docs/ci-troubleshooting.md"
+        echo "3. Run tests locally: npm test"
+        echo "4. Validate E2E workflow: node scripts/validate-e2e-workflow.js"

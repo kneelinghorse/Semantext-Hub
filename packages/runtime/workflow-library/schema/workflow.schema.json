@@ -1,0 +1,230 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://ossp-agi.dev/schemas/workflow.schema.json",
+  "title": "OSSP-AGI Workflow Definition",
+  "description": "Schema for defining agent orchestration workflows with sequential, parallel, conditional, and saga (compensation) patterns",
+  "type": "object",
+  "required": ["workflowId", "name", "version", "steps"],
+  "properties": {
+    "workflowId": {
+      "type": "string",
+      "description": "Unique identifier for the workflow",
+      "pattern": "^[a-zA-Z0-9_-]+$"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable workflow name",
+      "minLength": 1
+    },
+    "version": {
+      "type": "string",
+      "description": "Semantic version of the workflow",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "description": {
+      "type": "string",
+      "description": "Optional workflow description"
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Optional metadata for the workflow",
+      "properties": {
+        "author": { "type": "string" },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "created": { "type": "string", "format": "date-time" },
+        "updated": { "type": "string", "format": "date-time" }
+      }
+    },
+    "timeout": {
+      "type": "integer",
+      "description": "Workflow timeout in milliseconds",
+      "minimum": 0
+    },
+    "retryPolicy": {
+      "$ref": "#/definitions/retryPolicy"
+    },
+    "compensationPolicy": {
+      "type": "string",
+      "enum": ["none", "partial", "full"],
+      "description": "Compensation strategy for saga pattern",
+      "default": "none"
+    },
+    "steps": {
+      "type": "array",
+      "description": "Workflow execution steps",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/step"
+      }
+    }
+  },
+  "definitions": {
+    "step": {
+      "type": "object",
+      "required": ["stepId", "type"],
+      "properties": {
+        "stepId": {
+          "type": "string",
+          "description": "Unique step identifier",
+          "pattern": "^[a-zA-Z0-9_-]+$"
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable step name"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["task", "parallel", "conditional", "compensation"],
+          "description": "Step execution type"
+        },
+        "condition": {
+          "type": "string",
+          "description": "JavaScript expression for conditional execution"
+        },
+        "dependsOn": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Step IDs this step depends on"
+        },
+        "timeout": {
+          "type": "integer",
+          "description": "Step timeout in milliseconds",
+          "minimum": 0
+        },
+        "retryPolicy": {
+          "$ref": "#/definitions/retryPolicy"
+        },
+        "onFailure": {
+          "type": "string",
+          "enum": ["fail", "continue", "compensate"],
+          "description": "Behavior on step failure",
+          "default": "fail"
+        },
+        "compensation": {
+          "type": "string",
+          "description": "Step ID to execute for compensation"
+        },
+        "task": {
+          "$ref": "#/definitions/task"
+        },
+        "branches": {
+          "type": "array",
+          "description": "Parallel branches (for parallel steps)",
+          "items": {
+            "type": "object",
+            "required": ["branchId", "steps"],
+            "properties": {
+              "branchId": { "type": "string" },
+              "name": { "type": "string" },
+              "steps": {
+                "type": "array",
+                "items": { "$ref": "#/definitions/step" }
+              }
+            }
+          }
+        },
+        "cases": {
+          "type": "array",
+          "description": "Conditional cases (for conditional steps)",
+          "items": {
+            "type": "object",
+            "required": ["condition", "steps"],
+            "properties": {
+              "condition": {
+                "type": "string",
+                "description": "JavaScript expression for case condition"
+              },
+              "name": { "type": "string" },
+              "steps": {
+                "type": "array",
+                "items": { "$ref": "#/definitions/step" }
+              }
+            }
+          }
+        },
+        "default": {
+          "type": "array",
+          "description": "Default steps for conditional (else clause)",
+          "items": { "$ref": "#/definitions/step" }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "type": { "const": "task" } }
+          },
+          "then": {
+            "required": ["task"]
+          }
+        },
+        {
+          "if": {
+            "properties": { "type": { "const": "parallel" } }
+          },
+          "then": {
+            "required": ["branches"]
+          }
+        },
+        {
+          "if": {
+            "properties": { "type": { "const": "conditional" } }
+          },
+          "then": {
+            "required": ["cases"]
+          }
+        }
+      ]
+    },
+    "task": {
+      "type": "object",
+      "required": ["action"],
+      "properties": {
+        "action": {
+          "type": "string",
+          "description": "Action identifier or URN"
+        },
+        "inputs": {
+          "type": "object",
+          "description": "Input parameters for the task"
+        },
+        "outputs": {
+          "type": "object",
+          "description": "Output mapping for the task"
+        }
+      }
+    },
+    "retryPolicy": {
+      "type": "object",
+      "properties": {
+        "maxAttempts": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 3
+        },
+        "backoffMs": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 1000
+        },
+        "backoffMultiplier": {
+          "type": "number",
+          "minimum": 1,
+          "default": 2
+        },
+        "maxBackoffMs": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 60000
+        },
+        "retryableErrors": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Error codes that should trigger retry"
+        }
+      }
+    }
+  }
+}

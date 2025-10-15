@@ -1,0 +1,216 @@
+{
+  "workflowId": "distributed-transaction-saga",
+  "name": "Distributed Transaction with Saga Compensation",
+  "version": "1.0.0",
+  "description": "Demonstrates saga pattern with compensation for distributed transaction across multiple services",
+  "metadata": {
+    "author": "OSSP-AGI",
+    "tags": ["saga", "compensation", "distributed-transaction", "example"],
+    "created": "2025-10-06T00:00:00Z"
+  },
+  "timeout": 30000,
+  "compensationPolicy": "full",
+  "retryPolicy": {
+    "maxAttempts": 3,
+    "backoffMs": 1000,
+    "backoffMultiplier": 2
+  },
+  "steps": [
+    {
+      "stepId": "reserve-inventory",
+      "name": "Reserve Product Inventory",
+      "type": "task",
+      "task": {
+        "action": "urn:ossp:action:inventory:reserve",
+        "inputs": {
+          "orderId": "input.orderId",
+          "items": "input.items"
+        },
+        "outputs": {
+          "reservationId": "result.reservationId",
+          "reserved": "result.items"
+        }
+      },
+      "timeout": 5000,
+      "onFailure": "fail",
+      "compensation": "compensate-inventory"
+    },
+    {
+      "stepId": "compensate-inventory",
+      "name": "Release Inventory Reservation",
+      "type": "compensation",
+      "task": {
+        "action": "urn:ossp:action:inventory:release",
+        "inputs": {
+          "reservationId": "$reserve-inventory.reservationId"
+        },
+        "outputs": {
+          "released": "result.success"
+        }
+      },
+      "timeout": 3000
+    },
+    {
+      "stepId": "charge-payment",
+      "name": "Process Payment",
+      "type": "task",
+      "dependsOn": ["reserve-inventory"],
+      "task": {
+        "action": "urn:ossp:action:payment:charge",
+        "inputs": {
+          "orderId": "input.orderId",
+          "amount": "input.totalAmount",
+          "paymentMethod": "input.paymentMethodId"
+        },
+        "outputs": {
+          "transactionId": "result.transactionId",
+          "charged": "result.success"
+        }
+      },
+      "timeout": 10000,
+      "onFailure": "compensate",
+      "compensation": "compensate-payment",
+      "retryPolicy": {
+        "maxAttempts": 5,
+        "backoffMs": 2000,
+        "retryableErrors": ["NETWORK_ERROR", "TIMEOUT"]
+      }
+    },
+    {
+      "stepId": "compensate-payment",
+      "name": "Refund Payment",
+      "type": "compensation",
+      "task": {
+        "action": "urn:ossp:action:payment:refund",
+        "inputs": {
+          "transactionId": "$charge-payment.transactionId",
+          "amount": "input.totalAmount",
+          "reason": "Order failed"
+        },
+        "outputs": {
+          "refunded": "result.success",
+          "refundId": "result.refundId"
+        }
+      },
+      "timeout": 10000
+    },
+    {
+      "stepId": "create-shipment",
+      "name": "Create Shipping Order",
+      "type": "task",
+      "dependsOn": ["charge-payment"],
+      "task": {
+        "action": "urn:ossp:action:shipping:create",
+        "inputs": {
+          "orderId": "input.orderId",
+          "address": "input.shippingAddress",
+          "items": "input.items"
+        },
+        "outputs": {
+          "shipmentId": "result.shipmentId",
+          "trackingNumber": "result.trackingNumber"
+        }
+      },
+      "timeout": 5000,
+      "onFailure": "compensate",
+      "compensation": "compensate-shipment"
+    },
+    {
+      "stepId": "compensate-shipment",
+      "name": "Cancel Shipping Order",
+      "type": "compensation",
+      "task": {
+        "action": "urn:ossp:action:shipping:cancel",
+        "inputs": {
+          "shipmentId": "$create-shipment.shipmentId",
+          "reason": "Order failed"
+        },
+        "outputs": {
+          "cancelled": "result.success"
+        }
+      },
+      "timeout": 3000
+    },
+    {
+      "stepId": "update-order-status",
+      "name": "Mark Order as Confirmed",
+      "type": "task",
+      "dependsOn": ["create-shipment"],
+      "task": {
+        "action": "urn:ossp:action:order:update-status",
+        "inputs": {
+          "orderId": "input.orderId",
+          "status": "confirmed",
+          "trackingNumber": "$create-shipment.trackingNumber"
+        },
+        "outputs": {
+          "updated": "result.success",
+          "confirmedAt": "result.timestamp"
+        }
+      },
+      "timeout": 3000,
+      "onFailure": "compensate",
+      "compensation": "compensate-order-status"
+    },
+    {
+      "stepId": "compensate-order-status",
+      "name": "Mark Order as Failed",
+      "type": "compensation",
+      "task": {
+        "action": "urn:ossp:action:order:update-status",
+        "inputs": {
+          "orderId": "input.orderId",
+          "status": "failed",
+          "reason": "Transaction failed during processing"
+        },
+        "outputs": {
+          "updated": "result.success"
+        }
+      },
+      "timeout": 3000
+    },
+    {
+      "stepId": "send-confirmation",
+      "name": "Send Order Confirmation Email",
+      "type": "task",
+      "dependsOn": ["update-order-status"],
+      "task": {
+        "action": "urn:ossp:action:email:send",
+        "inputs": {
+          "to": "input.customerEmail",
+          "template": "order-confirmation",
+          "data": {
+            "orderId": "input.orderId",
+            "trackingNumber": "$create-shipment.trackingNumber"
+          }
+        },
+        "outputs": {
+          "sent": "result.success",
+          "messageId": "result.messageId"
+        }
+      },
+      "timeout": 5000,
+      "onFailure": "continue"
+    },
+    {
+      "stepId": "log-completion",
+      "name": "Log Transaction Completion",
+      "type": "task",
+      "dependsOn": ["send-confirmation"],
+      "task": {
+        "action": "urn:ossp:action:audit:log",
+        "inputs": {
+          "event": "order-completed",
+          "orderId": "input.orderId",
+          "transactionId": "$charge-payment.transactionId",
+          "shipmentId": "$create-shipment.shipmentId"
+        },
+        "outputs": {
+          "logged": "result.success"
+        }
+      },
+      "timeout": 2000,
+      "onFailure": "continue"
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+name: "integration-workbench-demo"
+description: "Demo workflow chaining API → Event → Data agents for customer order processing."
+concurrency: 4
+metadata:
+  scenario: "customer-order-processing"
+  version: "1.0.0"
+steps:
+  - id: "submit-order"
+    agent: "api"
+    description: "Simulate inbound API request that registers a customer order."
+    params:
+      durationMs: 45
+      requestId: "demo-order-api"
+      payload:
+        orderId: "ORD-24519"
+        customerId: "C-98231"
+        total: 249.5
+        currency: "USD"
+  - name: "event-and-audit-fanout"
+    parallel:
+      - id: "emit-order-received"
+        agent: "event"
+        description: "Publish order.received for downstream consumers."
+        input: "{{submit-order}}"
+        params:
+          durationMs: 30
+          topic: "order.received"
+          attributes:
+            priority: "high"
+            source: "api-gateway"
+      - id: "buffer-audit-log"
+        agent: "data"
+        description: "Stage audit log entry for compliance retention."
+        input: "{{submit-order}}"
+        params:
+          durationMs: 40
+          collection: "audit_logs"
+          retentionDays: 90
+  - id: "persist-ledger"
+    agent: "data"
+    description: "Persist final order ledger entry combining API payload and event metadata."
+    input:
+      order: "{{submit-order}}"
+      eventMetadata: "{{emit-order-received}}"
+      auditRecord: "{{buffer-audit-log}}"
+    params:
+      durationMs: 35
+      collection: "order_ledger"
+  - id: "notify-crm"
+    agent: "event"
+    description: "Emit CRM notification to sync downstream systems."
+    input: "{{persist-ledger}}"
+    params:
+      durationMs: 28
+      topic: "crm.notify"
+      attributes:
+        template: "order-created"
+  - id: "generate-report"
+    agent: "data"
+    description: "Produce analytics snapshot for reporting dashboards."
+    input:
+      ledgerEntry: "{{persist-ledger}}"
+      crmEvent: "{{notify-crm}}"
+    params:
+      durationMs: 32
+      collection: "reporting_snapshots"

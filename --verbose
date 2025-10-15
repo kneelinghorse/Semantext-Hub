@@ -1,0 +1,99 @@
+{
+  "validation": {
+    "startTime": 19.028292,
+    "endTime": 21.130375,
+    "duration": 2.1020830000000004,
+    "success": true,
+    "errors": []
+  },
+  "steps": {
+    "workflowFile": {
+      "success": true,
+      "workflowExists": true,
+      "hasRequiredJobs": true,
+      "duration": 0,
+      "details": {
+        "path": "/Users/d/portfolio/OSSP-AGI/.github/workflows/runtime-integration.yml",
+        "size": 13764
+      }
+    },
+    "artifactExporter": {
+      "success": true,
+      "exporterExists": true,
+      "hasRequiredFeatures": true,
+      "duration": 0,
+      "details": {
+        "path": "/Users/d/portfolio/OSSP-AGI/app/scripts/ci-artifact-exporter.js",
+        "size": 18686
+      }
+    },
+    "testInfrastructure": {
+      "success": true,
+      "testDirExists": true,
+      "hasRequiredTests": true,
+      "testFiles": 14,
+      "duration": 0,
+      "details": {
+        "testFiles": [
+          "a2a-auth.test.js",
+          "a2a-client.test.js",
+          "acm-generator.test.js",
+          "agent-discovery-service.test.js",
+          "circuit-breaker.test.js",
+          "error-handler.test.js",
+          "mcp-client.test.js",
+          "multi-agent-e2e.test.js",
+          "registry-api.test.js",
+          "retry-policies.test.js",
+          "structured-logger.test.js",
+          "urn-registry.test.js",
+          "urn-resolver.test.js",
+          "well-known-server.test.js"
+        ]
+      }
+    },
+    "performance": {
+      "success": true,
+      "memoryUsage": 4916984,
+      "memoryMeetsThreshold": true,
+      "duration": 0,
+      "details": {
+        "rss": 45645824,
+        "heapTotal": 6127616,
+        "heapUsed": 4916984,
+        "external": 1885468
+      }
+    },
+    "documentation": {
+      "success": true,
+      "troubleshootingExists": true,
+      "runtimeNotesExists": true,
+      "duration": 0,
+      "details": {
+        "docsDir": "/Users/d/portfolio/OSSP-AGI/app/docs",
+        "files": [
+          "ci-troubleshooting.md",
+          "runtime-integration-notes.md"
+        ]
+      }
+    }
+  },
+  "performance": {},
+  "summary": {
+    "overallSuccess": true,
+    "stepSuccessRate": 1,
+    "performancePassed": true,
+    "criteriaPassed": true,
+    "performanceChecks": {
+      "memory": true
+    },
+    "criteriaChecks": {
+      "minSuccessRate": true,
+      "minComponentsValidated": true,
+      "minTestsPassed": true
+    },
+    "totalSteps": 5,
+    "successfulSteps": 5,
+    "failedSteps": 0
+  }
+}

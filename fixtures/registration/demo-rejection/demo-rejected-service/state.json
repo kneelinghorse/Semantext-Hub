@@ -1,0 +1,26 @@
+{
+  "version": 6,
+  "state": {
+    "manifestId": "demo-rejected-service",
+    "currentState": "APPROVED",
+    "manifest": {
+      "urn": "urn:proto:api:example/incomplete-service@1.0.0",
+      "kind": "API",
+      "version": "1.0.0",
+      "title": "Incomplete Service"
+    },
+    "createdAt": "2025-10-06T15:43:50.378Z",
+    "updatedAt": "2025-10-06T15:43:50.437Z",
+    "lastTransition": {
+      "from": "REVIEWED",
+      "to": "APPROVED",
+      "event": "approve",
+      "timestamp": "2025-10-06T15:43:50.437Z",
+      "attempt": 0
+    },
+    "rejectionReason": "Missing required endpoints and documentation",
+    "reviewer": "bob@example.com",
+    "reviewNotes": "Fixed! All requirements met."
+  },
+  "updatedAt": "2025-10-06T15:43:50.438Z"
+}

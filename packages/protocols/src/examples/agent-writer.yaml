@@ -1,0 +1,46 @@
+apiVersion: agent/v1.1.1
+kind: AgentManifest
+agent:
+  id: writer
+  name: Writer Agent
+  version: 1.1.1
+  discovery_uri: https://agents.example.com/writer/.well-known/agent.json
+  lifecycle: { status: enabled }
+
+capabilities:
+  tools:
+    - name: write_article
+      description: Generate an article from research
+      inputSchema: { type: object, properties: { research: { type: string } }, required: ["research"] }
+      outputSchema: { type: object, properties: { article: { type: string } } }
+      urn: "urn:proto:agent:writer@1.1.1#tool.write_article"
+  resources:
+    - uri: "docs://style_guide"
+      name: "Style Guide"
+      mimeType: "text/markdown"
+      urn: "urn:proto:agent:writer@1.1.1#res.style_guide"
+  prompts:
+    - name: long_form
+      arguments: [{ name: tone, required: false }]
+      urn: "urn:proto:agent:writer@1.1.1#prompt.long_form"
+  modalities: { input: ["application/json"], output: ["text/markdown"] }
+
+communication:
+  supported: ["a2a", "mcp"]
+  endpoints: { a2a: "https://agents.example.com/a2a/writer" }
+  transport: { primary: "https", streaming: "sse", fallback: "polling" }
+
+authorization:
+  delegation_supported: true
+  signature_algorithm: ES256
+
+relationships:
+  models: ["urn:proto:ai:llm.writer@1.1.1"]
+  apis: ["urn:proto:api:publishing@1.1.1#/v1/publish"]
+  workflows: ["urn:proto:workflow:research_pipeline@1.1.2"]
+  roles: ["urn:proto:iam:role.writer@1.1.1"]
+  targets: ["urn:proto:obs:writer-service@1.1.1"]
+
+metadata:
+  owner: "platform/ai"
+  tags: ["agent","writer"]

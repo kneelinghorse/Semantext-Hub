@@ -1,0 +1,32 @@
+{
+  "urn": "urn:proto:data:sample.set/customer-db@v1.0.0",
+  "metadata": {
+    "urn": "urn:proto:data:sample.set/customer-db@v1.0.0",
+    "name": "Sample Customer Data Store",
+    "kind": "data",
+    "version": "1.0.0",
+    "description": "Normalized customer profile records used across the sample set.",
+    "status": "approved",
+    "visibility": "internal",
+    "tags": ["sample", "catalog", "data"],
+    "created_at": "2025-01-10T00:00:00Z",
+    "updated_at": "2025-01-10T00:00:00Z"
+  },
+  "service": {
+    "name": "customer-db",
+    "type": "database",
+    "engine": "postgresql",
+    "entities": [
+      {
+        "name": "customer_profile",
+        "description": "Authoritative customer profile records.",
+        "columns": [
+          { "name": "customer_id", "type": "uuid", "primary_key": true },
+          { "name": "email", "type": "string" },
+          { "name": "lifecycle_status", "type": "string" },
+          { "name": "created_at", "type": "timestamp" }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "asyncapi": "2.6.0",
+  "info": {
+    "title": "Kafka Event API",
+    "version": "1.0.0"
+  },
+  "servers": {
+    "production": {
+      "url": "kafka://kafka.prod:9092",
+      "protocol": "kafka"
+    }
+  },
+  "channels": {
+    "user.events": {
+      "subscribe": {
+        "message": {
+          "payload": {
+            "type": "object",
+            "properties": {
+              "eventType": {
+                "type": "string",
+                "enum": [
+                  "created",
+                  "updated",
+                  "deleted"
+                ]
+              },
+              "userId": {
+                "type": "string"
+              },
+              "data": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

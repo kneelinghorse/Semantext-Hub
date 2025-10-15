@@ -1,0 +1,98 @@
+{
+  "metadata": {
+    "name": "test-api",
+    "version": "2.0.0",
+    "kind": "api",
+    "description": "Test API v2"
+  },
+  "catalog": {
+    "endpoints": [
+      {
+        "method": "GET",
+        "path": "/users",
+        "request": {
+          "type": "object",
+          "properties": {
+            "limit": {
+              "type": "integer",
+              "default": 10
+            },
+            "offset": {
+              "type": "integer",
+              "default": 0
+            }
+          }
+        },
+        "response": {
+          "type": "object",
+          "properties": {
+            "users": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "object",
+                    "properties": {
+                      "primary": {
+                        "type": "string"
+                      },
+                      "verified": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": ["primary"]
+                  }
+                },
+                "required": ["id", "name", "email"]
+              }
+            }
+          }
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/users",
+        "request": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "email": {
+              "type": "object",
+              "properties": {
+                "primary": {
+                  "type": "string"
+                },
+                "verified": {
+                  "type": "boolean",
+                  "default": false
+                }
+              },
+              "required": ["primary"]
+            }
+          },
+          "required": ["name", "email"]
+        },
+        "response": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "created": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    ]
+  }
+}

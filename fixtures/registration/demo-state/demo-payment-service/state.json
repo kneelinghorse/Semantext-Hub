@@ -1,0 +1,36 @@
+{
+  "version": 4,
+  "state": {
+    "manifestId": "demo-payment-service",
+    "currentState": "REGISTERED",
+    "manifest": {
+      "urn": "urn:proto:api:example/payment-service@1.0.0",
+      "kind": "API",
+      "version": "1.0.0",
+      "title": "Payment Service API",
+      "description": "REST API for processing payments",
+      "endpoints": [
+        {
+          "path": "/payments",
+          "method": "POST"
+        },
+        {
+          "path": "/payments/{id}",
+          "method": "GET"
+        }
+      ]
+    },
+    "createdAt": "2025-10-06T15:43:50.327Z",
+    "updatedAt": "2025-10-06T15:43:50.365Z",
+    "lastTransition": {
+      "from": "APPROVED",
+      "to": "REGISTERED",
+      "event": "register",
+      "timestamp": "2025-10-06T15:43:50.365Z",
+      "attempt": 0
+    },
+    "reviewer": "alice@example.com",
+    "reviewNotes": "All security checks passed. API design follows best practices."
+  },
+  "updatedAt": "2025-10-06T15:43:50.365Z"
+}

@@ -1,0 +1,21 @@
+{
+  "type": "{{type}}",
+  "name": "{{name}}",
+  "version": "{{version}}",
+  "description": "{{description}}",
+  "protocol": {
+    "baseUrl": "{{baseUrl}}",
+    "authentication": "{{authentication}}",
+    "endpoints": [
+      {
+        "path": "{{endpoint_path}}",
+        "method": "{{endpoint_method}}",
+        "description": "{{endpoint_description}}"
+      }
+    ]
+  },
+  "metadata": {
+    "created": "{{timestamp}}",
+    "author": "{{author}}"
+  }
+}

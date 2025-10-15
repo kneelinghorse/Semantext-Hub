@@ -1,0 +1,171 @@
+{
+  "workflowId": "multi-source-aggregation",
+  "name": "Parallel Multi-Source Data Aggregation",
+  "version": "1.0.0",
+  "description": "Demonstrates parallel execution for fetching and aggregating data from multiple sources",
+  "metadata": {
+    "author": "OSSP-AGI",
+    "tags": ["parallel", "aggregation", "example"],
+    "created": "2025-10-06T00:00:00Z"
+  },
+  "timeout": 20000,
+  "steps": [
+    {
+      "stepId": "fetch-all-sources",
+      "name": "Fetch from All Data Sources",
+      "type": "parallel",
+      "timeout": 10000,
+      "branches": [
+        {
+          "branchId": "source-api",
+          "name": "Fetch from REST API",
+          "steps": [
+            {
+              "stepId": "fetch-api-data",
+              "name": "Call REST API",
+              "type": "task",
+              "task": {
+                "action": "urn:ossp:action:http-get",
+                "inputs": {
+                  "url": "https://api.example.com/v1/data",
+                  "headers": {
+                    "Accept": "application/json"
+                  }
+                },
+                "outputs": {
+                  "data": "result.body"
+                }
+              },
+              "timeout": 5000
+            }
+          ]
+        },
+        {
+          "branchId": "source-database",
+          "name": "Fetch from Database",
+          "steps": [
+            {
+              "stepId": "fetch-db-data",
+              "name": "Query Database",
+              "type": "task",
+              "task": {
+                "action": "urn:ossp:action:db-query",
+                "inputs": {
+                  "query": "SELECT * FROM records WHERE status = 'active'",
+                  "database": "main"
+                },
+                "outputs": {
+                  "data": "result.rows"
+                }
+              },
+              "timeout": 5000
+            }
+          ]
+        },
+        {
+          "branchId": "source-file",
+          "name": "Read from File System",
+          "steps": [
+            {
+              "stepId": "fetch-file-data",
+              "name": "Read CSV File",
+              "type": "task",
+              "task": {
+                "action": "urn:ossp:action:read-csv",
+                "inputs": {
+                  "path": "/data/imports/latest.csv",
+                  "delimiter": ","
+                },
+                "outputs": {
+                  "data": "result.records"
+                }
+              },
+              "timeout": 3000
+            }
+          ]
+        },
+        {
+          "branchId": "source-queue",
+          "name": "Consume from Message Queue",
+          "steps": [
+            {
+              "stepId": "fetch-queue-data",
+              "name": "Read from Queue",
+              "type": "task",
+              "task": {
+                "action": "urn:ossp:action:queue-consume",
+                "inputs": {
+                  "queue": "data-events",
+                  "maxMessages": 100
+                },
+                "outputs": {
+                  "data": "result.messages"
+                }
+              },
+              "timeout": 5000
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "stepId": "merge-results",
+      "name": "Merge All Results",
+      "type": "task",
+      "dependsOn": ["fetch-all-sources"],
+      "task": {
+        "action": "urn:ossp:action:merge-datasets",
+        "inputs": {
+          "sources": [
+            "$fetch-api-data",
+            "$fetch-db-data",
+            "$fetch-file-data",
+            "$fetch-queue-data"
+          ],
+          "strategy": "union"
+        },
+        "outputs": {
+          "merged": "result.dataset",
+          "count": "result.totalRecords"
+        }
+      },
+      "timeout": 3000
+    },
+    {
+      "stepId": "deduplicate",
+      "name": "Remove Duplicates",
+      "type": "task",
+      "dependsOn": ["merge-results"],
+      "task": {
+        "action": "urn:ossp:action:deduplicate",
+        "inputs": {
+          "data": "$merge-results",
+          "key": "id"
+        },
+        "outputs": {
+          "unique": "result.dataset",
+          "duplicatesRemoved": "result.removedCount"
+        }
+      },
+      "timeout": 2000
+    },
+    {
+      "stepId": "generate-report",
+      "name": "Generate Aggregation Report",
+      "type": "task",
+      "dependsOn": ["deduplicate"],
+      "task": {
+        "action": "urn:ossp:action:generate-report",
+        "inputs": {
+          "data": "$deduplicate",
+          "format": "json",
+          "includeStats": true
+        },
+        "outputs": {
+          "report": "result"
+        }
+      },
+      "timeout": 2000
+    }
+  ]
+}

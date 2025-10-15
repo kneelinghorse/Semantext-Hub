@@ -1,0 +1,21 @@
+--- a/app/jest.config.js
++++ b/app/jest.config.js
+@@ Minimal changes to enable TS ESM tests @@
++// Add TS + ESM support for probe tests
+extensionsToTreatAsEsm: ['.ts', '.tsx'],
+  transform: {
+    '^.+\.(ts|tsx)$': [
+      'babel-jest',
+      { presets: [ ['@babel/preset-env', { targets: { node: 'current' } }], '@babel/preset-typescript' ] }
+    ]
+  },
+  testMatch: [
+    '**/tests/**/*.test.js',
+    '**/tests/**/*.spec.js',
+    '**/tests/**/*.test.ts',
+    '**/tests/**/*.spec.ts',
+    '**/tests/_probe/**/*.test.ts'
+  ],
+
+// Notes:
+- Requires devDeps: babel-jest, @babel/core, @babel/preset-env, @babel/preset-typescript

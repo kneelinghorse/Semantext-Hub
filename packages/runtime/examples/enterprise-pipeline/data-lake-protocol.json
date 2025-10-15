@@ -1,0 +1,241 @@
+{
+  "urn": "urn:proto:data:enterprise/data-lake@v1",
+  "metadata": {
+    "urn": "urn:proto:data:enterprise/data-lake@v1",
+    "name": "Enterprise Data Lake",
+    "version": "1.0.0",
+    "description": "PostgreSQL data lake for enterprise customer data",
+    "status": "approved",
+    "created_at": "2025-01-09T00:00:00Z",
+    "approved_at": "2025-01-09T00:00:00Z",
+    "approved_by": "system"
+  },
+  "service": {
+    "name": "data-lake",
+    "type": "data",
+    "version": "1.0.0",
+    "database": "PostgreSQL",
+    "version": "14.0",
+    "connection": {
+      "host": "data-lake.enterprise.com",
+      "port": 5432,
+      "database": "enterprise_data"
+    }
+  },
+  "data": {
+    "tables": [
+      {
+        "name": "customers",
+        "description": "Customer master data table",
+        "columns": [
+          {
+            "name": "id",
+            "type": "uuid",
+            "primary_key": true,
+            "description": "Unique customer identifier"
+          },
+          {
+            "name": "name",
+            "type": "varchar(255)",
+            "nullable": false,
+            "description": "Customer full name"
+          },
+          {
+            "name": "email",
+            "type": "varchar(255)",
+            "nullable": false,
+            "unique": true,
+            "description": "Customer email address"
+          },
+          {
+            "name": "company",
+            "type": "varchar(255)",
+            "nullable": false,
+            "description": "Company name"
+          },
+          {
+            "name": "industry",
+            "type": "varchar(100)",
+            "nullable": true,
+            "description": "Industry sector"
+          },
+          {
+            "name": "created_at",
+            "type": "timestamp",
+            "nullable": false,
+            "default": "CURRENT_TIMESTAMP",
+            "description": "Record creation timestamp"
+          },
+          {
+            "name": "updated_at",
+            "type": "timestamp",
+            "nullable": false,
+            "default": "CURRENT_TIMESTAMP",
+            "description": "Record last update timestamp"
+          }
+        ],
+        "indexes": [
+          {
+            "name": "idx_customers_email",
+            "columns": ["email"],
+            "unique": true
+          },
+          {
+            "name": "idx_customers_company",
+            "columns": ["company"]
+          },
+          {
+            "name": "idx_customers_industry",
+            "columns": ["industry"]
+          }
+        ]
+      },
+      {
+        "name": "customer_interactions",
+        "description": "Customer interaction tracking table",
+        "columns": [
+          {
+            "name": "id",
+            "type": "uuid",
+            "primary_key": true,
+            "description": "Unique interaction identifier"
+          },
+          {
+            "name": "customer_id",
+            "type": "uuid",
+            "nullable": false,
+            "foreign_key": {
+              "table": "customers",
+              "column": "id"
+            },
+            "description": "Reference to customer"
+          },
+          {
+            "name": "interaction_type",
+            "type": "varchar(50)",
+            "nullable": false,
+            "description": "Type of interaction (email, call, meeting, etc.)"
+          },
+          {
+            "name": "interaction_date",
+            "type": "timestamp",
+            "nullable": false,
+            "description": "When the interaction occurred"
+          },
+          {
+            "name": "duration_minutes",
+            "type": "integer",
+            "nullable": true,
+            "description": "Duration of interaction in minutes"
+          },
+          {
+            "name": "outcome",
+            "type": "varchar(100)",
+            "nullable": true,
+            "description": "Outcome of the interaction"
+          },
+          {
+            "name": "notes",
+            "type": "text",
+            "nullable": true,
+            "description": "Additional notes about the interaction"
+          }
+        ],
+        "indexes": [
+          {
+            "name": "idx_interactions_customer_id",
+            "columns": ["customer_id"]
+          },
+          {
+            "name": "idx_interactions_date",
+            "columns": ["interaction_date"]
+          },
+          {
+            "name": "idx_interactions_type",
+            "columns": ["interaction_type"]
+          }
+        ]
+      },
+      {
+        "name": "analytics_cache",
+        "description": "Cached analytics results for performance",
+        "columns": [
+          {
+            "name": "id",
+            "type": "uuid",
+            "primary_key": true,
+            "description": "Unique cache entry identifier"
+          },
+          {
+            "name": "report_type",
+            "type": "varchar(50)",
+            "nullable": false,
+            "description": "Type of analytics report"
+          },
+          {
+            "name": "report_date",
+            "type": "date",
+            "nullable": false,
+            "description": "Date the report covers"
+          },
+          {
+            "name": "report_data",
+            "type": "jsonb",
+            "nullable": false,
+            "description": "Cached report data in JSON format"
+          },
+          {
+            "name": "generated_at",
+            "type": "timestamp",
+            "nullable": false,
+            "default": "CURRENT_TIMESTAMP",
+            "description": "When the cache entry was generated"
+          },
+          {
+            "name": "expires_at",
+            "type": "timestamp",
+            "nullable": false,
+            "description": "When the cache entry expires"
+          }
+        ],
+        "indexes": [
+          {
+            "name": "idx_analytics_cache_type_date",
+            "columns": ["report_type", "report_date"],
+            "unique": true
+          },
+          {
+            "name": "idx_analytics_cache_expires",
+            "columns": ["expires_at"]
+          }
+        ]
+      }
+    ],
+    "views": [
+      {
+        "name": "customer_summary",
+        "description": "Aggregated customer data view",
+        "sql": "SELECT c.id, c.name, c.email, c.company, c.industry, COUNT(ci.id) as interaction_count, MAX(ci.interaction_date) as last_interaction FROM customers c LEFT JOIN customer_interactions ci ON c.id = ci.customer_id GROUP BY c.id, c.name, c.email, c.company, c.industry"
+      },
+      {
+        "name": "monthly_interactions",
+        "description": "Monthly interaction statistics view",
+        "sql": "SELECT DATE_TRUNC('month', interaction_date) as month, interaction_type, COUNT(*) as count, AVG(duration_minutes) as avg_duration FROM customer_interactions GROUP BY DATE_TRUNC('month', interaction_date), interaction_type"
+      }
+    ]
+  },
+  "dependencies": [],
+  "consumers": [
+    {
+      "name": "api-gateway",
+      "description": "API Gateway that reads and writes customer data",
+      "tables": ["customers", "customer_interactions"]
+    },
+    {
+      "name": "analytics-workflow",
+      "description": "Analytics workflow that processes data for reports",
+      "tables": ["customers", "customer_interactions", "analytics_cache"],
+      "views": ["customer_summary", "monthly_interactions"]
+    }
+  ]
+}

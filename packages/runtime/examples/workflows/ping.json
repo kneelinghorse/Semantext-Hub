@@ -1,0 +1,55 @@
+{
+  "name": "ping-workflow",
+  "version": "1.0.0",
+  "description": "Simple 3-step workflow demonstrating HTTP, Event, and Tool adapters",
+  "stopOnError": true,
+  "steps": [
+    {
+      "name": "ping-http",
+      "description": "Make HTTP request to test connectivity",
+      "adapter": "http",
+      "input": {
+        "method": "GET",
+        "url": "https://httpbin.org/get",
+        "headers": {
+          "User-Agent": "OSSP-Workflow-Test/1.0"
+        },
+        "timeout": 10000
+      }
+    },
+    {
+      "name": "emit-ping-event",
+      "description": "Emit ping event to event bus",
+      "adapter": "event",
+      "input": {
+        "event": "workflow.ping",
+        "data": {
+          "status": "success",
+          "timestamp": "{{timestamp}}",
+          "source": "ping-workflow"
+        },
+        "priority": 5,
+        "persistent": true
+      }
+    },
+    {
+      "name": "echo-result",
+      "description": "Use tool adapter to echo the result",
+      "adapter": "tool",
+      "input": {
+        "tool": "echo",
+        "args": {
+          "message": "Ping workflow completed successfully",
+          "stepCount": 3,
+          "adapters": ["http", "event", "tool"]
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "author": "OSSP Workflow Team",
+    "created": "2025-01-10",
+    "tags": ["demo", "ping", "connectivity"],
+    "expectedDuration": "5-10 seconds"
+  }
+}

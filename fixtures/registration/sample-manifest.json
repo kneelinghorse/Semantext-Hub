@@ -1,0 +1,31 @@
+{
+  "urn": "urn:proto:api:example/payment-service@1.0.0",
+  "kind": "API",
+  "version": "1.0.0",
+  "title": "Payment Service API",
+  "description": "REST API for processing payments and managing transactions",
+  "baseUrl": "https://api.example.com/payments",
+  "authentication": {
+    "type": "oauth2",
+    "flows": ["client_credentials"]
+  },
+  "endpoints": [
+    {
+      "path": "/payments",
+      "method": "POST",
+      "operationId": "createPayment",
+      "summary": "Create a new payment"
+    },
+    {
+      "path": "/payments/{id}",
+      "method": "GET",
+      "operationId": "getPayment",
+      "summary": "Get payment by ID"
+    }
+  ],
+  "metadata": {
+    "owner": "payments-team@example.com",
+    "tags": ["payments", "transactions"],
+    "environment": "production"
+  }
+}

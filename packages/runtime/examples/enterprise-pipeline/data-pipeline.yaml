@@ -1,0 +1,205 @@
+apiVersion: workflow.v1
+kind: Workflow
+metadata:
+  name: enterprise-data-pipeline
+  description: End-to-end enterprise data pipeline workflow
+  version: "1.0.0"
+
+spec:
+  inputs:
+    customerData:
+      type: object
+      description: Customer data to process
+      required: true
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        company:
+          type: string
+        industry:
+          type: string
+    reportType:
+      type: string
+      description: Type of analytics report to generate
+      required: true
+      enum: ["customer", "sales", "performance", "interactions"]
+    dateRange:
+      type: object
+      description: Date range for analytics
+      required: true
+      properties:
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+
+  steps:
+    # Step 1: Validate customer data
+    validate-customer-data:
+      type: agent
+      agent: "urn:agent:api-gateway:validator"
+      tool: "validate_customer"
+      args:
+        customerData: "{{ inputs.customerData }}"
+      outputs:
+        validatedCustomer: "{{ result.customer }}"
+      onError: fail
+
+    # Step 2: Store customer in data lake
+    store-customer:
+      type: agent
+      agent: "urn:agent:data-lake:processor"
+      tool: "store_customer"
+      args:
+        customer: "{{ steps.validate-customer-data.outputs.validatedCustomer }}"
+      outputs:
+        customerId: "{{ result.customerId }}"
+      onError: fail
+
+    # Step 3: Record customer interaction
+    record-interaction:
+      type: agent
+      agent: "urn:agent:data-lake:processor"
+      tool: "record_interaction"
+      args:
+        customerId: "{{ steps.store-customer.outputs.customerId }}"
+        interactionType: "data_ingestion"
+        interactionDate: "{{ now() }}"
+        notes: "Customer data ingested via API Gateway"
+      outputs:
+        interactionId: "{{ result.interactionId }}"
+      onError: continue
+
+    # Step 4: Trigger analytics workflow
+    trigger-analytics:
+      type: agent
+      agent: "urn:agent:analytics-workflow:orchestrator"
+      tool: "execute_workflow"
+      args:
+        workflowName: "enterprise-analytics"
+        inputs:
+          reportType: "{{ inputs.reportType }}"
+          dateRange: "{{ inputs.dateRange }}"
+          filters:
+            customerId: "{{ steps.store-customer.outputs.customerId }}"
+      outputs:
+        reportId: "{{ result.reportId }}"
+        reportData: "{{ result.reportData }}"
+      onError: continue
+
+    # Step 5: Cache analytics results
+    cache-analytics:
+      type: agent
+      agent: "urn:agent:data-lake:processor"
+      tool: "cache_analytics"
+      args:
+        reportId: "{{ steps.trigger-analytics.outputs.reportId }}"
+        reportData: "{{ steps.trigger-analytics.outputs.reportData }}"
+        reportType: "{{ inputs.reportType }}"
+        expiresAt: "{{ date.add(now(), '7 days') }}"
+      outputs:
+        cacheId: "{{ result.cacheId }}"
+      onError: continue
+
+    # Step 6: Update API Gateway cache
+    update-api-cache:
+      type: agent
+      agent: "urn:agent:api-gateway:processor"
+      tool: "update_cache"
+      args:
+        endpoint: "/analytics/reports"
+        data:
+          reportId: "{{ steps.trigger-analytics.outputs.reportId }}"
+          reportData: "{{ steps.trigger-analytics.outputs.reportData }}"
+          generatedAt: "{{ now() }}"
+      outputs:
+        apiCacheUpdated: "{{ result.success }}"
+      onError: continue
+
+  outputs:
+    customerId:
+      type: string
+      value: "{{ steps.store-customer.outputs.customerId }}"
+    interactionId:
+      type: string
+      value: "{{ steps.record-interaction.outputs.interactionId }}"
+    reportId:
+      type: string
+      value: "{{ steps.trigger-analytics.outputs.reportId }}"
+    cacheId:
+      type: string
+      value: "{{ steps.cache-analytics.outputs.cacheId }}"
+    success:
+      type: boolean
+      value: "{{ steps.store-customer.outputs.customerId != null }}"
+
+  errorHandlers:
+    validation-failure:
+      type: agent
+      agent: "urn:agent:api-gateway:processor"
+      tool: "log_error"
+      args:
+        error: "Customer data validation failed"
+        details: "{{ error.message }}"
+        customerData: "{{ inputs.customerData }}"
+      continue: false
+
+    data-storage-failure:
+      type: agent
+      agent: "urn:agent:data-lake:processor"
+      tool: "log_error"
+      args:
+        error: "Data storage failed"
+        details: "{{ error.message }}"
+        customerId: "{{ steps.store-customer.outputs.customerId }}"
+      continue: false
+
+    analytics-failure:
+      type: agent
+      agent: "urn:agent:analytics-workflow:orchestrator"
+      tool: "log_error"
+      args:
+        error: "Analytics workflow failed"
+        details: "{{ error.message }}"
+        reportType: "{{ inputs.reportType }}"
+      continue: true
+
+  retryPolicy:
+    maxRetries: 3
+    backoffMultiplier: 2
+    initialDelay: 1000
+
+  timeout: 300000
+
+  monitoring:
+    metrics:
+      - name: "pipeline_duration"
+        type: "histogram"
+        description: "Total pipeline execution time"
+      - name: "customer_ingestion_rate"
+        type: "counter"
+        description: "Number of customers processed"
+      - name: "analytics_generation_time"
+        type: "histogram"
+        description: "Time to generate analytics reports"
+      - name: "cache_hit_rate"
+        type: "gauge"
+        description: "Percentage of cache hits"
+    alerts:
+      - name: "pipeline_failure"
+        condition: "{{ error.type == 'critical' }}"
+        severity: "high"
+        message: "Enterprise data pipeline failed"
+      - name: "slow_processing"
+        condition: "{{ duration > 300000 }}"
+        severity: "medium"
+        message: "Pipeline processing is slow"
+      - name: "cache_miss_rate_high"
+        condition: "{{ cache_hit_rate < 0.8 }}"
+        severity: "low"
+        message: "Cache hit rate is below threshold"

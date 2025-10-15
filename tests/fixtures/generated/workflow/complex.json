@@ -1,0 +1,37 @@
+{
+  "workflowId": "complex-workflow",
+  "name": "Complex Test Workflow",
+  "version": "2.0.0",
+  "steps": [
+    {
+      "stepId": "validate",
+      "type": "validation",
+      "validation": {
+        "schema": {
+          "type": "object"
+        },
+        "data": {
+          "test": true
+        }
+      }
+    },
+    {
+      "stepId": "process",
+      "type": "task",
+      "task": {
+        "action": "process-data",
+        "inputs": {
+          "source": "validation"
+        }
+      }
+    },
+    {
+      "stepId": "notify",
+      "type": "notification",
+      "notification": {
+        "channel": "slack",
+        "message": "Processing complete"
+      }
+    }
+  ]
+}

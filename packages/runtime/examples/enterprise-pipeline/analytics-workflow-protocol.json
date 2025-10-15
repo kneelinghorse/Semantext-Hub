@@ -1,0 +1,237 @@
+{
+  "urn": "urn:proto:workflow:enterprise/analytics@v1",
+  "metadata": {
+    "urn": "urn:proto:workflow:enterprise/analytics@v1",
+    "name": "Enterprise Analytics Workflow",
+    "version": "1.0.0",
+    "description": "Analytics workflow for customer data processing and reporting",
+    "status": "approved",
+    "created_at": "2025-01-09T00:00:00Z",
+    "approved_at": "2025-01-09T00:00:00Z",
+    "approved_by": "system"
+  },
+  "service": {
+    "name": "analytics-workflow",
+    "type": "workflow",
+    "version": "1.0.0",
+    "engine": "OSSP-AGI Workflow Engine",
+    "execution": {
+      "mode": "async",
+      "timeout": 300,
+      "retryPolicy": {
+        "maxRetries": 3,
+        "backoffMultiplier": 2,
+        "initialDelay": 1000
+      }
+    }
+  },
+  "workflow": {
+    "name": "enterprise-analytics",
+    "description": "Enterprise customer analytics processing workflow",
+    "version": "1.0.0",
+    "inputs": [
+      {
+        "name": "reportType",
+        "type": "string",
+        "description": "Type of analytics report to generate",
+        "required": true,
+        "enum": ["customer", "sales", "performance", "interactions"]
+      },
+      {
+        "name": "dateRange",
+        "type": "object",
+        "description": "Date range for the report",
+        "required": true,
+        "properties": {
+          "startDate": { "type": "string", "format": "date" },
+          "endDate": { "type": "string", "format": "date" }
+        }
+      },
+      {
+        "name": "filters",
+        "type": "object",
+        "description": "Additional filters for the report",
+        "required": false,
+        "properties": {
+          "industry": { "type": "string" },
+          "company": { "type": "string" }
+        }
+      }
+    ],
+    "outputs": [
+      {
+        "name": "reportId",
+        "type": "string",
+        "description": "Generated report identifier"
+      },
+      {
+        "name": "reportData",
+        "type": "object",
+        "description": "Processed report data"
+      },
+      {
+        "name": "summary",
+        "type": "object",
+        "description": "Report summary statistics"
+      }
+    ],
+    "steps": [
+      {
+        "name": "validate-inputs",
+        "type": "validation",
+        "description": "Validate input parameters",
+        "config": {
+          "rules": [
+            {
+              "field": "reportType",
+              "type": "enum",
+              "values": ["customer", "sales", "performance", "interactions"]
+            },
+            {
+              "field": "dateRange.startDate",
+              "type": "date",
+              "format": "YYYY-MM-DD"
+            },
+            {
+              "field": "dateRange.endDate",
+              "type": "date",
+              "format": "YYYY-MM-DD"
+            }
+          ]
+        }
+      },
+      {
+        "name": "check-cache",
+        "type": "data",
+        "description": "Check if report is already cached",
+        "config": {
+          "operation": "query",
+          "table": "analytics_cache",
+          "conditions": {
+            "report_type": "{{ inputs.reportType }}",
+            "report_date": "{{ inputs.dateRange.endDate }}"
+          }
+        },
+        "outputs": {
+          "cached": "{{ result.exists }}",
+          "cacheData": "{{ result.data }}"
+        }
+      },
+      {
+        "name": "extract-customer-data",
+        "type": "data",
+        "description": "Extract customer data from data lake",
+        "condition": "{{ steps.check-cache.outputs.cached == false }}",
+        "config": {
+          "operation": "query",
+          "table": "customers",
+          "filters": "{{ inputs.filters }}"
+        },
+        "outputs": {
+          "customers": "{{ result.rows }}"
+        }
+      },
+      {
+        "name": "extract-interaction-data",
+        "type": "data",
+        "description": "Extract interaction data from data lake",
+        "condition": "{{ steps.check-cache.outputs.cached == false }}",
+        "config": {
+          "operation": "query",
+          "table": "customer_interactions",
+          "dateRange": "{{ inputs.dateRange }}"
+        },
+        "outputs": {
+          "interactions": "{{ result.rows }}"
+        }
+      },
+      {
+        "name": "process-analytics",
+        "type": "transformation",
+        "description": "Process raw data into analytics",
+        "condition": "{{ steps.check-cache.outputs.cached == false }}",
+        "config": {
+          "algorithm": "{{ inputs.reportType }}",
+          "inputs": {
+            "customers": "{{ steps.extract-customer-data.outputs.customers }}",
+            "interactions": "{{ steps.extract-interaction-data.outputs.interactions }}"
+          }
+        },
+        "outputs": {
+          "processedData": "{{ result.data }}",
+          "summary": "{{ result.summary }}"
+        }
+      },
+      {
+        "name": "cache-results",
+        "type": "data",
+        "description": "Cache processed results",
+        "condition": "{{ steps.check-cache.outputs.cached == false }}",
+        "config": {
+          "operation": "insert",
+          "table": "analytics_cache",
+          "data": {
+            "report_type": "{{ inputs.reportType }}",
+            "report_date": "{{ inputs.dateRange.endDate }}",
+            "report_data": "{{ steps.process-analytics.outputs.processedData }}",
+            "expires_at": "{{ date.add(inputs.dateRange.endDate, '7 days') }}"
+          }
+        }
+      },
+      {
+        "name": "generate-report",
+        "type": "output",
+        "description": "Generate final report",
+        "config": {
+          "format": "json",
+          "data": "{{ steps.check-cache.outputs.cached ? steps.check-cache.outputs.cacheData : steps.process-analytics.outputs.processedData }}"
+        },
+        "outputs": {
+          "reportId": "{{ result.reportId }}",
+          "reportData": "{{ result.data }}",
+          "summary": "{{ result.summary }}"
+        }
+      }
+    ],
+    "errorHandlers": [
+      {
+        "name": "validation-error",
+        "condition": "{{ error.type == 'validation' }}",
+        "action": "fail",
+        "message": "Input validation failed: {{ error.message }}"
+      },
+      {
+        "name": "data-error",
+        "condition": "{{ error.type == 'data' }}",
+        "action": "retry",
+        "maxRetries": 3,
+        "backoff": "exponential"
+      },
+      {
+        "name": "processing-error",
+        "condition": "{{ error.type == 'processing' }}",
+        "action": "fail",
+        "message": "Data processing failed: {{ error.message }}"
+      }
+    ]
+  },
+  "dependencies": [
+    {
+      "urn": "urn:proto:api:enterprise/api-gateway@v1",
+      "description": "API Gateway for report access",
+      "endpoints": ["/analytics/reports"]
+    },
+    {
+      "urn": "urn:proto:data:enterprise/data-lake@v1",
+      "description": "Data Lake for customer and interaction data",
+      "tables": ["customers", "customer_interactions", "analytics_cache"]
+    }
+  ],
+  "consumers": [
+    {
+      "name": "api-gateway",
+      "description": "API Gateway that triggers analytics workflows",
+      "workflows": ["enterprise-analytics"]
+    }
+  ]
+}

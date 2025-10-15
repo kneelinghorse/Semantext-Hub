@@ -1,0 +1,16 @@
+apiVersion: integration/v1.1.2
+kind: IntegrationManifest
+metadata: { name: "research_to_writer", urn: "urn:proto:integration:research_writer@1.1.2" }
+spec:
+  source: { type: api, urn: "urn:proto:api:research@1.1.1#/v1/findings" }
+  destination: { type: agent, urn: "urn:proto:agent:writer@1.1.1" }
+  agentMapping:
+    conversationContext: { enabled: true, preserveHistory: true }
+    artifactMapping:
+      - sourceArtifact: "research_summary"
+        destinationInput: "research"
+        transformation:
+          type: jsonpath
+          rules:
+            research: "$.summary"
+    taskChaining: { mode: sequential, errorHandling: compensate }

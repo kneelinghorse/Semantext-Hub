@@ -1,0 +1,21 @@
+{
+  "type": "api",
+  "name": "Test",
+  "version": "1.0.0",
+  "description": "Generated api protocol for Test",
+  "protocol": {
+    "baseUrl": "https://api.example.com",
+    "authentication": "bearer",
+    "endpoints": [
+      {
+        "path": "/v1/resource",
+        "method": "GET",
+        "description": "Main API endpoint"
+      }
+    ]
+  },
+  "metadata": {
+    "created": "2025-10-03T15:17:56.794Z",
+    "author": "protocol-discover"
+  }
+}

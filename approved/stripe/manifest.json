@@ -1,0 +1,21 @@
+{
+  "urn": "urn:api:1759777267604",
+  "type": "api",
+  "metadata": {
+    "status": "approved",
+    "source": {
+      "type": "openapi",
+      "reference": "/Users/systemsystems/portfolio/OSSP-AGI/app/seeds/openapi/stripe/spec.json"
+    }
+  },
+  "catalog": {
+    "type": "api",
+    "endpoints": [
+      {
+        "path": "/api/v1",
+        "method": "GET",
+        "description": "API endpoint discovered from /Users/systemsystems/portfolio/OSSP-AGI/app/seeds/openapi/stripe/spec.json"
+      }
+    ]
+  }
+}

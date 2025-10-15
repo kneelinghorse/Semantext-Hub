@@ -1,0 +1,27 @@
+{
+  "apiVersion": "protocol.ossp-agi.dev/v1",
+  "kind": "APIProtocol",
+  "metadata": {
+    "name": "test-api",
+    "version": "1.0.0",
+    "description": "Test API protocol"
+  },
+  "spec": {
+    "openapi": "3.0.0",
+    "info": {
+      "title": "Test API",
+      "version": "1.0.0"
+    },
+    "paths": {
+      "/test": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      }
+    }
+  }
+}

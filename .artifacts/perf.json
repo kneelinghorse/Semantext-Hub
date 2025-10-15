@@ -1,0 +1,30 @@
+{
+  "discovery": {
+    "p50": 470.1953125,
+    "p95": 849.14697265625,
+    "avg": 505.2879248046875,
+    "total": 50,
+    "cacheHitRate": 0.78,
+    "errors": 0
+  },
+  "mcp": {
+    "p50": 1523.540771484375,
+    "p95": 2627.480224609375,
+    "avg": 1486.2375569661458,
+    "total": 30,
+    "toolExecutions": 14,
+    "errors": 0
+  },
+  "system": {
+    "memoryUsage": {
+      "rss": 54853632,
+      "heapTotal": 10846208,
+      "heapUsed": 6932952,
+      "external": 2223357,
+      "arrayBuffers": 36059
+    },
+    "uptime": 0.040099042
+  },
+  "correlationId": "55ae5cfc-ad69-4571-a4c8-2b7ad248b713",
+  "timestamp": "2025-10-13T18:28:11.590Z"
+}

@@ -1,0 +1,24 @@
+{
+  "eventType": "order.processed",
+  "payload": {
+    "orderId": "order-456",
+    "customerId": "customer-789",
+    "items": [
+      {
+        "productId": "prod-1",
+        "quantity": 2
+      },
+      {
+        "productId": "prod-2",
+        "quantity": 1
+      }
+    ],
+    "total": 99.99,
+    "timestamp": "2024-01-01T00:00:00Z"
+  },
+  "metadata": {
+    "source": "order-service",
+    "version": "1.0.0",
+    "correlationId": "corr-123"
+  }
+}

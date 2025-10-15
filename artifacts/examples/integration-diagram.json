@@ -1,0 +1,64 @@
+{
+  "format": "cytoscape",
+  "version": "1.0.0",
+  "generated_at": "2025-10-15T03:37:00Z",
+  "workflow": "integration-workbench-demo",
+  "elements": {
+    "nodes": [
+      { "data": { "id": "submit-order", "label": "Submit Order", "type": "api", "group": "ingress" } },
+      { "data": { "id": "emit-order-received", "label": "Emit order.received", "type": "event", "group": "distribution" } },
+      { "data": { "id": "buffer-audit-log", "label": "Buffer Audit Log", "type": "data", "group": "compliance" } },
+      { "data": { "id": "persist-ledger", "label": "Persist Ledger", "type": "data", "group": "core-data" } },
+      { "data": { "id": "notify-crm", "label": "Notify CRM", "type": "event", "group": "distribution" } },
+      { "data": { "id": "generate-report", "label": "Generate Report", "type": "data", "group": "analytics" } }
+    ],
+    "edges": [
+      { "data": { "id": "edge-submit-order-emit", "source": "submit-order", "target": "emit-order-received", "relationship": "fanout" } },
+      { "data": { "id": "edge-submit-order-audit", "source": "submit-order", "target": "buffer-audit-log", "relationship": "fanout" } },
+      { "data": { "id": "edge-emit-ledger", "source": "emit-order-received", "target": "persist-ledger", "relationship": "feeds" } },
+      { "data": { "id": "edge-audit-ledger", "source": "buffer-audit-log", "target": "persist-ledger", "relationship": "journals" } },
+      { "data": { "id": "edge-ledger-crm", "source": "persist-ledger", "target": "notify-crm", "relationship": "notifies" } },
+      { "data": { "id": "edge-ledger-report", "source": "persist-ledger", "target": "generate-report", "relationship": "enriches" } },
+      { "data": { "id": "edge-crm-report", "source": "notify-crm", "target": "generate-report", "relationship": "augments" } }
+    ]
+  },
+  "stylesheets": [
+    {
+      "selector": "node",
+      "style": {
+        "label": "data(label)",
+        "text-valign": "center",
+        "text-halign": "center",
+        "shape": "round-rectangle",
+        "background-color": "#f5f5f5",
+        "color": "#222"
+      }
+    },
+    {
+      "selector": "node[type = 'api']",
+      "style": { "background-color": "#dae8fc", "border-color": "#6c8ebf" }
+    },
+    {
+      "selector": "node[type = 'event']",
+      "style": { "background-color": "#d5e8d4", "border-color": "#82b366" }
+    },
+    {
+      "selector": "node[type = 'data']",
+      "style": { "background-color": "#ffe6cc", "border-color": "#d79b00" }
+    },
+    {
+      "selector": "edge",
+      "style": {
+        "width": 2,
+        "line-color": "#8a8a8a",
+        "target-arrow-color": "#8a8a8a",
+        "target-arrow-shape": "triangle",
+        "curve-style": "bezier"
+      }
+    }
+  ],
+  "metadata": {
+    "scenario": "customer-order-processing",
+    "notes": "Generated for Sprint 14 integration documentation demo."
+  }
+}

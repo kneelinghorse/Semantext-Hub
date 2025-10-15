@@ -1,0 +1,61 @@
+{
+  "generatedAt": "2025-10-15T02:17:19.582Z",
+  "workspace": "/Users/d/portfolio/OSSP-AGI/app",
+  "summary": {
+    "runCount": 5,
+    "averageDurationMs": 184.2
+  },
+  "metrics": {
+    "totalDurationMs": 921,
+    "maxConcurrent": 2,
+    "latency": {
+      "minMs": 93,
+      "maxMs": 205,
+      "p50Ms": 154,
+      "p95Ms": 200,
+      "averageMs": 150.5
+    }
+  },
+  "runs": [
+    {
+      "iteration": 1,
+      "workflow": "integration-benchmark-1",
+      "totalDurationMs": 186,
+      "stepCount": 4,
+      "p95LatencyMs": 185,
+      "successCount": 4
+    },
+    {
+      "iteration": 2,
+      "workflow": "integration-benchmark-2",
+      "totalDurationMs": 185,
+      "stepCount": 4,
+      "p95LatencyMs": 190,
+      "successCount": 4
+    },
+    {
+      "iteration": 3,
+      "workflow": "integration-benchmark-3",
+      "totalDurationMs": 184,
+      "stepCount": 4,
+      "p95LatencyMs": 195,
+      "successCount": 4
+    },
+    {
+      "iteration": 4,
+      "workflow": "integration-benchmark-4",
+      "totalDurationMs": 183,
+      "stepCount": 4,
+      "p95LatencyMs": 200,
+      "successCount": 4
+    },
+    {
+      "iteration": 5,
+      "workflow": "integration-benchmark-5",
+      "totalDurationMs": 183,
+      "stepCount": 4,
+      "p95LatencyMs": 205,
+      "successCount": 4
+    }
+  ]
+}

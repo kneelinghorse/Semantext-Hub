@@ -1,0 +1,54 @@
+{
+  "urn": "urn:proto:workflow:sample.set/customer-onboarding@v1.0.0",
+  "metadata": {
+    "urn": "urn:proto:workflow:sample.set/customer-onboarding@v1.0.0",
+    "name": "Sample Customer Onboarding Workflow",
+    "kind": "workflow",
+    "version": "1.0.0",
+    "description": "Automated workflow that reacts to customer creation events and orchestrates follow-up actions.",
+    "status": "approved",
+    "visibility": "internal",
+    "tags": ["sample", "catalog", "workflow"],
+    "created_at": "2025-01-10T00:00:00Z",
+    "updated_at": "2025-01-10T00:00:00Z"
+  },
+  "workflow": {
+    "name": "Customer Onboarding",
+    "steps": [
+      {
+        "id": "ingest-event",
+        "type": "event-listener",
+        "description": "Receive the customer.created event and extract identifiers.",
+        "inputs": {
+          "event": "urn:proto:event:sample.set/customer-created@v1.0.0"
+        }
+      },
+      {
+        "id": "hydrate-profile",
+        "type": "api-call",
+        "description": "Query the customer API for enriched profile information.",
+        "uses": "urn:proto:api:sample.set/customer-api@v1.0.0"
+      },
+      {
+        "id": "trigger-notification",
+        "type": "agent-invocation",
+        "description": "Delegate to the notification agent to message stakeholders.",
+        "uses": "urn:proto:agent:sample.set/notification-agent@v1.0.0"
+      }
+    ],
+    "triggers": [
+      {
+        "type": "event",
+        "event": "urn:proto:event:sample.set/customer-created@v1.0.0"
+      }
+    ]
+  },
+  "relationships": {
+    "depends_on": [
+      "urn:proto:api:sample.set/customer-api@v1.0.0",
+      "urn:proto:agent:sample.set/notification-agent@v1.0.0"
+    ],
+    "consumes": ["urn:proto:event:sample.set/customer-created@v1.0.0"]
+  }
+}
+

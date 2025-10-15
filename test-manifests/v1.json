@@ -1,0 +1,96 @@
+{
+  "metadata": {
+    "name": "test-api",
+    "version": "1.0.0",
+    "kind": "api",
+    "description": "Test API v1"
+  },
+  "catalog": {
+    "endpoints": [
+      {
+        "method": "GET",
+        "path": "/users",
+        "request": {
+          "type": "object",
+          "properties": {
+            "limit": {
+              "type": "integer",
+              "default": 10
+            }
+          }
+        },
+        "response": {
+          "type": "object",
+          "properties": {
+            "users": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string"
+                  }
+                },
+                "required": ["id", "name"]
+              }
+            }
+          }
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/users",
+        "request": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "email": {
+              "type": "string"
+            }
+          },
+          "required": ["name", "email"]
+        },
+        "response": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "created": {
+              "type": "boolean"
+            }
+          }
+        }
+      },
+      {
+        "method": "DELETE",
+        "path": "/users/{id}",
+        "request": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            }
+          },
+          "required": ["id"]
+        },
+        "response": {
+          "type": "object",
+          "properties": {
+            "deleted": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    ]
+  }
+}

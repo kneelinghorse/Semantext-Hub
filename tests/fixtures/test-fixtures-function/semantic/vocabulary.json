@@ -1,0 +1,12 @@
+{
+  "terms": {
+    "protocol": {
+      "definition": "A protocol definition",
+      "type": "Class"
+    },
+    "agent": {
+      "definition": "An autonomous agent",
+      "type": "Class"
+    }
+  }
+}

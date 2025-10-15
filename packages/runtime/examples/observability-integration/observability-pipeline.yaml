@@ -1,0 +1,254 @@
+apiVersion: workflow.v1
+kind: Workflow
+metadata:
+  name: observability-pipeline
+  description: End-to-end observability pipeline workflow
+  version: "1.0.0"
+
+spec:
+  inputs:
+    logData:
+      type: object
+      description: Log data to process
+      required: true
+      properties:
+        level:
+          type: string
+          enum: ["DEBUG", "INFO", "WARN", "ERROR", "FATAL"]
+        service:
+          type: string
+        message:
+          type: string
+        context:
+          type: object
+          additionalProperties: true
+    alertConfig:
+      type: object
+      description: Alert configuration
+      required: false
+      properties:
+        metricName:
+          type: string
+        threshold:
+          type: number
+        severity:
+          type: string
+          enum: ["low", "medium", "high", "critical"]
+
+  steps:
+    # Step 1: Collect and validate log data
+    collect-logs:
+      type: agent
+      agent: "urn:agent:log-collector:processor"
+      tool: "collect_logs"
+      args:
+        logData: "{{ inputs.logData }}"
+      outputs:
+        logId: "{{ result.logId }}"
+        processedLog: "{{ result.processedLog }}"
+      onError: fail
+
+    # Step 2: Analyze log patterns
+    analyze-patterns:
+      type: agent
+      agent: "urn:agent:log-collector:analyzer"
+      tool: "analyze_patterns"
+      args:
+        logData: "{{ steps.collect-logs.outputs.processedLog }}"
+      outputs:
+        patterns: "{{ result.patterns }}"
+        anomalies: "{{ result.anomalies }}"
+      onError: continue
+
+    # Step 3: Derive metrics from logs
+    derive-metrics:
+      type: agent
+      agent: "urn:agent:log-collector:processor"
+      tool: "derive_metrics"
+      args:
+        logData: "{{ steps.collect-logs.outputs.processedLog }}"
+        patterns: "{{ steps.analyze-patterns.outputs.patterns }}"
+      outputs:
+        derivedMetrics: "{{ result.metrics }}"
+      onError: continue
+
+    # Step 4: Ingest metrics into metrics hub
+    ingest-metrics:
+      type: agent
+      agent: "urn:agent:metrics-hub:processor"
+      tool: "ingest_metrics"
+      args:
+        metrics: "{{ steps.derive-metrics.outputs.derivedMetrics }}"
+      outputs:
+        ingestedCount: "{{ result.ingestedCount }}"
+        rejectedCount: "{{ result.rejectedCount }}"
+      onError: continue
+
+    # Step 5: Check for alert conditions
+    check-alerts:
+      type: agent
+      agent: "urn:agent:metrics-hub:analyzer"
+      tool: "check_alerts"
+      args:
+        metrics: "{{ steps.derive-metrics.outputs.derivedMetrics }}"
+        alertConfig: "{{ inputs.alertConfig }}"
+      outputs:
+        triggeredAlerts: "{{ result.alerts }}"
+      onError: continue
+
+    # Step 6: Publish alert notifications
+    publish-alerts:
+      type: agent
+      agent: "urn:agent:event-bus:publisher"
+      tool: "publish_alerts"
+      args:
+        alerts: "{{ steps.check-alerts.outputs.triggeredAlerts }}"
+      outputs:
+        publishedAlerts: "{{ result.publishedCount }}"
+      onError: continue
+
+    # Step 7: Escalate critical alerts
+    escalate-alerts:
+      type: agent
+      agent: "urn:agent:event-bus:publisher"
+      tool: "escalate_alerts"
+      args:
+        alerts: "{{ steps.check-alerts.outputs.triggeredAlerts }}"
+        escalationRules: "{{ inputs.alertConfig.escalationRules }}"
+      outputs:
+        escalatedAlerts: "{{ result.escalatedCount }}"
+      onError: continue
+
+    # Step 8: Create incident if needed
+    create-incident:
+      type: agent
+      agent: "urn:agent:event-bus:publisher"
+      tool: "create_incident"
+      args:
+        alerts: "{{ steps.check-alerts.outputs.triggeredAlerts }}"
+        severity: "{{ inputs.alertConfig.severity }}"
+      outputs:
+        incidentId: "{{ result.incidentId }}"
+      onError: continue
+
+    # Step 9: Publish health check events
+    publish-health-check:
+      type: agent
+      agent: "urn:agent:event-bus:publisher"
+      tool: "publish_health_check"
+      args:
+        service: "observability-pipeline"
+        status: "{{ steps.ingest-metrics.outputs.ingestedCount > 0 ? 'healthy' : 'degraded' }}"
+        checks:
+          logCollection: "{{ steps.collect-logs.outputs.logId ? 'pass' : 'fail' }}"
+          metricsIngestion: "{{ steps.ingest-metrics.outputs.ingestedCount > 0 ? 'pass' : 'fail' }}"
+          alertProcessing: "{{ steps.publish-alerts.outputs.publishedAlerts >= 0 ? 'pass' : 'fail' }}"
+      outputs:
+        healthCheckId: "{{ result.healthCheckId }}"
+      onError: continue
+
+  outputs:
+    logId:
+      type: string
+      value: "{{ steps.collect-logs.outputs.logId }}"
+    ingestedMetrics:
+      type: integer
+      value: "{{ steps.ingest-metrics.outputs.ingestedCount }}"
+    triggeredAlerts:
+      type: integer
+      value: "{{ steps.publish-alerts.outputs.publishedAlerts }}"
+    escalatedAlerts:
+      type: integer
+      value: "{{ steps.escalate-alerts.outputs.escalatedAlerts }}"
+    incidentId:
+      type: string
+      value: "{{ steps.create-incident.outputs.incidentId }}"
+    healthStatus:
+      type: string
+      value: "{{ steps.publish-health-check.outputs.healthCheckId ? 'healthy' : 'degraded' }}"
+
+  errorHandlers:
+    log-collection-failure:
+      type: agent
+      agent: "urn:agent:log-collector:processor"
+      tool: "log_error"
+      args:
+        error: "Log collection failed"
+        details: "{{ error.message }}"
+        logData: "{{ inputs.logData }}"
+      continue: false
+
+    metrics-ingestion-failure:
+      type: agent
+      agent: "urn:agent:metrics-hub:processor"
+      tool: "log_error"
+      args:
+        error: "Metrics ingestion failed"
+        details: "{{ error.message }}"
+        metrics: "{{ steps.derive-metrics.outputs.derivedMetrics }}"
+      continue: true
+
+    alert-processing-failure:
+      type: agent
+      agent: "urn:agent:event-bus:publisher"
+      tool: "log_error"
+      args:
+        error: "Alert processing failed"
+        details: "{{ error.message }}"
+        alerts: "{{ steps.check-alerts.outputs.triggeredAlerts }}"
+      continue: true
+
+    event-publishing-failure:
+      type: agent
+      agent: "urn:agent:event-bus:publisher"
+      tool: "log_error"
+      args:
+        error: "Event publishing failed"
+        details: "{{ error.message }}"
+        eventType: "{{ error.eventType }}"
+      continue: true
+
+  retryPolicy:
+    maxRetries: 3
+    backoffMultiplier: 2
+    initialDelay: 1000
+
+  timeout: 120000
+
+  monitoring:
+    metrics:
+      - name: "pipeline_duration"
+        type: "histogram"
+        description: "Total pipeline execution time"
+      - name: "logs_processed"
+        type: "counter"
+        description: "Number of logs processed"
+      - name: "metrics_derived"
+        type: "counter"
+        description: "Number of metrics derived from logs"
+      - name: "alerts_triggered"
+        type: "counter"
+        description: "Number of alerts triggered"
+      - name: "incidents_created"
+        type: "counter"
+        description: "Number of incidents created"
+      - name: "health_check_status"
+        type: "gauge"
+        description: "Pipeline health status"
+    alerts:
+      - name: "pipeline_failure"
+        condition: "{{ error.type == 'critical' }}"
+        severity: "high"
+        message: "Observability pipeline failed"
+      - name: "slow_processing"
+        condition: "{{ duration > 120000 }}"
+        severity: "medium"
+        message: "Pipeline processing is slow"
+      - name: "high_alert_rate"
+        condition: "{{ alerts_triggered > 100 }}"
+        severity: "medium"
+        message: "High alert rate detected"
+      - name: "metrics_ingestion_failure"
+        condition: "{{ metrics_derived == 0 }}"
+        severity: "low"
+        message: "No metrics derived from logs"

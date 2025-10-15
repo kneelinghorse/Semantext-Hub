@@ -1,0 +1,213 @@
+name: Protocol Diff Analysis
+
+on:
+  pull_request:
+    paths:
+      - '**/*.json'
+      - '**/*.yaml'
+      - '**/*.yml'
+      - 'artifacts/**'
+      - 'protocols/**'
+    types: [opened, synchronize, reopened]
+
+jobs:
+  protocol-diff:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: 'package-lock.json'
+      
+      - name: Install dependencies
+        working-directory: .
+        run: npm ci
+      
+      - name: Build OSSP CLI
+        working-directory: .
+        run: npm run build
+      
+      - name: Find changed protocol files
+        id: find-files
+        run: |
+          # Find changed protocol files
+          CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD | grep -E '\.(json|yaml|yml)$' | grep -E '(manifest|protocol|api|event|data)' || true)
+          
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "No protocol files changed"
+            echo "changed=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          echo "Changed protocol files:"
+          echo "$CHANGED_FILES"
+          echo "changed=true" >> $GITHUB_OUTPUT
+          echo "files<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGED_FILES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      
+      - name: Analyze protocol changes
+        if: steps.find-files.outputs.changed == 'true'
+        id: analyze
+        working-directory: .
+        run: |
+          # Create output directory
+          mkdir -p protocol-diff-output
+          
+          # Analyze each changed file
+          BREAKING_CHANGES_FOUND=false
+          TOTAL_BREAKING=0
+          ANALYSIS_REPORT=""
+          
+          for file in ${{ steps.find-files.outputs.files }}; do
+            echo "Analyzing $file..."
+            
+            # Check if file exists in previous commit
+            if git show HEAD~1:"$file" >/dev/null 2>&1; then
+              # File exists in previous commit, compare
+              OLD_FILE=$(mktemp)
+              NEW_FILE=$(mktemp)
+              
+              git show HEAD~1:"$file" > "$OLD_FILE"
+              git show HEAD:"$file" > "$NEW_FILE"
+              
+              # Run protocol diff
+              if node cli/commands/protocol-diff.js --old "$OLD_FILE" --new "$NEW_FILE" --format github --output "protocol-diff-output/${file##*/}.md"; then
+                echo "No breaking changes in $file"
+              else
+                echo "Breaking changes found in $file"
+                BREAKING_CHANGES_FOUND=true
+                
+                # Count breaking changes
+                BREAKING_COUNT=$(node cli/commands/protocol-diff.js --old "$OLD_FILE" --new "$NEW_FILE" --format json | jq '.summary.breaking // 0')
+                TOTAL_BREAKING=$((TOTAL_BREAKING + BREAKING_COUNT))
+                
+                # Add to analysis report
+                ANALYSIS_REPORT+="\n## $file\n"
+                ANALYSIS_REPORT+="$(cat protocol-diff-output/${file##*/}.md)\n"
+              fi
+              
+              # Cleanup
+              rm -f "$OLD_FILE" "$NEW_FILE"
+            else
+              echo "New file $file, skipping diff"
+            fi
+          done
+          
+          # Set outputs
+          echo "breaking_changes_found=$BREAKING_CHANGES_FOUND" >> $GITHUB_OUTPUT
+          echo "total_breaking=$TOTAL_BREAKING" >> $GITHUB_OUTPUT
+          echo "analysis_report<<EOF" >> $GITHUB_OUTPUT
+          echo -e "$ANALYSIS_REPORT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      
+      - name: Check for migration files
+        if: steps.find-files.outputs.changed == 'true'
+        id: migration-check
+        run: |
+          # Check for migration files
+          MIGRATION_FILES=""
+          
+          for pattern in "MIGRATION.md" "BREAKING_CHANGES.md" "CHANGELOG.md"; do
+            if [ -f "$pattern" ]; then
+              MIGRATION_FILES+="$pattern "
+            fi
+          done
+          
+          # Check in docs/migrations directory
+          if [ -d "docs/migrations" ]; then
+            for file in docs/migrations/*.md; do
+              if [ -f "$file" ]; then
+                MIGRATION_FILES+="$file "
+              fi
+            done
+          fi
+          
+          if [ -n "$MIGRATION_FILES" ]; then
+            echo "Migration files found: $MIGRATION_FILES"
+            echo "migration_files_found=true" >> $GITHUB_OUTPUT
+            echo "migration_files<<EOF" >> $GITHUB_OUTPUT
+            echo "$MIGRATION_FILES" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "No migration files found"
+            echo "migration_files_found=false" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Comment on PR
+        if: steps.find-files.outputs.changed == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { breaking_changes_found, total_breaking, analysis_report, migration_files_found, migration_files } = process.env;
+            
+            let comment = "## 🔍 Protocol Diff Analysis\n\n";
+            
+            if (breaking_changes_found === 'true') {
+              comment += "⚠️ **Breaking changes detected!**\n\n";
+              comment += `**Total breaking changes:** ${total_breaking}\n\n`;
+              
+              if (migration_files_found === 'true') {
+                comment += "✅ **Migration files found:**\n";
+                comment += migration_files.split(' ').map(file => `- \`${file}\``).join('\n') + "\n\n";
+                comment += "✅ **Proceeding with breaking changes** (migration documentation provided)\n\n";
+              } else {
+                comment += "❌ **No migration files found!**\n\n";
+                comment += "**Required actions:**\n";
+                comment += "1. Create a migration file documenting the breaking changes\n";
+                comment += "2. Use the [Migration Template](docs/migrations/MIGRATION_TEMPLATE.md) as a guide\n";
+                comment += "3. Commit the migration file along with your changes\n\n";
+                comment += "**Migration file options:**\n";
+                comment += "- `MIGRATION.md`\n";
+                comment += "- `BREAKING_CHANGES.md`\n";
+                comment += "- `CHANGELOG.md`\n";
+                comment += "- `docs/migrations/*.md`\n\n";
+              }
+              
+              comment += "### Breaking Changes Details\n\n";
+              comment += analysis_report;
+            } else {
+              comment += "✅ **No breaking changes detected**\n\n";
+              comment += "All protocol changes are backward compatible.\n";
+            }
+            
+            comment += "\n---\n";
+            comment += "*This analysis was generated by the Protocol Diff workflow.*";
+            
+            // Post comment
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+        env:
+          breaking_changes_found: ${{ steps.analyze.outputs.breaking_changes_found }}
+          total_breaking: ${{ steps.analyze.outputs.total_breaking }}
+          analysis_report: ${{ steps.analyze.outputs.analysis_report }}
+          migration_files_found: ${{ steps.migration-check.outputs.migration_files_found }}
+          migration_files: ${{ steps.migration-check.outputs.migration_files }}
+      
+      - name: Fail on breaking changes without migration
+        if: steps.find-files.outputs.changed == 'true' && steps.analyze.outputs.breaking_changes_found == 'true' && steps.migration-check.outputs.migration_files_found == 'false'
+        run: |
+          echo "❌ Breaking changes detected without migration file!"
+          echo "Please create a migration file documenting the breaking changes."
+          echo "See the PR comment for details."
+          exit 1
+      
+      - name: Upload diff reports
+        if: steps.find-files.outputs.changed == 'true' && always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: protocol-diff-reports
+          path: protocol-diff-output/
+          retention-days: 30

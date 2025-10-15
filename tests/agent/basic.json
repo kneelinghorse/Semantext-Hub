@@ -1,0 +1,16 @@
+{
+  "agent": {
+    "id": "test-agent",
+    "name": "Test Agent",
+    "version": "1.0.0",
+    "description": "Basic test agent"
+  },
+  "capabilities": {
+    "tools": [
+      {
+        "name": "test-tool",
+        "description": "Test tool"
+      }
+    ]
+  }
+}

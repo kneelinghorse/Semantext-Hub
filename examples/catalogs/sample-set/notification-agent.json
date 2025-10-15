@@ -1,0 +1,33 @@
+{
+  "urn": "urn:proto:agent:sample.set/notification-agent@v1.0.0",
+  "metadata": {
+    "urn": "urn:proto:agent:sample.set/notification-agent@v1.0.0",
+    "name": "Sample Notification Agent",
+    "kind": "agent",
+    "version": "1.0.0",
+    "description": "Lightweight notification agent that can send welcome messages for new customers.",
+    "status": "approved",
+    "visibility": "internal",
+    "tags": ["sample", "catalog", "agent"],
+    "created_at": "2025-01-10T00:00:00Z",
+    "updated_at": "2025-01-10T00:00:00Z"
+  },
+  "agent": {
+    "runtime": "nodejs",
+    "capabilities": {
+      "tools": [
+        {
+          "name": "send-welcome-email",
+          "description": "Send a welcome message to the onboarded customer."
+        }
+      ],
+      "apis": ["urn:proto:api:sample.set/customer-api@v1.0.0"],
+      "events": ["urn:proto:event:sample.set/customer-created@v1.0.0"]
+    }
+  },
+  "relationships": {
+    "depends_on": ["urn:proto:api:sample.set/customer-api@v1.0.0"],
+    "consumes": ["urn:proto:event:sample.set/customer-created@v1.0.0"]
+  }
+}
+

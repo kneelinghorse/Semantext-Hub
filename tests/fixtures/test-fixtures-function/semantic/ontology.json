@@ -1,0 +1,12 @@
+{
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "ossp": "https://ossp-agi.dev/schema/"
+  },
+  "@type": "Thing",
+  "ossp:protocol": {
+    "@type": "Protocol",
+    "name": "Test Protocol",
+    "version": "1.0.0"
+  }
+}

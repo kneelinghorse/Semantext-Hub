@@ -1,0 +1,15 @@
+{
+  "type": "{{type}}",
+  "name": "{{name}}",
+  "version": "{{version}}",
+  "description": "{{description}}",
+  "protocol": {
+    "vocabulary": "{{vocabulary}}",
+    "ontology": "{{ontology}}",
+    "relations": []
+  },
+  "metadata": {
+    "created": "{{timestamp}}",
+    "author": "{{author}}"
+  }
+}

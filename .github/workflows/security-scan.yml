@@ -1,0 +1,165 @@
+name: Security Scan
+
+on:
+  pull_request:
+    paths:
+      - '**/*.js'
+      - '**/*.ts'
+      - '**/*.json'
+      - '**/*.yaml'
+      - '**/*.yml'
+      - 'artifacts/**'
+      - 'protocols/**'
+    types: [opened, synchronize, reopened]
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: 'package-lock.json'
+      
+      - name: Install dependencies
+        working-directory: .
+        run: npm ci
+      
+      - name: Find changed files
+        id: find-files
+        run: |
+          # Find changed files that need security scanning
+          CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD | grep -E '\.(js|ts|json|yaml|yml)$' | grep -E '(manifest|protocol|api|event|data|config)' || true)
+          
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "No relevant files changed"
+            echo "changed=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+          echo "changed=true" >> $GITHUB_OUTPUT
+          echo "files<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGED_FILES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      
+      - name: Run security scan
+        if: steps.find-files.outputs.changed == 'true'
+        id: security-scan
+        working-directory: .
+        run: |
+          # Create output directory
+          mkdir -p security-scan-output
+          
+          # Run security scan on changed files
+          SECURITY_VIOLATIONS_FOUND=false
+          TOTAL_VIOLATIONS=0
+          SCAN_REPORT=""
+          
+          for file in ${{ steps.find-files.outputs.files }}; do
+            echo "Scanning $file for security violations..."
+            
+            # Run security scan on the file
+            if node cli/commands/security-scan.js --target "$file" --format json >/dev/null 2>&1; then
+              echo "No security violations in $file"
+            else
+              echo "Security violations found in $file"
+              SECURITY_VIOLATIONS_FOUND=true
+              
+              # Get violation count
+              VIOLATION_COUNT=$(node cli/commands/security-scan.js --target "$file" --format json 2>/dev/null | jq '.violations | length' || echo "0")
+              TOTAL_VIOLATIONS=$((TOTAL_VIOLATIONS + VIOLATION_COUNT))
+              
+              # Generate detailed report
+              node cli/commands/security-scan.js --target "$file" --format github --output "security-scan-output/${file##*/}.md"
+              
+              # Add to scan report
+              SCAN_REPORT+="\n## $file\n"
+              SCAN_REPORT+="$(cat security-scan-output/${file##*/}.md)\n"
+            fi
+          done
+          
+          # Set outputs
+          echo "security_violations_found=$SECURITY_VIOLATIONS_FOUND" >> $GITHUB_OUTPUT
+          echo "total_violations=$TOTAL_VIOLATIONS" >> $GITHUB_OUTPUT
+          echo "scan_report<<EOF" >> $GITHUB_OUTPUT
+          echo -e "$SCAN_REPORT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      
+      - name: Comment on PR
+        if: steps.find-files.outputs.changed == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { security_violations_found, total_violations, scan_report } = process.env;
+            
+            let comment = "## 🔒 Security Scan Report\n\n";
+            
+            if (security_violations_found === 'true') {
+              comment += "⚠️ **Security violations detected!**\n\n";
+              comment += `**Total violations:** ${total_violations}\n\n`;
+              
+              comment += "❌ **Security policy violations found**\n\n";
+              comment += "**Required actions:**\n";
+              comment += "1. Review and fix the security violations\n";
+              comment += "2. Ensure no secrets are committed to version control\n";
+              comment += "3. Use only allowed licenses\n";
+              comment += "4. Follow secure coding practices\n\n";
+              
+              comment += "**Security Policy Reference:**\n";
+              comment += "- [Security Policies](docs/security/SECURITY_POLICIES.md)\n";
+              comment += "- [Secret Detection Patterns](docs/security/SECURITY_POLICIES.md#secrets-detection)\n";
+              comment += "- [License Compliance](docs/security/SECURITY_POLICIES.md#license-violations)\n";
+              comment += "- [Vulnerability Scanning](docs/security/SECURITY_POLICIES.md#security-vulnerabilities)\n\n";
+              
+              comment += "### Violation Details\n\n";
+              comment += scan_report;
+            } else {
+              comment += "✅ **No security violations detected**\n\n";
+              comment += "All scanned files comply with security policies.\n\n";
+              comment += "**Security checks passed:**\n";
+              comment += "- ✅ No secrets detected\n";
+              comment += "- ✅ No disallowed licenses\n";
+              comment += "- ✅ No security vulnerabilities\n";
+            }
+            
+            comment += "\n---\n";
+            comment += "*This security scan was generated by the Security Scan workflow.*";
+            
+            // Post comment
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+        env:
+          security_violations_found: ${{ steps.security-scan.outputs.security_violations_found }}
+          total_violations: ${{ steps.security-scan.outputs.total_violations }}
+          scan_report: ${{ steps.security-scan.outputs.scan_report }}
+      
+      - name: Fail on security violations
+        if: steps.find-files.outputs.changed == 'true' && steps.security-scan.outputs.security_violations_found == 'true'
+        run: |
+          echo "❌ Security violations detected!"
+          echo "Please fix the security violations before merging."
+          echo "See the PR comment for detailed information."
+          echo "Refer to docs/security/SECURITY_POLICIES.md for guidance."
+          exit 1
+      
+      - name: Upload security reports
+        if: steps.find-files.outputs.changed == 'true' && always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-scan-reports
+          path: security-scan-output/
+          retention-days: 30

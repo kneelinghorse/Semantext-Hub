@@ -1,0 +1,417 @@
+{
+  "urn": "urn:proto:event:observability/event-bus@v1",
+  "metadata": {
+    "urn": "urn:proto:event:observability/event-bus@v1",
+    "name": "Observability Event Bus",
+    "version": "1.0.0",
+    "description": "Event bus for observability event coordination and routing",
+    "status": "approved",
+    "created_at": "2025-01-09T00:00:00Z",
+    "approved_at": "2025-01-09T00:00:00Z",
+    "approved_by": "system"
+  },
+  "service": {
+    "name": "event-bus",
+    "type": "event",
+    "version": "1.0.0",
+    "protocol": "Kafka",
+    "brokers": ["kafka.observability.com:9092"],
+    "security": {
+      "type": "sasl_plaintext",
+      "username": "event-bus",
+      "password": "secure-password"
+    }
+  },
+  "event": {
+    "asyncapi": "3.0.0",
+    "info": {
+      "title": "Observability Event Bus",
+      "version": "1.0.0",
+      "description": "Event bus for observability event coordination"
+    },
+    "servers": {
+      "production": {
+        "url": "kafka.observability.com:9092",
+        "protocol": "kafka",
+        "description": "Production Kafka cluster"
+      }
+    },
+    "channels": {
+      "alerts.notifications": {
+        "address": "alerts.notifications",
+        "messages": {
+          "alertNotification": {
+            "$ref": "#/components/messages/AlertNotification"
+          }
+        },
+        "bindings": {
+          "kafka": {
+            "group": "alert-group"
+          }
+        }
+      },
+      "alerts.escalations": {
+        "address": "alerts.escalations",
+        "messages": {
+          "alertEscalation": {
+            "$ref": "#/components/messages/AlertEscalation"
+          }
+        },
+        "bindings": {
+          "kafka": {
+            "group": "escalation-group"
+          }
+        }
+      },
+      "incidents.created": {
+        "address": "incidents.created",
+        "messages": {
+          "incidentCreated": {
+            "$ref": "#/components/messages/IncidentCreated"
+          }
+        },
+        "bindings": {
+          "kafka": {
+            "group": "incident-group"
+          }
+        }
+      },
+      "incidents.resolved": {
+        "address": "incidents.resolved",
+        "messages": {
+          "incidentResolved": {
+            "$ref": "#/components/messages/IncidentResolved"
+          }
+        },
+        "bindings": {
+          "kafka": {
+            "group": "incident-group"
+          }
+        }
+      },
+      "health.checks": {
+        "address": "health.checks",
+        "messages": {
+          "healthCheck": {
+            "$ref": "#/components/messages/HealthCheck"
+          }
+        },
+        "bindings": {
+          "kafka": {
+            "group": "health-group"
+          }
+        }
+      }
+    },
+    "operations": {
+      "publishAlertNotifications": {
+        "action": "send",
+        "channel": {
+          "$ref": "#/channels/alerts.notifications"
+        },
+        "summary": "Publish alert notifications"
+      },
+      "publishAlertEscalations": {
+        "action": "send",
+        "channel": {
+          "$ref": "#/channels/alerts.escalations"
+        },
+        "summary": "Publish alert escalations"
+      },
+      "publishIncidentCreated": {
+        "action": "send",
+        "channel": {
+          "$ref": "#/channels/incidents.created"
+        },
+        "summary": "Publish incident created events"
+      },
+      "publishIncidentResolved": {
+        "action": "send",
+        "channel": {
+          "$ref": "#/channels/incidents.resolved"
+        },
+        "summary": "Publish incident resolved events"
+      },
+      "publishHealthChecks": {
+        "action": "send",
+        "channel": {
+          "$ref": "#/channels/health.checks"
+        },
+        "summary": "Publish health check events"
+      }
+    },
+    "components": {
+      "messages": {
+        "AlertNotification": {
+          "name": "AlertNotification",
+          "title": "Alert Notification Message",
+          "summary": "Alert notification event",
+          "contentType": "application/json",
+          "payload": {
+            "$ref": "#/components/schemas/AlertNotificationPayload"
+          }
+        },
+        "AlertEscalation": {
+          "name": "AlertEscalation",
+          "title": "Alert Escalation Message",
+          "summary": "Alert escalation event",
+          "contentType": "application/json",
+          "payload": {
+            "$ref": "#/components/schemas/AlertEscalationPayload"
+          }
+        },
+        "IncidentCreated": {
+          "name": "IncidentCreated",
+          "title": "Incident Created Message",
+          "summary": "Incident created event",
+          "contentType": "application/json",
+          "payload": {
+            "$ref": "#/components/schemas/IncidentCreatedPayload"
+          }
+        },
+        "IncidentResolved": {
+          "name": "IncidentResolved",
+          "title": "Incident Resolved Message",
+          "summary": "Incident resolved event",
+          "contentType": "application/json",
+          "payload": {
+            "$ref": "#/components/schemas/IncidentResolvedPayload"
+          }
+        },
+        "HealthCheck": {
+          "name": "HealthCheck",
+          "title": "Health Check Message",
+          "summary": "Health check event",
+          "contentType": "application/json",
+          "payload": {
+            "$ref": "#/components/schemas/HealthCheckPayload"
+          }
+        }
+      },
+      "schemas": {
+        "AlertNotificationPayload": {
+          "type": "object",
+          "properties": {
+            "alertId": {
+              "type": "string",
+              "description": "Alert identifier"
+            },
+            "alertName": {
+              "type": "string",
+              "description": "Alert name"
+            },
+            "severity": {
+              "type": "string",
+              "enum": ["low", "medium", "high", "critical"],
+              "description": "Alert severity"
+            },
+            "status": {
+              "type": "string",
+              "enum": ["firing", "resolved"],
+              "description": "Alert status"
+            },
+            "timestamp": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Event timestamp"
+            },
+            "description": {
+              "type": "string",
+              "description": "Alert description"
+            },
+            "labels": {
+              "type": "object",
+              "additionalProperties": { "type": "string" },
+              "description": "Alert labels"
+            },
+            "annotations": {
+              "type": "object",
+              "additionalProperties": { "type": "string" },
+              "description": "Alert annotations"
+            }
+          },
+          "required": ["alertId", "alertName", "severity", "status", "timestamp"]
+        },
+        "AlertEscalationPayload": {
+          "type": "object",
+          "properties": {
+            "alertId": {
+              "type": "string",
+              "description": "Alert identifier"
+            },
+            "escalationLevel": {
+              "type": "integer",
+              "description": "Escalation level"
+            },
+            "escalationReason": {
+              "type": "string",
+              "description": "Reason for escalation"
+            },
+            "timestamp": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Escalation timestamp"
+            },
+            "assignedTo": {
+              "type": "string",
+              "description": "Person or team assigned"
+            },
+            "expectedResolution": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Expected resolution time"
+            }
+          },
+          "required": ["alertId", "escalationLevel", "timestamp"]
+        },
+        "IncidentCreatedPayload": {
+          "type": "object",
+          "properties": {
+            "incidentId": {
+              "type": "string",
+              "description": "Incident identifier"
+            },
+            "title": {
+              "type": "string",
+              "description": "Incident title"
+            },
+            "description": {
+              "type": "string",
+              "description": "Incident description"
+            },
+            "severity": {
+              "type": "string",
+              "enum": ["low", "medium", "high", "critical"],
+              "description": "Incident severity"
+            },
+            "status": {
+              "type": "string",
+              "enum": ["open", "investigating", "mitigating", "resolved"],
+              "description": "Incident status"
+            },
+            "createdAt": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Incident creation time"
+            },
+            "createdBy": {
+              "type": "string",
+              "description": "Incident creator"
+            },
+            "affectedServices": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Affected services"
+            },
+            "relatedAlerts": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Related alert IDs"
+            }
+          },
+          "required": ["incidentId", "title", "severity", "status", "createdAt"]
+        },
+        "IncidentResolvedPayload": {
+          "type": "object",
+          "properties": {
+            "incidentId": {
+              "type": "string",
+              "description": "Incident identifier"
+            },
+            "resolvedAt": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Resolution time"
+            },
+            "resolvedBy": {
+              "type": "string",
+              "description": "Person who resolved the incident"
+            },
+            "resolution": {
+              "type": "string",
+              "description": "Resolution description"
+            },
+            "rootCause": {
+              "type": "string",
+              "description": "Root cause analysis"
+            },
+            "prevention": {
+              "type": "string",
+              "description": "Prevention measures"
+            },
+            "duration": {
+              "type": "integer",
+              "description": "Incident duration in minutes"
+            }
+          },
+          "required": ["incidentId", "resolvedAt", "resolvedBy"]
+        },
+        "HealthCheckPayload": {
+          "type": "object",
+          "properties": {
+            "service": {
+              "type": "string",
+              "description": "Service name"
+            },
+            "status": {
+              "type": "string",
+              "enum": ["healthy", "degraded", "unhealthy"],
+              "description": "Health status"
+            },
+            "timestamp": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Health check timestamp"
+            },
+            "responseTime": {
+              "type": "number",
+              "description": "Response time in milliseconds"
+            },
+            "checks": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object",
+                "properties": {
+                  "status": { "type": "string" },
+                  "message": { "type": "string" },
+                  "duration": { "type": "number" }
+                }
+              },
+              "description": "Individual health checks"
+            },
+            "metadata": {
+              "type": "object",
+              "additionalProperties": true,
+              "description": "Additional metadata"
+            }
+          },
+          "required": ["service", "status", "timestamp"]
+        }
+      }
+    }
+  },
+  "dependencies": [
+    {
+      "urn": "urn:proto:event:observability/log-collector@v1",
+      "description": "Log Collector for log events",
+      "channels": ["logs.application", "logs.system", "logs.security"]
+    },
+    {
+      "urn": "urn:proto:api:observability/metrics-hub@v1",
+      "description": "Metrics Hub for alert events",
+      "endpoints": ["/alerts"]
+    }
+  ],
+  "consumers": [
+    {
+      "name": "log-collector",
+      "description": "Log Collector that publishes log events",
+      "channels": ["logs.application", "logs.system", "logs.security"]
+    },
+    {
+      "name": "metrics-hub",
+      "description": "Metrics Hub that publishes alert events",
+      "channels": ["alerts.notifications", "alerts.escalations"]
+    }
+  ]
+}

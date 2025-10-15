@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "system-protocols": {
+      "command": "node",
+      "args": ["./bin/protocol-mcp-server.js"],
+      "type": "stdio",
+      "env": {
+        "PROTOCOL_ROOT": "/Users/systemsystems/portfolio/OSSP-AGI/app"
+      }
+    }
+  }
+}

@@ -1,0 +1,321 @@
+{
+  "urn": "urn:proto:event:observability/log-collector@v1",
+  "metadata": {
+    "urn": "urn:proto:event:observability/log-collector@v1",
+    "name": "Observability Log Collector",
+    "version": "1.0.0",
+    "description": "Structured log collection and processing service",
+    "status": "approved",
+    "created_at": "2025-01-09T00:00:00Z",
+    "approved_at": "2025-01-09T00:00:00Z",
+    "approved_by": "system"
+  },
+  "service": {
+    "name": "log-collector",
+    "type": "event",
+    "version": "1.0.0",
+    "protocol": "Kafka",
+    "brokers": ["kafka.observability.com:9092"],
+    "security": {
+      "type": "sasl_plaintext",
+      "username": "log-collector",
+      "password": "secure-password"
+    }
+  },
+  "event": {
+    "asyncapi": "3.0.0",
+    "info": {
+      "title": "Observability Log Collector",
+      "version": "1.0.0",
+      "description": "Structured log collection and processing"
+    },
+    "servers": {
+      "production": {
+        "url": "kafka.observability.com:9092",
+        "protocol": "kafka",
+        "description": "Production Kafka cluster"
+      }
+    },
+    "channels": {
+      "logs.application": {
+        "address": "logs.application",
+        "messages": {
+          "applicationLog": {
+            "$ref": "#/components/messages/ApplicationLog"
+          }
+        },
+        "bindings": {
+          "kafka": {
+            "group": "log-collector-group"
+          }
+        }
+      },
+      "logs.system": {
+        "address": "logs.system",
+        "messages": {
+          "systemLog": {
+            "$ref": "#/components/messages/SystemLog"
+          }
+        },
+        "bindings": {
+          "kafka": {
+            "group": "log-collector-group"
+          }
+        }
+      },
+      "logs.security": {
+        "address": "logs.security",
+        "messages": {
+          "securityLog": {
+            "$ref": "#/components/messages/SecurityLog"
+          }
+        },
+        "bindings": {
+          "kafka": {
+            "group": "log-collector-group"
+          }
+        }
+      },
+      "metrics.derived": {
+        "address": "metrics.derived",
+        "messages": {
+          "derivedMetric": {
+            "$ref": "#/components/messages/DerivedMetric"
+          }
+        },
+        "bindings": {
+          "kafka": {
+            "group": "metrics-group"
+          }
+        }
+      }
+    },
+    "operations": {
+      "collectApplicationLogs": {
+        "action": "receive",
+        "channel": {
+          "$ref": "#/channels/logs.application"
+        },
+        "summary": "Collect application logs"
+      },
+      "collectSystemLogs": {
+        "action": "receive",
+        "channel": {
+          "$ref": "#/channels/logs.system"
+        },
+        "summary": "Collect system logs"
+      },
+      "collectSecurityLogs": {
+        "action": "receive",
+        "channel": {
+          "$ref": "#/channels/logs.security"
+        },
+        "summary": "Collect security logs"
+      },
+      "publishDerivedMetrics": {
+        "action": "send",
+        "channel": {
+          "$ref": "#/channels/metrics.derived"
+        },
+        "summary": "Publish derived metrics from logs"
+      }
+    },
+    "components": {
+      "messages": {
+        "ApplicationLog": {
+          "name": "ApplicationLog",
+          "title": "Application Log Message",
+          "summary": "Structured application log entry",
+          "contentType": "application/json",
+          "payload": {
+            "$ref": "#/components/schemas/ApplicationLogPayload"
+          }
+        },
+        "SystemLog": {
+          "name": "SystemLog",
+          "title": "System Log Message",
+          "summary": "Structured system log entry",
+          "contentType": "application/json",
+          "payload": {
+            "$ref": "#/components/schemas/SystemLogPayload"
+          }
+        },
+        "SecurityLog": {
+          "name": "SecurityLog",
+          "title": "Security Log Message",
+          "summary": "Structured security log entry",
+          "contentType": "application/json",
+          "payload": {
+            "$ref": "#/components/schemas/SecurityLogPayload"
+          }
+        },
+        "DerivedMetric": {
+          "name": "DerivedMetric",
+          "title": "Derived Metric Message",
+          "summary": "Metric derived from log analysis",
+          "contentType": "application/json",
+          "payload": {
+            "$ref": "#/components/schemas/DerivedMetricPayload"
+          }
+        }
+      },
+      "schemas": {
+        "ApplicationLogPayload": {
+          "type": "object",
+          "properties": {
+            "timestamp": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Log timestamp"
+            },
+            "level": {
+              "type": "string",
+              "enum": ["DEBUG", "INFO", "WARN", "ERROR", "FATAL"],
+              "description": "Log level"
+            },
+            "service": {
+              "type": "string",
+              "description": "Service name"
+            },
+            "message": {
+              "type": "string",
+              "description": "Log message"
+            },
+            "context": {
+              "type": "object",
+              "additionalProperties": true,
+              "description": "Additional context data"
+            },
+            "traceId": {
+              "type": "string",
+              "description": "Distributed trace ID"
+            },
+            "spanId": {
+              "type": "string",
+              "description": "Span ID"
+            }
+          },
+          "required": ["timestamp", "level", "service", "message"]
+        },
+        "SystemLogPayload": {
+          "type": "object",
+          "properties": {
+            "timestamp": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Log timestamp"
+            },
+            "hostname": {
+              "type": "string",
+              "description": "Hostname"
+            },
+            "component": {
+              "type": "string",
+              "description": "System component"
+            },
+            "message": {
+              "type": "string",
+              "description": "Log message"
+            },
+            "severity": {
+              "type": "string",
+              "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"],
+              "description": "Severity level"
+            },
+            "metrics": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "number"
+              },
+              "description": "System metrics"
+            }
+          },
+          "required": ["timestamp", "hostname", "component", "message"]
+        },
+        "SecurityLogPayload": {
+          "type": "object",
+          "properties": {
+            "timestamp": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Log timestamp"
+            },
+            "eventType": {
+              "type": "string",
+              "enum": ["AUTHENTICATION", "AUTHORIZATION", "ACCESS", "THREAT"],
+              "description": "Security event type"
+            },
+            "source": {
+              "type": "string",
+              "description": "Event source"
+            },
+            "target": {
+              "type": "string",
+              "description": "Event target"
+            },
+            "result": {
+              "type": "string",
+              "enum": ["SUCCESS", "FAILURE", "BLOCKED"],
+              "description": "Event result"
+            },
+            "details": {
+              "type": "object",
+              "additionalProperties": true,
+              "description": "Additional event details"
+            }
+          },
+          "required": ["timestamp", "eventType", "source", "result"]
+        },
+        "DerivedMetricPayload": {
+          "type": "object",
+          "properties": {
+            "timestamp": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Metric timestamp"
+            },
+            "metricName": {
+              "type": "string",
+              "description": "Metric name"
+            },
+            "value": {
+              "type": "number",
+              "description": "Metric value"
+            },
+            "labels": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              },
+              "description": "Metric labels"
+            },
+            "source": {
+              "type": "string",
+              "description": "Metric source"
+            }
+          },
+          "required": ["timestamp", "metricName", "value"]
+        }
+      }
+    }
+  },
+  "dependencies": [
+    {
+      "urn": "urn:proto:api:observability/metrics-hub@v1",
+      "description": "Metrics Hub for metric storage and querying",
+      "endpoints": ["/metrics"]
+    }
+  ],
+  "consumers": [
+    {
+      "name": "metrics-hub",
+      "description": "Metrics Hub that processes derived metrics",
+      "channels": ["metrics.derived"]
+    },
+    {
+      "name": "event-bus",
+      "description": "Event Bus that publishes observability events",
+      "channels": ["logs.application", "logs.system", "logs.security"]
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "type": "data",
+  "name": "LogFormat",
+  "version": "1.0.0",
+  "description": "Log file format",
+  "protocol": {
+    "format": "json",
+    "schema": {
+      "fields": []
+    },
+    "compression": "none"
+  },
+  "metadata": {
+    "created": "2025-10-03T15:27:59.261Z",
+    "author": "protocol-discover"
+  }
+}

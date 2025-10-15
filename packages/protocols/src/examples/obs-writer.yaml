@@ -1,0 +1,9 @@
+apiVersion: obs/v1.1.2
+kind: ObservabilityManifest
+observability: { service: "writer-service", lifecycle: { status: "enabled" } }
+signals:
+  logs: { paths: ["/var/log/writer/*.log"] }
+relationships:
+  targets:
+    - "urn:proto:agent:writer@1.1.1"
+    - "urn:proto:api:publishing@1.1.1#/v1/publish"

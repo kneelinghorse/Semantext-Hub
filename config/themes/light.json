@@ -1,0 +1,293 @@
+{
+  "$schema": "../theme-style-schema.json",
+  "id": "light",
+  "name": "Aurora Light",
+  "description": "Balanced light theme optimised for documentation-friendly exports.",
+  "version": 1,
+  "palette": {
+    "text": {
+      "primary": "#1F2933",
+      "muted": "#475569",
+      "inverse": "#F8FAFC"
+    },
+    "node": {
+      "default": {
+        "fill": "#E6F4F1",
+        "stroke": "#0B7285"
+      },
+      "protocol": {
+        "fill": "#EBF4FF",
+        "stroke": "#1D4ED8"
+      },
+      "service": {
+        "fill": "#F0F9FF",
+        "stroke": "#0EA5E9"
+      },
+      "dataset": {
+        "fill": "#FEF3C7",
+        "stroke": "#D97706"
+      },
+      "external": {
+        "fill": "#F9FAFB",
+        "stroke": "#94A3B8"
+      }
+    },
+    "domain": {
+      "core": {
+        "fill": "#DCFCE7",
+        "stroke": "#15803D"
+      },
+      "platform": {
+        "fill": "#E0F2FE",
+        "stroke": "#0284C7"
+      },
+      "governance": {
+        "fill": "#F3E8FF",
+        "stroke": "#7C3AED"
+      }
+    },
+    "edge": {
+      "default": {
+        "stroke": "#0B7285",
+        "label": "#0F172A"
+      },
+      "consumes": {
+        "stroke": "#16A34A"
+      },
+      "publishes": {
+        "stroke": "#0EA5E9"
+      },
+      "depends_on": {
+        "stroke": "#1D4ED8"
+      }
+    }
+  },
+  "drawio": {
+    "defaults": {
+      "node": {
+        "width": 180,
+        "height": 80,
+        "style": {
+          "shape": "rectangle",
+          "perimeter": "rectanglePerimeter",
+          "rounded": 1,
+          "html": 1,
+          "whiteSpace": "wrap",
+          "fontColor": "{{palette.text.primary}}",
+          "fontSize": 14,
+          "strokeColor": "{{palette.node.default.stroke}}",
+          "fillColor": "{{palette.node.default.fill}}",
+          "align": "center",
+          "verticalAlign": "middle",
+          "spacing": 12
+        }
+      },
+      "edge": {
+        "style": {
+          "edgeStyle": "orthogonalEdgeStyle",
+          "startArrow": "none",
+          "endArrow": "block",
+          "endSize": 8,
+          "html": 1,
+          "rounded": 0,
+          "orthogonalLoop": 1,
+          "strokeColor": "{{palette.edge.default.stroke}}",
+          "strokeWidth": 2
+        }
+      }
+    },
+    "nodeTypes": {
+      "protocol": {
+        "style": {
+          "fillColor": "{{palette.node.protocol.fill}}",
+          "strokeColor": "{{palette.node.protocol.stroke}}"
+        }
+      },
+      "service": {
+        "style": {
+          "shape": "swimlane",
+          "align": "left",
+          "verticalAlign": "top",
+          "fillColor": "{{palette.node.service.fill}}",
+          "strokeColor": "{{palette.node.service.stroke}}"
+        }
+      },
+      "dataset": {
+        "style": {
+          "shape": "cylinder",
+          "fillColor": "{{palette.node.dataset.fill}}",
+          "strokeColor": "{{palette.node.dataset.stroke}}"
+        }
+      },
+      "external": {
+        "style": {
+          "dashed": 1,
+          "fillColor": "{{palette.node.external.fill}}",
+          "strokeColor": "{{palette.node.external.stroke}}",
+          "fontColor": "{{palette.text.muted}}"
+        }
+      }
+    },
+    "domains": {
+      "core": {
+        "style": {
+          "fillColor": "{{palette.domain.core.fill}}",
+          "strokeColor": "{{palette.domain.core.stroke}}"
+        }
+      },
+      "platform": {
+        "style": {
+          "fillColor": "{{palette.domain.platform.fill}}",
+          "strokeColor": "{{palette.domain.platform.stroke}}"
+        }
+      },
+      "governance": {
+        "style": {
+          "fillColor": "{{palette.domain.governance.fill}}",
+          "strokeColor": "{{palette.domain.governance.stroke}}"
+        }
+      }
+    },
+    "edgeTypes": {
+      "depends_on": {
+        "style": {
+          "dashed": 0,
+          "strokeColor": "{{palette.edge.depends_on.stroke}}",
+          "endArrow": "block"
+        }
+      },
+      "publishes": {
+        "style": {
+          "strokeColor": "{{palette.edge.publishes.stroke}}",
+          "endArrow": "openTriangle"
+        }
+      },
+      "consumes": {
+        "style": {
+          "strokeColor": "{{palette.edge.consumes.stroke}}",
+          "endArrow": "block",
+          "dashed": 1
+        }
+      }
+    }
+  },
+  "cytoscape": {
+    "defaults": {
+      "node": {
+        "style": {
+          "background-color": "{{palette.node.default.fill}}",
+          "border-color": "{{palette.node.default.stroke}}",
+          "border-width": 2,
+          "border-style": "solid",
+          "label": "data(label)",
+          "color": "{{palette.text.primary}}",
+          "font-size": 14,
+          "font-weight": 500,
+          "text-halign": "center",
+          "text-valign": "center",
+          "text-wrap": "wrap",
+          "text-max-width": 160,
+          "padding": "12px",
+          "shape": "round-rectangle"
+        }
+      },
+      "edge": {
+        "style": {
+          "curve-style": "bezier",
+          "width": 2,
+          "line-color": "{{palette.edge.default.stroke}}",
+          "target-arrow-shape": "triangle",
+          "target-arrow-color": "{{palette.edge.default.stroke}}",
+          "arrow-scale": 1,
+          "label": "data(label)",
+          "font-size": 11,
+          "color": "{{palette.edge.default.label}}",
+          "text-wrap": "wrap",
+          "text-margin-y": -10
+        }
+      },
+      "layout": {
+        "name": "cola",
+        "maxSimulationTime": 4000,
+        "refresh": 1,
+        "animate": false,
+        "fit": true,
+        "padding": 40,
+        "edgeElasticity": 100,
+        "nodeSpacing": 30
+      }
+    },
+    "nodeTypes": {
+      "protocol": {
+        "style": {
+          "background-color": "{{palette.node.protocol.fill}}",
+          "border-color": "{{palette.node.protocol.stroke}}"
+        }
+      },
+      "service": {
+        "style": {
+          "background-color": "{{palette.node.service.fill}}",
+          "border-color": "{{palette.node.service.stroke}}"
+        }
+      },
+      "dataset": {
+        "style": {
+          "background-color": "{{palette.node.dataset.fill}}",
+          "border-color": "{{palette.node.dataset.stroke}}"
+        }
+      },
+      "external": {
+        "style": {
+          "background-color": "{{palette.node.external.fill}}",
+          "border-color": "{{palette.node.external.stroke}}",
+          "border-style": "dashed",
+          "line-style": "dashed",
+          "color": "{{palette.text.muted}}"
+        }
+      }
+    },
+    "domains": {
+      "core": {
+        "style": {
+          "background-color": "{{palette.domain.core.fill}}",
+          "border-color": "{{palette.domain.core.stroke}}"
+        }
+      },
+      "platform": {
+        "style": {
+          "background-color": "{{palette.domain.platform.fill}}",
+          "border-color": "{{palette.domain.platform.stroke}}"
+        }
+      },
+      "governance": {
+        "style": {
+          "background-color": "{{palette.domain.governance.fill}}",
+          "border-color": "{{palette.domain.governance.stroke}}"
+        }
+      }
+    },
+    "edgeTypes": {
+      "consumes": {
+        "style": {
+          "line-style": "dashed",
+          "line-color": "{{palette.edge.consumes.stroke}}",
+          "target-arrow-color": "{{palette.edge.consumes.stroke}}"
+        }
+      },
+      "publishes": {
+        "style": {
+          "line-color": "{{palette.edge.publishes.stroke}}",
+          "target-arrow-color": "{{palette.edge.publishes.stroke}}",
+          "target-arrow-shape": "triangle-backcurve"
+        }
+      },
+      "depends_on": {
+        "style": {
+          "line-style": "solid",
+          "line-color": "{{palette.edge.depends_on.stroke}}",
+          "target-arrow-color": "{{palette.edge.depends_on.stroke}}"
+        }
+      }
+    }
+  }
+}

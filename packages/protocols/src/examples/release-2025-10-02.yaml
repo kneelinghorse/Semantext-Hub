@@ -1,0 +1,14 @@
+apiVersion: release/v1.1.2
+kind: ReleaseManifest
+release:
+  version: "2025.10.02"
+  lifecycle: { status: "planned" }
+strategy: { type: "canary", canary: { traffic_split: [{ percent: 10, duration: "10m" }, { percent: 50, duration: "15m" }] } }
+gates:
+  testing: { tests: ["urn:proto:testing:smoke@1.1.1"], min_pass_rate: 95 }
+relationships:
+  targets:
+    - "urn:proto:agent:writer@1.1.1"
+    - "urn:proto:api:publishing@1.1.1#/v1/publish"
+  observability:
+    - "urn:proto:obs:writer-service@1.1.1"

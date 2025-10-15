@@ -1,0 +1,24 @@
+{
+  "urn": "urn:api:1759791882576",
+  "type": "api",
+  "metadata": {
+    "status": "draft",
+    "source": {
+      "type": "openapi",
+      "reference": "https://raw.githubusercontent.com/github/rest-api-description/main/descriptions/api.github.com/api.github.com.json"
+    },
+    "discovered_at": "2025-10-06T00:00:00Z",
+    "name": "GitHub REST API",
+    "description": "Official GitHub REST API for repository, issue, and user management"
+  },
+  "catalog": {
+    "type": "api",
+    "endpoints": [
+      {
+        "path": "/api/v1",
+        "method": "GET",
+        "description": "API endpoint discovered from GitHub REST API OpenAPI specification"
+      }
+    ]
+  }
+}

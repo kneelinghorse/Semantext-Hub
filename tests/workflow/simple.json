@@ -1,0 +1,17 @@
+{
+  "workflowId": "test-workflow",
+  "name": "Test Workflow",
+  "version": "1.0.0",
+  "steps": [
+    {
+      "stepId": "step-1",
+      "type": "task",
+      "task": {
+        "action": "test-action",
+        "inputs": {
+          "message": "Hello World"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "urn": "urn:proto:event:sample.set/customer-created@v1.0.0",
+  "metadata": {
+    "urn": "urn:proto:event:sample.set/customer-created@v1.0.0",
+    "name": "Sample Customer Created Event",
+    "kind": "event",
+    "version": "1.0.0",
+    "description": "Event emitted when a new customer profile is created.",
+    "status": "approved",
+    "visibility": "internal",
+    "tags": ["sample", "catalog", "event"],
+    "created_at": "2025-01-10T00:00:00Z",
+    "updated_at": "2025-01-10T00:00:00Z"
+  },
+  "event": {
+    "channels": [
+      {
+        "name": "customer.created",
+        "description": "Notification stream for newly created customers.",
+        "publisher": "sample-set.customer-api",
+        "delivery": {
+          "protocol": "sns",
+          "region": "us-east-1"
+        }
+      }
+    ]
+  }
+}

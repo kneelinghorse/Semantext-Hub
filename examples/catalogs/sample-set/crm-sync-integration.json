@@ -1,0 +1,36 @@
+{
+  "urn": "urn:proto:integration:sample.set/crm-sync@v1.0.0",
+  "metadata": {
+    "urn": "urn:proto:integration:sample.set/crm-sync@v1.0.0",
+    "name": "Sample CRM Sync Integration",
+    "kind": "integration",
+    "version": "1.0.0",
+    "description": "Nightly integration that synchronizes customer data from the internal store to an external CRM.",
+    "status": "approved",
+    "visibility": "internal",
+    "tags": ["sample", "catalog", "integration"],
+    "created_at": "2025-01-10T00:00:00Z",
+    "updated_at": "2025-01-10T00:00:00Z"
+  },
+  "integration": {
+    "mode": "batch",
+    "schedule": "0 2 * * *",
+    "source": {
+      "urn": "urn:proto:data:sample.set/customer-db@v1.0.0",
+      "type": "database"
+    },
+    "destination": {
+      "urn": "urn:proto:api:sample.set/customer-api@v1.0.0",
+      "type": "api"
+    }
+  },
+  "relationships": {
+    "depends_on": [
+      "urn:proto:data:sample.set/customer-db@v1.0.0",
+      "urn:proto:api:sample.set/customer-api@v1.0.0"
+    ],
+    "reads_from": ["urn:proto:data:sample.set/customer-db@v1.0.0"],
+    "writes_to": ["urn:proto:api:sample.set/customer-api@v1.0.0"]
+  }
+}
+

@@ -1,0 +1,17 @@
+{
+  "type": "{{type}}",
+  "name": "{{name}}",
+  "version": "{{version}}",
+  "description": "{{description}}",
+  "protocol": {
+    "format": "{{format}}",
+    "schema": {
+      "fields": []
+    },
+    "compression": "{{compression}}"
+  },
+  "metadata": {
+    "created": "{{timestamp}}",
+    "author": "{{author}}"
+  }
+}
