@@ -307,9 +307,14 @@ export class ProgressAggregator {
    * @private
    */
   _scheduleCleanup(taskId) {
-    setTimeout(() => {
+    const timeout = setTimeout(() => {
       this.trackers.delete(taskId);
     }, 5 * 60 * 1000); // 5 minutes
+
+    // Ensure the cleanup timer does not hold the event loop open in CI/test environments.
+    if (typeof timeout.unref === 'function') {
+      timeout.unref();
+    }
   }
 }
 

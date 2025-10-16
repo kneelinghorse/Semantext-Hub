@@ -75,7 +75,7 @@ jobs:
         
     - name: Upload test artifacts
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: test-artifacts-${{ matrix.test-suite }}
         path: |
@@ -124,7 +124,7 @@ jobs:
         
     - name: Upload A2A artifacts
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: a2a-artifacts
         path: |
@@ -173,7 +173,7 @@ jobs:
         
     - name: Upload MCP artifacts
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: mcp-artifacts
         path: |
@@ -222,7 +222,7 @@ jobs:
         
     - name: Upload discovery artifacts
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: discovery-artifacts
         path: |
@@ -271,7 +271,7 @@ jobs:
         
     - name: Upload E2E artifacts
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: e2e-artifacts
         path: |
@@ -332,7 +332,7 @@ jobs:
         
     - name: Upload performance artifacts
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: performance-artifacts
         path: |
@@ -416,7 +416,7 @@ jobs:
         
     - name: Upload quality report
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: quality-report
         path: |
