@@ -6,8 +6,8 @@ export default {
   // Use babel-jest for TS/JS to interop ESM/CJS cleanly
   transform: { '^.+\.(t|j)sx?$': ['babel-jest', { rootMode: 'upward' }] },
   testMatch: [
-    '**/tests/**/*.test.(ts|js)',
-    '**/tests/**/*.spec.(ts|js)'
+    '**/tests/**/*.test.(ts|js|mjs)',
+    '**/tests/**/*.spec.(ts|js|mjs)'
   ],
   testPathIgnorePatterns: [
     '/node_modules/',
@@ -43,21 +43,8 @@ export default {
   maxWorkers: 2,
   verbose: true,
   setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'mjs', 'json', 'node'],
   moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/$1',
-    // Extensionless ESM paths used in tests
-    '^\\.\\./\\.\\./packages/runtime/importers/openapi/importer$': '<rootDir>/packages/runtime/importers/openapi/importer.js',
-    '^\\.\\./\\.\\./packages/runtime/importers/postgres/importer$': '<rootDir>/packages/runtime/importers/postgres/importer.js',
-    '^\\.\\./\\.\\./packages/runtime/importers/openapi/importer\\.js$': '<rootDir>/packages/runtime/importers/openapi/importer.js',
-    '^\\.\\./\\.\\./packages/runtime/importers/postgres/importer\\.js$': '<rootDir>/packages/runtime/importers/postgres/importer.js',
-    // Map CLI commands in tests to CJS shims for isolation
-    '^\\.\\./\\.\\./packages/runtime/cli/commands/discover$': '<rootDir>/tests/_shims/commands/discover.cjs',
-    '^\\.\\./\\.\\./packages/runtime/cli/commands/review$': '<rootDir>/tests/_shims/commands/review.cjs',
-    '^\\.\\./\\.\\./packages/runtime/cli/commands/approve$': '<rootDir>/tests/_shims/commands/approve.cjs',
-    '^\\.\\./\\.\\./packages/runtime/cli/commands/governance$': '<rootDir>/tests/_shims/commands/governance.cjs',
-    
-    '^\\.\\./\\.\\./packages/runtime/cli/utils/output$': '<rootDir>/tests/_shims/utils/output.cjs',
-    '^\\.\\./\\.\\./packages/runtime/cli/utils/detect-ci$': '<rootDir>/tests/_shims/utils/detect-ci.cjs'
+    '^@/(.*)$': '<rootDir>/$1'
   }
 };

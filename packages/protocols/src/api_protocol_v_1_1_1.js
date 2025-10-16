@@ -16,6 +16,16 @@
 // Utilities (tiny, local)
 // ————————————————————————————————————————————————————————————————
 
+/**
+ * @typedef {Object} SignatureEnvelope
+ * @property {'identity-access.signing.v1'} spec
+ * @property {string} protected
+ * @property {string} payload
+ * @property {{alg:'sha-256', value:string}} hash
+ * @property {string} signature
+ * @property {{alg:'EdDSA'|'ES256', kid:string, typ:string, canonical:string, digest:string, iat:string, exp?:string, [key:string]:any}} [header]
+ */
+
 /** Canonicalize JSON for stable hashing */
 function jsonCanon(value) {
   if (value === null || typeof value !== 'object') return JSON.stringify(value);
@@ -90,6 +100,7 @@ const clone = x => JSON.parse(JSON.stringify(x));
  * @property {string[]} [relationships.consumers]
  * @property {string[]} [relationships.complements]
  * @property {Object} [rules]            Optional rules (e.g., endpoint constraints)
+ * @property {SignatureEnvelope} [sig]
  */
 
 // ————————————————————————————————————————————————————————————————

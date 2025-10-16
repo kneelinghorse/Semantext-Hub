@@ -25,7 +25,7 @@ import { runFullValidation } from '../../workflow/validation-service.js';
  * @param {Object} options - Command options
  * @param {boolean} options.force - Force approval despite warnings
  */
-async function approveCommand(manifestPath, options) {
+async function approveCommand(manifestPath, options = {}) {
   try {
     // Check if manifest exists
     if (!await fs.pathExists(manifestPath)) {
@@ -65,14 +65,16 @@ async function approveCommand(manifestPath, options) {
 
     // Validate manifest
     console.log('🔍 Running validation...\n');
-    const validation = await runFullValidation({
-      manifestPath,
-      manifest: manifestForApproval,
-      options: {
-        includeDiff: true,
-        includeMigration: false
-      }
-    });
+    const validation = options.validationResult
+      ? options.validationResult
+      : await runFullValidation({
+        manifestPath,
+        manifest: manifestForApproval,
+        options: {
+          includeDiff: true,
+          includeMigration: false
+        }
+      });
 
     const { combined, structural, cross, diff, breaking } = validation;
 

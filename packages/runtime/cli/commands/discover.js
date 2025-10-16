@@ -236,7 +236,8 @@ async function discoverCommand(type, source, options = {}) {
       spinner.start();
     }
 
-    const manifest = await runImporter(sourceType, source, spinner);
+    const importerFn = typeof options.runImporter === 'function' ? options.runImporter : runImporter;
+    const manifest = await importerFn(sourceType, source, spinner);
 
     augmentProvenance(manifest, source);
 

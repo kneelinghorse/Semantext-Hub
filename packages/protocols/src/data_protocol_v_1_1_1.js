@@ -59,6 +59,16 @@ function hash(value) {
   return 'fnv1a64-' + h.toString(16).padStart(16, '0');
 }
 
+/**
+ * @typedef {Object} SignatureEnvelope
+ * @property {'identity-access.signing.v1'} spec
+ * @property {string} protected
+ * @property {string} payload
+ * @property {{alg:'sha-256', value:string}} hash
+ * @property {string} signature
+ * @property {{alg:'EdDSA'|'ES256', kid:string, typ:string, canonical:string, digest:string, iat:string, exp?:string, [key:string]:any}} [header]
+ */
+
 // ————————————————————————————————————————————————————————————————
 // Manifest shape (informative JSDoc only)
 // ————————————————————————————————————————————————————————————————
@@ -90,6 +100,7 @@ function hash(value) {
  * @property {Object} [catalog]
  * @property {string} [catalog.owner]
  * @property {string[]} [catalog.tags]
+ * @property {SignatureEnvelope} [sig]
  */
 
 // ————————————————————————————————————————————————————————————————

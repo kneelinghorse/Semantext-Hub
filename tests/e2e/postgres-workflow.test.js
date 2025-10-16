@@ -5,19 +5,69 @@
 import fs from 'fs-extra';
 import os from 'os';
 import path from 'path';
+
 import { discoverCommand } from '../../packages/runtime/cli/commands/discover.js';
 import { reviewCommand } from '../../packages/runtime/cli/commands/review.js';
 import { approveCommand } from '../../packages/runtime/cli/commands/approve.js';
-import { PostgresImporter } from '../../packages/runtime/importers/postgres/importer.js';
 
-jest.mock('../../packages/runtime/importers/postgres/importer.js', () => {
-  const importMock = jest.fn();
-  const PostgresImporter = jest.fn().mockImplementation(() => ({
-    import: importMock
-  }));
-  PostgresImporter.__importMock = importMock;
-  return { PostgresImporter };
-});
+function createValidationResult(overrides = {}) {
+  const base = {
+    structural: { errors: [], warnings: [], suggestions: [] },
+    cross: { issues: { errors: [], warnings: [], info: [] } },
+    combined: { valid: true, errors: [], warnings: [] },
+    diff: {
+      summary: {
+        totalChanges: 0,
+        breaking: 0,
+        nonBreaking: 0,
+        compatible: 0,
+        internal: 0,
+        hasBreakingChanges: false
+      },
+      changes: { breaking: [] }
+    },
+    breaking: {
+      hasBreakingChanges: false,
+      riskScore: 0,
+      downstreamImpact: { totalAffected: 0, criticalPath: false },
+      recommendation: { level: 'none', actions: [] }
+    },
+    migration: {
+      required: false,
+      blockers: [],
+      warnings: [],
+      suggestions: [],
+      effort: { estimatedHours: 0, complexity: 'low', confidence: 1 }
+    },
+    graph: { nodes: 0, edges: 0, cache: { hitRatio: 1 } },
+    context: { loadErrors: [] }
+  };
+
+  return {
+    ...base,
+    ...overrides,
+    structural: { ...base.structural, ...(overrides.structural || {}) },
+    cross: {
+      ...base.cross,
+      ...(overrides.cross || {}),
+      issues: {
+        ...base.cross.issues,
+        ...((overrides.cross && overrides.cross.issues) || {})
+      }
+    },
+    combined: { ...base.combined, ...(overrides.combined || {}) },
+    diff: {
+      ...base.diff,
+      ...(overrides.diff || {}),
+      summary: { ...base.diff.summary, ...((overrides.diff && overrides.diff.summary) || {}) },
+      changes: { ...base.diff.changes, ...((overrides.diff && overrides.diff.changes) || {}) }
+    },
+    breaking: { ...base.breaking, ...(overrides.breaking || {}) },
+    migration: { ...base.migration, ...(overrides.migration || {}) },
+    graph: { ...base.graph, ...(overrides.graph || {}) },
+    context: { ...base.context, ...(overrides.context || {}) }
+  };
+}
 
 function withMockedExit(fn, { throwOnExit = false } = {}) {
   const originalExit = process.exit;
@@ -53,6 +103,8 @@ async function createTempArtifactsDir(prefix) {
 describe('Postgres discover → review → approve workflow', () => {
   let tmpContext;
   let originalUser;
+  let runImporterMock;
+  let validationResult;
 
   const sampleManifest = () => ({
     metadata: {
@@ -100,7 +152,11 @@ describe('Postgres discover → review → approve workflow', () => {
       await fs.remove(tmpContext.tmpDir);
       tmpContext = null;
     }
-    PostgresImporter.__importMock.mockReset();
+    if (runImporterMock) {
+      runImporterMock.mockReset();
+      runImporterMock = null;
+    }
+    validationResult = undefined;
     process.exitCode = undefined;
   });
 
@@ -108,12 +164,16 @@ describe('Postgres discover → review → approve workflow', () => {
     tmpContext = await createTempArtifactsDir('postgres-workflow-');
     const { artifactsDir } = tmpContext;
 
-    PostgresImporter.__importMock.mockResolvedValue(sampleManifest());
+    runImporterMock = jest.fn(() => Promise.resolve(sampleManifest()));
+    validationResult = createValidationResult();
 
     await discoverCommand('data', 'postgresql://localhost:5432/analytics', {
       output: artifactsDir,
-      format: 'json'
+      format: 'json',
+      runImporter: runImporterMock
     });
+    expect(runImporterMock).toHaveBeenCalledWith('postgres', 'postgresql://localhost:5432/analytics', expect.any(Object));
+    expect(runImporterMock).toHaveBeenCalledTimes(1);
 
     const draftPath = path.join(artifactsDir, 'data-manifest.draft.json');
     expect(await fs.pathExists(draftPath)).toBe(true);
@@ -123,10 +183,10 @@ describe('Postgres discover → review → approve workflow', () => {
     expect(draftManifest.service).toBeDefined();
     expect(draftManifest.service.entities.length).toBeGreaterThan(0);
 
-    const reviewExit = await withMockedExit(() => reviewCommand(draftPath, {}));
+    const reviewExit = await withMockedExit(() => reviewCommand(draftPath, { validationResult }));
     expect(reviewExit).toHaveBeenCalledWith(0);
 
-    await approveCommand(draftPath, {});
+    await approveCommand(draftPath, { validationResult: createValidationResult() });
 
     const approvedPath = path.join(artifactsDir, 'data-manifest.approved.json');
     expect(await fs.pathExists(approvedPath)).toBe(true);
@@ -143,6 +203,21 @@ describe('Postgres discover → review → approve workflow', () => {
   test('requires force flag when validation errors exist', async () => {
     tmpContext = await createTempArtifactsDir('postgres-workflow-force-');
     const { artifactsDir } = tmpContext;
+    const failingValidation = createValidationResult({
+      combined: { valid: false, errors: [{ field: 'service', message: 'Invalid service configuration' }], warnings: [] },
+      structural: {
+        errors: [{ field: 'service.name', message: 'Service name is required' }],
+        warnings: [],
+        suggestions: []
+      },
+      cross: {
+        issues: {
+          errors: [{ message: 'Cross protocol mismatch' }],
+          warnings: [],
+          info: []
+        }
+      }
+    });
 
     const invalidManifestPath = path.join(artifactsDir, 'data-manifest.draft.json');
     await fs.writeJson(invalidManifestPath, {
@@ -152,13 +227,13 @@ describe('Postgres discover → review → approve workflow', () => {
     });
 
     const exitWithoutForce = await withMockedExit(
-      () => approveCommand(invalidManifestPath, {}),
+      () => approveCommand(invalidManifestPath, { validationResult: failingValidation }),
       { throwOnExit: true }
     );
     expect(exitWithoutForce).toHaveBeenCalledWith(1);
 
     // Force approval succeeds and produces approved manifest
-    await approveCommand(invalidManifestPath, { force: true });
+    await approveCommand(invalidManifestPath, { force: true, validationResult: failingValidation });
 
     const approvedPath = path.join(artifactsDir, 'data-manifest.approved.json');
     expect(await fs.pathExists(approvedPath)).toBe(true);

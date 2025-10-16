@@ -64,17 +64,23 @@ import { createURNRegistry } from './urn-registry.js';
 export class AgentDiscoveryService extends EventEmitter {
   constructor(options = {}) {
     super();
+
+    const {
+      registryFactory = createURNRegistry,
+      ...configOptions
+    } = options;
     
     this.config = {
-      registry: options.registry || {},
-      enableLogging: options.enableLogging !== false,
-      maxResults: options.maxResults || 100,
-      cacheTtl: options.cacheTtl || 300000, // 5 minutes
-      enableCaching: options.enableCaching !== false,
-      ...options
+      registry: configOptions.registry || {},
+      enableLogging: configOptions.enableLogging !== false,
+      maxResults: configOptions.maxResults || 100,
+      cacheTtl: configOptions.cacheTtl || 300000, // 5 minutes
+      enableCaching: configOptions.enableCaching !== false,
+      ...configOptions
     };
 
-    this.registry = createURNRegistry(this.config.registry);
+    this.registryFactory = registryFactory;
+    this.registry = registryFactory(this.config.registry);
     this.cache = new Map();
     this.isInitialized = false;
   }
@@ -289,7 +295,15 @@ export class AgentDiscoveryService extends EventEmitter {
       await this.initialize();
     }
 
-    return this.registry.getAgent(urn);
+    try {
+      return await this.registry.getAgent(urn);
+    } catch (error) {
+      if (error instanceof URNError) {
+        throw error;
+      }
+
+      throw new URNError(`Failed to get agent: ${error.message}`, error);
+    }
   }
 
   /**
@@ -302,12 +316,20 @@ export class AgentDiscoveryService extends EventEmitter {
       await this.initialize();
     }
 
-    const result = await this.registry.registerAgent(agentData);
-    
-    // Clear cache to ensure fresh results
-    this._clearCache();
-    
-    return result;
+    try {
+      const result = await this.registry.registerAgent(agentData);
+      
+      // Clear cache to ensure fresh results
+      this._clearCache();
+      
+      return result;
+    } catch (error) {
+      if (error instanceof URNError) {
+        throw error;
+      }
+
+      throw new URNError(`Failed to register agent: ${error.message}`, error);
+    }
   }
 
   /**

@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "generated_at": "2025-10-16T00:00:00Z",
+  "budgets": {
+    "wsap": {
+      "ingest": {
+        "avg": 2500,
+        "p95": 4000
+      },
+      "plan": {
+        "avg": 1800,
+        "p95": 3200
+      },
+      "runtime": {
+        "avg": 2200,
+        "p95": 3600
+      }
+    },
+    "cli": {
+      "perf-status": {
+        "avg": 1500,
+        "p95": 2500
+      }
+    },
+    "mcp": {
+      "dispatch": {
+        "avg": 1200,
+        "p95": 2000
+      }
+    }
+  }
+}

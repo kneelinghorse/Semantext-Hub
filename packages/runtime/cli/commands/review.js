@@ -77,7 +77,7 @@ async function reviewCommand(manifestPath, options) {
     console.log('\n🔍 Validation Results');
     console.log('───────────────────────────────────────────────────\n');
 
-    const validation = await runFullValidation({
+    const validation = options.validationResult || await runFullValidation({
       manifestPath,
       manifest: reviewManifest,
       options: {

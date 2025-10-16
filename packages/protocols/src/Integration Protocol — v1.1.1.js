@@ -28,6 +28,22 @@ const clone=x=>JSON.parse(JSON.stringify(x));
 function hash(v){ const s=jsonCanon(v); let h=BigInt('0xcbf29ce484222325'); const p=BigInt('0x100000001b3'); for(let i=0;i<s.length;i++){ h^=BigInt(s.charCodeAt(i)); h=(h*p)&BigInt('0xFFFFFFFFFFFFFFFF'); } return 'fnv1a64-'+h.toString(16).padStart(16,'0'); }
 const isURN = s => typeof s==='string' && /^urn:proto:[a-z]+:[a-zA-Z0-9._-]+@[\d.]+(#[^#\s]+)?$/.test(s);
 
+/**
+ * @typedef {Object} SignatureEnvelope
+ * @property {'identity-access.signing.v1'} spec
+ * @property {string} protected
+ * @property {string} payload
+ * @property {{alg:'sha-256', value:string}} hash
+ * @property {string} signature
+ * @property {{alg:'EdDSA'|'ES256', kid:string, typ:string, canonical:string, digest:string, iat:string, exp?:string, [key:string]:any}} [header]
+ */
+
+/**
+ * @typedef {Object} RegistryRecord
+ * @property {IntegrationManifest} card
+ * @property {SignatureEnvelope} [sig]
+ */
+
 // ————————————————————————————————————————————————————————————————
 // Manifest shape (informative JSDoc)
 // ————————————————————————————————————————————————————————————————
@@ -75,6 +91,7 @@ const isURN = s => typeof s==='string' && /^urn:proto:[a-z]+:[a-zA-Z0-9._-]+@[\d
  * @property {Object} [metadata]
  * @property {string} [metadata.owner]
  * @property {string[]} [metadata.tags]
+ * @property {SignatureEnvelope} [sig]
  */
 
 // ————————————————————————————————————————————————————————————————
@@ -196,6 +213,18 @@ registerValidator('agentMapping.consistency', m=>{
   }
 
   return { ok:issues.length===0, issues };
+});
+
+registerValidator('signature.envelope', m=>{
+  const issues=[];
+  if (!m?.sig) return { ok:true, issues };
+  if (m.sig?.spec !== 'identity-access.signing.v1'){
+    issues.push({ path:'sig.spec', msg:'signature must declare identity-access.signing.v1', level:'error' });
+  }
+  if (m.sig && typeof m.sig !== 'object'){
+    issues.push({ path:'sig', msg:'signature envelope must be an object', level:'error' });
+  }
+  return { ok: issues.length===0, issues };
 });
 
 // ————————————————————————————————————————————————————————————————
@@ -356,6 +385,16 @@ function createIntegrationProtocol(manifestInput={}){
   });
 }
 
+function createRegistryRecord(card, sig){
+  if (!card || typeof card !== 'object') throw new Error('RegistryRecord requires a manifest card');
+  const record = { card: clone(card) };
+  if (sig !== undefined){
+    if (!sig || typeof sig !== 'object') throw new Error('RegistryRecord sig must be an object');
+    record.sig = clone(sig);
+  }
+  return Object.freeze(record);
+}
+
 function createIntegrationCatalog(protocols=[]){
   const items=protocols; const asManifests=()=>items.map(p=>p.manifest());
   function find(expr){ return items.filter(p=>p.match(expr)); }
@@ -377,6 +416,7 @@ function createIntegrationCatalog(protocols=[]){
 // ————————————————————————————————————————————————————————————————
 export {
   createIntegrationProtocol,
+  createRegistryRecord,
   createIntegrationCatalog,
   registerValidator,
   Validators,

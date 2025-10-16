@@ -1,0 +1,10 @@
+{
+  "windowMs": 60000,
+  "max": 60,
+  "standardHeaders": true,
+  "legacyHeaders": false,
+  "message": {
+    "error": "rate_limited",
+    "message": "Too many requests, please retry later."
+  }
+}

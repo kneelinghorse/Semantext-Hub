@@ -10,127 +10,109 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import path from 'path';
+import { fileURLToPath, pathToFileURL } from 'url';
 
-import { 
-  RegistryAPIServer, 
-  createRegistryAPIServer, 
-  startRegistryAPIServer 
-} from '../../packages/runtime/runtime/registry-api.js';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-import { 
-  URNError, 
-  URNFormatError, 
-  URNResolutionError 
-} from '../../packages/runtime/runtime/urn-types.js';
+const registryApiModuleUrl = pathToFileURL(path.join(__dirname, '../../packages/runtime/runtime/registry-api.js')).href;
+const urnTypesModuleUrl = pathToFileURL(path.join(__dirname, '../../packages/runtime/runtime/urn-types.js')).href;
 
-// Mock the registry and discovery service
-jest.mock('../../packages/runtime/runtime/urn-registry.js', () => ({
-  createURNRegistry: jest.fn(() => ({
+const {
+  RegistryAPIServer,
+  createRegistryAPIServer,
+  startRegistryAPIServer
+} = await import(registryApiModuleUrl);
+
+const {
+  URNError,
+  URNFormatError,
+  URNResolutionError
+} = await import(urnTypesModuleUrl);
+
+describe('Registry API Server', () => {
+  let server;
+let mockRegistry;
+let mockDiscoveryService;
+let mockAgentData;
+let registryFactory;
+let discoveryFactory;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+
+  mockAgentData = {
+    urn: 'urn:agent:ai:ml-agent@1.0.0',
+    name: 'ml-agent',
+    version: '1.0.0',
+    description: 'Machine learning inference agent',
+    capabilities: {
+      'ml-inference': {
+        type: 'service',
+        description: 'Machine learning model inference',
+        version: '1.0.0'
+      }
+    },
+    endpoints: {
+      api: '/api/v1',
+      health: '/health'
+    }
+  };
+
+  mockRegistry = {
     initialize: jest.fn(),
     registerAgent: jest.fn(),
     getAgent: jest.fn(),
     listAgentsByDomain: jest.fn(),
     searchAgentsByCapability: jest.fn(),
-    getStats: jest.fn(),
-    getHealth: jest.fn(),
+    getStats: jest.fn(() => ({
+      totalAgents: 1,
+      domains: 1,
+      capabilities: 1
+    })),
+    getHealth: jest.fn(() => ({
+      status: 'healthy',
+      isInitialized: true,
+      totalAgents: 1
+    })),
     shutdown: jest.fn()
-  }))
-}));
+  };
 
-jest.mock('../../packages/runtime/runtime/agent-discovery-service.js', () => ({
-  createAgentDiscoveryService: jest.fn(() => ({
+  mockDiscoveryService = {
     initialize: jest.fn(),
     discoverAgents: jest.fn(),
     discoverByDomain: jest.fn(),
     discoverByCapability: jest.fn(),
     getAgent: jest.fn(),
     registerAgent: jest.fn(),
-    getStats: jest.fn(),
-    getHealth: jest.fn(),
+    getStats: jest.fn(() => ({
+      totalAgents: 1,
+      domains: 1,
+      capabilities: 1,
+      cacheSize: 0,
+      serviceStatus: 'healthy'
+    })),
+    getHealth: jest.fn(() => ({
+      status: 'healthy',
+      isInitialized: true,
+      totalAgents: 1,
+      service: 'AgentDiscoveryService',
+      cacheEnabled: true,
+      cacheSize: 0
+    })),
     shutdown: jest.fn()
-  }))
-}));
+  };
 
-describe('Registry API Server', () => {
-  let server;
-  let mockRegistry;
-  let mockDiscoveryService;
-  let mockAgentData;
+    registryFactory = jest.fn(() => mockRegistry);
+    discoveryFactory = jest.fn(() => mockDiscoveryService);
+  });
 
-  beforeEach(async () => {
-    mockAgentData = {
-      urn: 'urn:agent:ai:ml-agent@1.0.0',
-      name: 'ml-agent',
-      version: '1.0.0',
-      description: 'Machine learning inference agent',
-      capabilities: {
-        'ml-inference': {
-          type: 'service',
-          description: 'Machine learning model inference',
-          version: '1.0.0'
-        }
-      },
-      endpoints: {
-        api: '/api/v1',
-        health: '/health'
-      }
-    };
-
-    // Create mock registry
-    mockRegistry = {
-      initialize: jest.fn(),
-      registerAgent: jest.fn(),
-      getAgent: jest.fn(),
-      listAgentsByDomain: jest.fn(),
-      searchAgentsByCapability: jest.fn(),
-      getStats: jest.fn(() => ({
-        totalAgents: 1,
-        domains: 1,
-        capabilities: 1
-      })),
-      getHealth: jest.fn(() => ({
-        status: 'healthy',
-        isInitialized: true,
-        totalAgents: 1
-      })),
-      shutdown: jest.fn()
-    };
-
-    // Create mock discovery service
-    mockDiscoveryService = {
-      initialize: jest.fn(),
-      discoverAgents: jest.fn(),
-      discoverByDomain: jest.fn(),
-      discoverByCapability: jest.fn(),
-      getAgent: jest.fn(),
-      registerAgent: jest.fn(),
-      getStats: jest.fn(() => ({
-        totalAgents: 1,
-        domains: 1,
-        capabilities: 1,
-        cacheSize: 0,
-        serviceStatus: 'healthy'
-      })),
-      getHealth: jest.fn(() => ({
-        status: 'healthy',
-        isInitialized: true,
-        totalAgents: 1,
-        service: 'AgentDiscoveryService',
-        cacheEnabled: true,
-        cacheSize: 0
-      })),
-      shutdown: jest.fn()
-    };
-
-    // Mock the service creation
-    const { createURNRegistry } = await import('../../packages/runtime/runtime/urn-registry.js');
-    const { createAgentDiscoveryService } = await import('../../packages/runtime/runtime/agent-discovery-service.js');
-    
-    createURNRegistry.mockReturnValue(mockRegistry);
-    createAgentDiscoveryService.mockReturnValue(mockDiscoveryService);
-
-    // Reset mocks
-    jest.clearAllMocks();
+  const buildServer = (options = {}) => createRegistryAPIServer({
+    registryFactory,
+    discoveryFactory,
+    enableLogging: false,
+    ...options
   });
 
   afterEach(async () => {
@@ -141,7 +123,7 @@ describe('Registry API Server', () => {
 
   describe('Server Initialization', () => {
     test('should initialize with default configuration', async () => {
-      server = createRegistryAPIServer();
+      server = buildServer();
       await server.start();
       
       expect(server.isRunning).toBe(true);
@@ -150,7 +132,7 @@ describe('Registry API Server', () => {
     });
 
     test('should initialize with custom configuration', async () => {
-      server = createRegistryAPIServer({
+      server = buildServer({
         port: 3002,
         host: '0.0.0.0',
         enableLogging: false
@@ -165,13 +147,13 @@ describe('Registry API Server', () => {
     test('should handle initialization errors', async () => {
       mockRegistry.initialize.mockRejectedValue(new Error('Registry init failed'));
       
-      server = createRegistryAPIServer();
+      server = buildServer();
       
       await expect(server.start()).rejects.toThrow(URNError);
     });
 
     test('should provide server status', () => {
-      server = createRegistryAPIServer();
+      server = buildServer();
       
       const status = server.getStatus();
       
@@ -184,7 +166,7 @@ describe('Registry API Server', () => {
 
   describe('Health Check Endpoint', () => {
     beforeEach(async () => {
-      server = createRegistryAPIServer();
+      server = buildServer();
       await server.start();
     });
 
@@ -209,7 +191,7 @@ describe('Registry API Server', () => {
 
   describe('Statistics Endpoint', () => {
     beforeEach(async () => {
-      server = createRegistryAPIServer();
+      server = buildServer();
       await server.start();
     });
 
@@ -234,7 +216,7 @@ describe('Registry API Server', () => {
 
   describe('Agent List Endpoint', () => {
     beforeEach(async () => {
-      server = createRegistryAPIServer();
+      server = buildServer();
       await server.start();
       
       mockDiscoveryService.discoverAgents.mockResolvedValue({
@@ -313,7 +295,7 @@ describe('Registry API Server', () => {
 
   describe('Agent Registration Endpoint', () => {
     beforeEach(async () => {
-      server = createRegistryAPIServer();
+      server = buildServer();
       await server.start();
       
       mockDiscoveryService.registerAgent.mockResolvedValue({
@@ -400,7 +382,7 @@ describe('Registry API Server', () => {
 
   describe('Get Agent Endpoint', () => {
     beforeEach(async () => {
-      server = createRegistryAPIServer();
+      server = buildServer();
       await server.start();
     });
 
@@ -464,7 +446,7 @@ describe('Registry API Server', () => {
 
   describe('Domain Endpoint', () => {
     beforeEach(async () => {
-      server = createRegistryAPIServer();
+      server = buildServer();
       await server.start();
       
       mockDiscoveryService.discoverByDomain.mockResolvedValue({
@@ -520,7 +502,7 @@ describe('Registry API Server', () => {
 
   describe('Capability Endpoint', () => {
     beforeEach(async () => {
-      server = createRegistryAPIServer();
+      server = buildServer();
       await server.start();
       
       mockDiscoveryService.discoverByCapability.mockResolvedValue({
@@ -556,7 +538,7 @@ describe('Registry API Server', () => {
 
   describe('Discovery Endpoint', () => {
     beforeEach(async () => {
-      server = createRegistryAPIServer();
+      server = buildServer();
       await server.start();
       
       mockDiscoveryService.discoverAgents.mockResolvedValue({
@@ -626,7 +608,7 @@ describe('Registry API Server', () => {
 
   describe('CORS Handling', () => {
     beforeEach(async () => {
-      server = createRegistryAPIServer();
+      server = buildServer();
       await server.start();
     });
 
@@ -679,7 +661,7 @@ describe('Registry API Server', () => {
 
   describe('Rate Limiting', () => {
     beforeEach(async () => {
-      server = createRegistryAPIServer({
+      server = buildServer({
         rateLimit: {
           windowMs: 60000,
           max: 2
@@ -748,7 +730,7 @@ describe('Registry API Server', () => {
 
   describe('Error Handling', () => {
     beforeEach(async () => {
-      server = createRegistryAPIServer();
+      server = buildServer();
       await server.start();
     });
 
@@ -792,7 +774,7 @@ describe('Registry API Server', () => {
 
   describe('Server Lifecycle', () => {
     test('should shutdown gracefully', async () => {
-      server = createRegistryAPIServer();
+      server = buildServer();
       await server.start();
       
       await server.stop();
@@ -803,7 +785,7 @@ describe('Registry API Server', () => {
     });
 
     test('should emit lifecycle events', async () => {
-      server = createRegistryAPIServer();
+      server = buildServer();
       
       const startedSpy = jest.fn();
       const stoppedSpy = jest.fn();
@@ -822,7 +804,10 @@ describe('Registry API Server', () => {
   describe('Convenience Functions', () => {
     test('should start server using convenience function', async () => {
       const startedServer = await startRegistryAPIServer({
-        port: 3003
+        port: 3003,
+        registryFactory,
+        discoveryFactory,
+        enableLogging: false
       });
       
       expect(startedServer.isRunning).toBe(true);
@@ -834,7 +819,7 @@ describe('Registry API Server', () => {
 
   describe('Performance', () => {
     beforeEach(async () => {
-      server = createRegistryAPIServer();
+      server = buildServer();
       await server.start();
       
       mockDiscoveryService.discoverAgents.mockResolvedValue({

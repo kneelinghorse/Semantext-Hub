@@ -25,6 +25,16 @@ const clone=x=>JSON.parse(JSON.stringify(x));
 function hash(v){ const s=jsonCanon(v); let h=BigInt('0xcbf29ce484222325'); const p=BigInt('0x100000001b3'); for(let i=0;i<s.length;i++){ h^=BigInt(s.charCodeAt(i)); h=(h*p)&BigInt('0xFFFFFFFFFFFFFFFF'); } return 'fnv1a64-'+h.toString(16).padStart(16,'0'); }
 const isURN = s => typeof s==='string' && /^urn:proto:(api|data|event|ui|workflow|infra|device|ai|iam|metric|integration|testing|docs|obs|config|release|agent):[a-zA-Z0-9._-]+@[\d.]+(#[^#\s]+)?$/.test(s);
 
+/**
+ * @typedef {Object} SignatureEnvelope
+ * @property {'identity-access.signing.v1'} spec
+ * @property {string} protected
+ * @property {string} payload
+ * @property {{alg:'sha-256', value:string}} hash
+ * @property {string} signature
+ * @property {{alg:'EdDSA'|'ES256', kid:string, typ:string, canonical:string, digest:string, iat:string, exp?:string, [key:string]:any}} [header]
+ */
+
 // ————————————————————————————————————————————————————————————————
 // Manifest shape (informative JSDoc)
 // ————————————————————————————————————————————————————————————————
@@ -36,6 +46,7 @@ const isURN = s => typeof s==='string' && /^urn:proto:(api|data|event|ui|workflo
  * @property {{status:'planned'|'in_progress'|'completed'|'failed'|'rolled_back', created_at?:string, started_at?:string, completed_at?:string}} [release.lifecycle]
  * @property {string} [release.commit_sha]
  * @property {string} [release.window]         // e.g., '2025-10-01T02:00Z..2025-10-01T03:00Z'
+ * @property {SignatureEnvelope[]} [release.attestations]
  *
  * @property {Object} strategy                 // how to roll out
  * @property {'all_at_once'|'blue_green'|'canary'|'rolling'} strategy.type
@@ -116,6 +127,24 @@ registerValidator('rollback.triggers',(m)=>{
   return { ok: issues.length===0, issues };
 });
 
+registerValidator('release.attestations',(m)=>{
+  const attestations = m?.release?.attestations;
+  const issues=[];
+  if (attestations == null) return { ok:true, issues };
+  if (!Array.isArray(attestations)){
+    issues.push({ path:'release.attestations', msg:'attestations must be an array', level:'error' });
+    return { ok:false, issues };
+  }
+  for (const [index, sig] of attestations.entries()){
+    if (!sig || typeof sig !== 'object'){
+      issues.push({ path:`release.attestations[${index}]`, msg:'attestation must be an object', level:'error' });
+    } else if (sig.spec !== 'identity-access.signing.v1'){
+      issues.push({ path:`release.attestations[${index}].spec`, msg:'attestation must declare identity-access.signing.v1', level:'error' });
+    }
+  }
+  return { ok: issues.length===0, issues };
+});
+
 registerValidator('relationships.targets',(m)=>{
   const issues=[]; for(const [i,u] of (m?.relationships?.targets||[]).entries()){ if(!isURN(u)) issues.push({path:`relationships.targets[${i}]`,msg:'invalid URN',level:'error'}); }
   for(const [i,u] of (m?.relationships?.observability||[]).entries()){ if(!isURN(u)) issues.push({path:`relationships.observability[${i}]`,msg:'invalid URN',level:'error'}); }
@@ -151,6 +180,7 @@ function normalize(m){
   n.gates_hash     = hash(n.gates||{});
   n.rollback_hash  = hash(n.rollback||{});
   n.changeset_hash = hash(n.changeset||[]);
+  n.attestations_hash = hash(n.release?.attestations||[]);
   n.link_hash      = hash(n.relationships||{});
   n.comms_hash     = hash(n.comms||{});
   return n;
@@ -170,6 +200,7 @@ function diff(a,b){
     if(c.path==='gates_hash')   significant.push({...c, reason:'gates changed'});
     if(c.path==='rollback_hash')significant.push({...c, reason:'rollback policy changed'});
     if(c.path==='changeset_hash') significant.push({...c, reason:'changeset changed'});
+    if(c.path==='attestations_hash') significant.push({...c, reason:'release attestations changed'});
     if(c.path==='link_hash')    significant.push({...c, reason:'release coverage links changed'});
     if(c.path==='comms_hash')   significant.push({...c, reason:'comms plan changed'});
   }

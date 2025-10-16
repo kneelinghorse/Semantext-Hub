@@ -1,0 +1,115 @@
+name: WSAP Perf Gate
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+env:
+  OSSP_LOG_ROOT: ${{ github.workspace }}/.wsap-logs
+
+jobs:
+  wsap:
+    name: WSAP Performance Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run WSAP workflow
+        run: npm run wsap --if-present
+
+      - name: Locate latest WSAP metrics log
+        id: discover_log
+        run: |
+          set -euo pipefail
+
+          if [ ! -d "$OSSP_LOG_ROOT" ]; then
+            echo "No metrics directory created at $OSSP_LOG_ROOT." >&2
+            exit 2
+          fi
+
+          LOG_FILE=$(python3 - <<'PY'
+import os
+
+root = os.environ.get('OSSP_LOG_ROOT')
+if not root or not os.path.isdir(root):
+    raise SystemExit(0)
+
+latest = None
+latest_mtime = -1.0
+
+for dirpath, dirnames, filenames in os.walk(root):
+    for name in filenames:
+        if not name.endswith('.jsonl'):
+            continue
+        path = os.path.join(dirpath, name)
+        try:
+            mtime = os.path.getmtime(path)
+        except OSError:
+            continue
+        if mtime > latest_mtime:
+            latest_mtime = mtime
+            latest = path
+
+if latest:
+    print(latest)
+PY
+)
+
+          if [ -z "$LOG_FILE" ]; then
+            echo "No performance log found under $OSSP_LOG_ROOT." >&2
+            exit 2
+          fi
+
+          echo "file=$LOG_FILE" >> "$GITHUB_OUTPUT"
+
+      - name: Enforce performance budgets
+        run: |
+          set -euo pipefail
+
+          LOG_FILE="${{ steps.discover_log.outputs.file }}"
+          if [ -z "$LOG_FILE" ]; then
+            echo "Log path output missing; gating cannot continue." >&2
+            exit 2
+          fi
+
+          if [ ! -f "$LOG_FILE" ]; then
+            echo "Resolved log file $LOG_FILE does not exist." >&2
+            exit 2
+          fi
+
+          mapfile -t combos < <(jq -r '.budgets | to_entries[] | .key as $tool | .value | to_entries[] | "\($tool) \(.key)"' app/config/perf-budgets.json)
+          if [ "${#combos[@]}" -eq 0 ]; then
+            echo "No budgets defined in app/config/perf-budgets.json." >&2
+            exit 1
+          fi
+
+          for combo in "${combos[@]}"; do
+            tool="${combo% *}"
+            step="${combo#* }"
+            echo "::group::perf gate ${tool}/${step}"
+            ./app/ci/perf-gate.sh --log "$LOG_FILE" --tool "$tool" --step "$step" --budgets app/config/perf-budgets.json
+            echo "::endgroup::"
+          done
+
+      - name: Upload WSAP logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wsap-logs
+          path: ${{ env.OSSP_LOG_ROOT }}

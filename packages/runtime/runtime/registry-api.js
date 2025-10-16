@@ -61,29 +61,37 @@ import { createAgentDiscoveryService } from './agent-discovery-service.js';
 export class RegistryAPIServer extends EventEmitter {
   constructor(options = {}) {
     super();
+
+    const {
+      registryFactory = createURNRegistry,
+      discoveryFactory = createAgentDiscoveryService,
+      ...configOptions
+    } = options;
     
     this.config = {
-      port: options.port || DEFAULT_CONFIG.port || 3001,
-      host: options.host || DEFAULT_CONFIG.host || 'localhost',
+      port: configOptions.port || DEFAULT_CONFIG.port || 3001,
+      host: configOptions.host || DEFAULT_CONFIG.host || 'localhost',
       cors: {
-        origin: options.cors?.origin || '*',
-        methods: options.cors?.methods || ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-        headers: options.cors?.headers || ['Content-Type', 'Authorization'],
-        ...options.cors
+        origin: configOptions.cors?.origin || '*',
+        methods: configOptions.cors?.methods || ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        headers: configOptions.cors?.headers || ['Content-Type', 'Authorization'],
+        ...configOptions.cors
       },
       rateLimit: {
-        windowMs: options.rateLimit?.windowMs || 60000, // 1 minute
-        max: options.rateLimit?.max || 100, // 100 requests per window
-        ...options.rateLimit
+        windowMs: configOptions.rateLimit?.windowMs || 60000, // 1 minute
+        max: configOptions.rateLimit?.max || 100, // 100 requests per window
+        ...configOptions.rateLimit
       },
-      registry: options.registry || {},
-      discovery: options.discovery || {},
-      enableLogging: options.enableLogging !== false,
-      ...options
+      registry: configOptions.registry || {},
+      discovery: configOptions.discovery || {},
+      enableLogging: configOptions.enableLogging !== false,
+      ...configOptions
     };
 
-    this.registry = createURNRegistry(this.config.registry);
-    this.discoveryService = createAgentDiscoveryService(this.config.discovery);
+    this.registryFactory = registryFactory;
+    this.discoveryFactory = discoveryFactory;
+    this.registry = registryFactory(this.config.registry);
+    this.discoveryService = discoveryFactory(this.config.discovery);
     this.server = null;
     this.isRunning = false;
     this.requestCounts = new Map();
@@ -357,13 +365,6 @@ export class RegistryAPIServer extends EventEmitter {
       return this._handleRegisterAgent(request);
     }
 
-    // Get agent by URN
-    const urnMatch = url.match(/^\/api\/v1\/agents\/(.+)$/);
-    if (urnMatch && method === 'GET') {
-      const urn = decodeURIComponent(urnMatch[1]);
-      return this._handleGetAgent(request, urn);
-    }
-
     // List agents by domain
     const domainMatch = url.match(/^\/api\/v1\/agents\/domain\/(.+)$/);
     if (domainMatch && method === 'GET') {
@@ -376,6 +377,13 @@ export class RegistryAPIServer extends EventEmitter {
     if (capabilityMatch && method === 'GET') {
       const capability = decodeURIComponent(capabilityMatch[1]);
       return this._handleListAgentsByCapability(request, capability);
+    }
+
+    // Get agent by URN
+    const urnMatch = url.match(/^\/api\/v1\/agents\/(.+)$/);
+    if (urnMatch && method === 'GET') {
+      const urn = decodeURIComponent(urnMatch[1]);
+      return this._handleGetAgent(request, urn);
     }
 
     // Discovery endpoint

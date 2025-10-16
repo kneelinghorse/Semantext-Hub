@@ -47,6 +47,51 @@ function hash(value){
   return 'fnv1a64-' + h.toString(16).padStart(16, '0');
 }
 
+/**
+ * @typedef {Object} SignatureEnvelope
+ * @property {'identity-access.signing.v1'} spec
+ * @property {string} protected
+ * @property {string} payload
+ * @property {{alg:'sha-256', value:string}} hash
+ * @property {string} signature
+ * @property {{alg:'EdDSA'|'ES256', kid:string, typ:string, canonical:string, digest:string, iat:string, exp?:string, [key:string]:any}} [header]
+ */
+
+const SignatureEnvelopeSpec = Object.freeze({
+  id: 'identity-access.signing.v1',
+  canonicalization: 'RFC8785-JCS',
+  digest: 'sha-256',
+  algorithms: ['EdDSA', 'ES256'],
+  fields: {
+    protected: 'base64url header JSON',
+    payload: 'base64url canonical JSON payload',
+    signature: 'base64url signature bytes',
+    hash: {
+      alg: 'sha-256',
+      value: 'base64url digest',
+    },
+    header: 'decoded header (optional convenience copy)',
+  },
+  policy: {
+    requireKeyId: true,
+    requireIssuedAt: true,
+    allowExpiry: true,
+  },
+});
+
+function isSignatureEnvelope(value){
+  if (!value || typeof value !== 'object') return false;
+  if (value.spec !== SignatureEnvelopeSpec.id) return false;
+  if (typeof value.protected !== 'string' || typeof value.payload !== 'string' || typeof value.signature !== 'string') return false;
+  if (!value.hash || value.hash.alg !== SignatureEnvelopeSpec.digest || typeof value.hash.value !== 'string') return false;
+  const header = value.header || {};
+  if (header && typeof header === 'object'){
+    if (header.alg && !SignatureEnvelopeSpec.algorithms.includes(header.alg)) return false;
+    if (header.kid && typeof header.kid !== 'string') return false;
+  }
+  return true;
+}
+
 // ————————————————————————————————————————————————————————————————
 // Manifest shape (informative JSDoc)
 // ————————————————————————————————————————————————————————————————
@@ -73,6 +118,7 @@ function hash(value){
  * @property {Object} [metadata]
  * @property {string} [metadata.owner]
  * @property {string[]} [metadata.tags]
+ * @property {SignatureEnvelope} [sig]
  */
 
 /**
@@ -156,6 +202,15 @@ registerValidator('governance.pii_policy', (m)=>{
   if (anyPII && m?.policies?.governance?.classification !== 'pii')
     issues.push({ path:'policies.governance.classification', msg:'PII permissions present → classification should be "pii"', level:'warn' });
   return { ok: issues.length===0, issues };
+});
+
+registerValidator('signature.envelope', (m)=>{
+  if (!m?.sig) return { ok:true, issues:[] };
+  if (isSignatureEnvelope(m.sig)) return { ok:true, issues:[] };
+  return {
+    ok: false,
+    issues: [{ path:'sig', msg:`signature must conform to ${SignatureEnvelopeSpec.id}`, level:'error' }],
+  };
 });
 
 registerValidator('delegation.core', m => {
@@ -518,6 +573,8 @@ function isDelegationExpired(delegation, now = new Date()) {
 // Exports
 // ————————————————————————————————————————————————————————————————
 export {
+  SignatureEnvelopeSpec,
+  isSignatureEnvelope,
   createIdentityProtocol,
   createIdentityCatalog,
   registerValidator,

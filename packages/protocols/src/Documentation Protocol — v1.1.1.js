@@ -24,6 +24,16 @@ const clone=x=>JSON.parse(JSON.stringify(x));
 function hash(v){ const s=jsonCanon(v); let h=BigInt('0xcbf29ce484222325'); const p=BigInt('0x100000001b3'); for(let i=0;i<s.length;i++){ h^=BigInt(s.charCodeAt(i)); h=(h*p)&BigInt('0xFFFFFFFFFFFFFFFF'); } return 'fnv1a64-'+h.toString(16).padStart(16,'0'); }
 const isURN = s => typeof s==='string' && /^urn:proto:(api|data|event|ui|workflow|infra|device|ai|iam|metric|integration|testing|docs|obs|config|release|agent):[a-zA-Z0-9._-]+@[\d.]+(#[^#\s]+)?$/.test(s);
 
+/**
+ * @typedef {Object} SignatureEnvelope
+ * @property {'identity-access.signing.v1'} spec
+ * @property {string} protected
+ * @property {string} payload
+ * @property {{alg:'sha-256', value:string}} hash
+ * @property {string} signature
+ * @property {{alg:'EdDSA'|'ES256', kid:string, typ:string, canonical:string, digest:string, iat:string, exp?:string, [key:string]:any}} [header]
+ */
+
 // ————————————————————————————————————————————————————————————————
 // Manifest shape (informative JSDoc)
 // ————————————————————————————————————————————————————————————————
@@ -60,7 +70,8 @@ const isURN = s => typeof s==='string' && /^urn:proto:(api|data|event|ui|workflo
  * @property {Object} [metadata]                        // free-form tags/owner
  * @property {string} [metadata.owner]
  * @property {string[]} [metadata.tags]
- */
+ * @property {SignatureEnvelope} [sig]
+*/
 
 // ————————————————————————————————————————————————————————————————
 // Validator registry (pluggable, zero-deps)
@@ -108,6 +119,19 @@ registerValidator('maintenance.freshness', (m)=>{
   return { ok: issues.length===0, issues };
 });
 
+registerValidator('signature.envelope', (m)=>{
+  const sig=m?.sig; const issues=[];
+  if(sig==null) return { ok:true, issues };
+  if(typeof sig!=='object'){
+    issues.push({ path:'sig', msg:'signature must be an object', level:'error' });
+    return { ok:false, issues };
+  }
+  if(sig.spec!=='identity-access.signing.v1'){
+    issues.push({ path:'sig.spec', msg:'signature must declare identity-access.signing.v1', level:'error' });
+  }
+  return { ok: issues.length===0, issues };
+});
+
 // ————————————————————————————————————————————————————————————————
 // Query language (:=: contains > < >= <=) + conveniences
 // ————————————————————————————————————————————————————————————————
@@ -140,6 +164,7 @@ function normalize(m){
   n.qc_hash    = hash(n.quality||{});
   n.gov_hash   = hash(n.governance||{});
   n.meta_hash  = hash(n.metadata||{});
+  n.sig_hash   = hash(n.sig||null);
   return n;
 }
 
@@ -160,6 +185,7 @@ function diff(a,b){
     if(c.path==='links_hash') significant.push({...c,reason:'linked targets changed'});
     if(c.path==='qc_hash') significant.push({...c,reason:'quality/feedback changed'});
     if(c.path==='gov_hash') significant.push({...c,reason:'governance changed'});
+    if(c.path==='sig_hash') significant.push({...c,reason:'signature envelope changed'});
   }
   return { changes, breaking, significant };
 }
@@ -198,9 +224,24 @@ function generateDocsSkeleton(manifest){
     for(const s of m.structure.sections){
       out+=`\n### ${s.title}\n\n${s.body||'_TBD_'}\n`;
     }
+    out+='\n';
+  }
+
+  if (m.sig) {
+    out += renderProvenanceFooter(m.sig);
   }
 
   return out;
+}
+
+function renderProvenanceFooter(sig){
+  if (!sig || typeof sig !== 'object') return '';
+  const header = sig.header || {};
+  const signer = header.kid || 'unknown signer';
+  const issued = header.iat || header.issued_at || 'unknown time';
+  const digestRaw = typeof sig.hash?.value === 'string' ? sig.hash.value : '';
+  const digestPreview = digestRaw ? `${digestRaw.slice(0, 16)}${digestRaw.length > 16 ? '…' : ''}` : 'n/a';
+  return `\n---\n_Signed by ${signer} @ ${issued} (digest ${digestPreview})_\n`;
 }
 
 // Generate nav graph (Mermaid)
@@ -316,5 +357,6 @@ module.exports = {
   // low-level helpers (optional)
   query, normalize, diff,
   generateDocsSkeleton, generateMermaidNav, generateProtocolStubs,
+  renderProvenanceFooter,
   findOutdated, analyzeCoverage,
 };
