@@ -53,16 +53,16 @@ Get a quick performance summary with key metrics:
 
 ```bash
 # Basic status
-node app/cli/commands/perf-status.js
+node cli/index.js perf:status
 
 # Verbose output with correlation ID
-node app/cli/commands/perf-status.js --verbose
+node cli/index.js perf:status --verbose
 
 # JSON format for scripting
-node app/cli/commands/perf-status.js --format json
+node cli/index.js perf:status --format json
 
 # Custom workspace
-node app/cli/commands/perf-status.js --workspace ./my-workspace
+node cli/index.js perf:status --workspace ./my-workspace
 ```
 
 #### Sample Output
@@ -219,7 +219,7 @@ Metrics are collected from:
 Add custom metrics to your operations:
 
 ```javascript
-import { PerformanceCollector } from '../cli/commands/perf-status.js';
+import { PerformanceCollector } from '../src/metrics/perf.js';
 
 const collector = new PerformanceCollector();
 
@@ -294,7 +294,7 @@ log.info('Operation completed', {
 
 2. Enable verbose logging:
    ```bash
-   node app/cli/commands/perf-status.js --verbose
+   node cli/index.js perf:status --verbose
    ```
 
 #### Correlation IDs Not Propagating
@@ -310,7 +310,7 @@ Enable debug mode for detailed trace information:
 ```bash
 export DEBUG=ossp:trace
 export TRACE=1
-node app/cli/commands/perf-status.js --verbose
+node cli/index.js perf:status --verbose
 ```
 
 ## Best Practices
@@ -357,7 +357,7 @@ import {
 import { 
   perfStatusCommand,
   PerformanceCollector
-} from '../cli/commands/perf-status.js';
+} from '../src/metrics/perf.js';
 ```
 
 ### Logging Utilities
@@ -394,7 +394,7 @@ const protocols = await adapterTracing.traceDiscoveryOperation('findProtocols', 
 ### Performance Monitoring Example
 
 ```javascript
-import { PerformanceCollector } from '../cli/commands/perf-status.js';
+import { PerformanceCollector } from '../src/metrics/perf.js';
 
 const collector = new PerformanceCollector();
 

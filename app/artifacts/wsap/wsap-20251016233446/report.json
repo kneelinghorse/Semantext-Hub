@@ -1,0 +1,172 @@
+{
+  "sessionId": "wsap-20251016233446",
+  "seedId": "github-api",
+  "generatedAt": "2025-10-16T23:34:46.502Z",
+  "registry": {
+    "url": "http://127.0.0.1:58584",
+    "keyId": "urn:proto:wsap:signing:wsap-20251016233446",
+    "apiKey": "wsap-b14ab2ac-602d-4280-ba56-ed3fc47be7f6",
+    "policy": "registry/signature-policy.json",
+    "agents": [
+      {
+        "urn": "urn:agent:wsap:analytics@1.0.0",
+        "endpoint": "http://127.0.0.1:58585",
+        "capabilities": [
+          "analytics.report",
+          "analytics.echo"
+        ],
+        "verification": {
+          "status": "verified",
+          "keyId": "urn:proto:wsap:signing:wsap-20251016233446",
+          "algorithm": "EdDSA",
+          "digestValid": true,
+          "signatureValid": true,
+          "verifiedAt": "2025-10-16T23:34:46.472Z",
+          "enforced": true
+        }
+      },
+      {
+        "urn": "urn:agent:wsap:workflow@1.0.0",
+        "endpoint": "http://127.0.0.1:58587",
+        "capabilities": [
+          "workflow.approval",
+          "workflow.echo"
+        ],
+        "verification": {
+          "status": "verified",
+          "keyId": "urn:proto:wsap:signing:wsap-20251016233446",
+          "algorithm": "EdDSA",
+          "digestValid": true,
+          "signatureValid": true,
+          "verifiedAt": "2025-10-16T23:34:46.479Z",
+          "enforced": true
+        }
+      },
+      {
+        "urn": "urn:agent:wsap:monitor@1.0.0",
+        "endpoint": "http://127.0.0.1:58589",
+        "capabilities": [
+          "monitor.health",
+          "monitor.echo"
+        ],
+        "verification": {
+          "status": "verified",
+          "keyId": "urn:proto:wsap:signing:wsap-20251016233446",
+          "algorithm": "EdDSA",
+          "digestValid": true,
+          "signatureValid": true,
+          "verifiedAt": "2025-10-16T23:34:46.483Z",
+          "enforced": true
+        }
+      }
+    ]
+  },
+  "a2a": [
+    {
+      "mode": "urn",
+      "target": "urn:agent:wsap:analytics@1.0.0",
+      "resolvedUrn": "urn:agent:wsap:analytics@1.0.0",
+      "durationMs": 4,
+      "correlationId": "0a29d344-62b6-4191-9329-d3b055188521",
+      "response": {
+        "ok": true,
+        "agent": "analytics-agent",
+        "message": "ping-analytics@1.0.0",
+        "urn": "urn:agent:wsap:analytics@1.0.0",
+        "correlationId": "0a29d344-62b6-4191-9329-d3b055188521",
+        "receivedAt": "2025-10-16T23:34:46.488Z"
+      }
+    },
+    {
+      "mode": "capability",
+      "target": "analytics.report",
+      "resolvedUrn": "urn:agent:wsap:analytics@1.0.0",
+      "durationMs": 3,
+      "correlationId": "f80222f9-1482-43bf-977c-3d9303c62c34",
+      "response": {
+        "ok": true,
+        "agent": "analytics-agent",
+        "message": "ping-analytics@1.0.0-cap",
+        "urn": "urn:agent:wsap:analytics@1.0.0",
+        "correlationId": "f80222f9-1482-43bf-977c-3d9303c62c34",
+        "receivedAt": "2025-10-16T23:34:46.492Z"
+      }
+    },
+    {
+      "mode": "urn",
+      "target": "urn:agent:wsap:workflow@1.0.0",
+      "resolvedUrn": "urn:agent:wsap:workflow@1.0.0",
+      "durationMs": 3,
+      "correlationId": "4eb3aa67-e545-43cb-a985-25f708be4b5d",
+      "response": {
+        "ok": true,
+        "agent": "workflow-agent",
+        "message": "ping-workflow@1.0.0",
+        "urn": "urn:agent:wsap:workflow@1.0.0",
+        "correlationId": "4eb3aa67-e545-43cb-a985-25f708be4b5d",
+        "receivedAt": "2025-10-16T23:34:46.495Z"
+      }
+    },
+    {
+      "mode": "capability",
+      "target": "workflow.approval",
+      "resolvedUrn": "urn:agent:wsap:workflow@1.0.0",
+      "durationMs": 2,
+      "correlationId": "7f0fc6c3-481d-49b3-8fbc-d54fb914ddd8",
+      "response": {
+        "ok": true,
+        "agent": "workflow-agent",
+        "message": "ping-workflow@1.0.0-cap",
+        "urn": "urn:agent:wsap:workflow@1.0.0",
+        "correlationId": "7f0fc6c3-481d-49b3-8fbc-d54fb914ddd8",
+        "receivedAt": "2025-10-16T23:34:46.498Z"
+      }
+    },
+    {
+      "mode": "urn",
+      "target": "urn:agent:wsap:monitor@1.0.0",
+      "resolvedUrn": "urn:agent:wsap:monitor@1.0.0",
+      "durationMs": 1,
+      "correlationId": "86a0d614-f239-4777-a61c-2489417f3c74",
+      "response": {
+        "ok": true,
+        "agent": "monitor-agent",
+        "message": "ping-monitor@1.0.0",
+        "urn": "urn:agent:wsap:monitor@1.0.0",
+        "correlationId": "86a0d614-f239-4777-a61c-2489417f3c74",
+        "receivedAt": "2025-10-16T23:34:46.500Z"
+      }
+    },
+    {
+      "mode": "capability",
+      "target": "monitor.health",
+      "resolvedUrn": "urn:agent:wsap:monitor@1.0.0",
+      "durationMs": 2,
+      "correlationId": "0bb10592-e98f-4e70-a0a2-fbfc1846ad5c",
+      "response": {
+        "ok": true,
+        "agent": "monitor-agent",
+        "message": "ping-monitor@1.0.0-cap",
+        "urn": "urn:agent:wsap:monitor@1.0.0",
+        "correlationId": "0bb10592-e98f-4e70-a0a2-fbfc1846ad5c",
+        "receivedAt": "2025-10-16T23:34:46.502Z"
+      }
+    }
+  ],
+  "artifacts": {
+    "catalogGraph": "catalog/catalog-graph.json",
+    "drawioDiagram": "drawio/catalog.drawio",
+    "cytoscapeExport": "cytoscape/catalog.json",
+    "docsSummary": "docs/summary.md"
+  },
+  "durations": {
+    "import": 24.723,
+    "approve": 7.744,
+    "catalog": 2.557,
+    "diagram": 7.412,
+    "cytoscape": 1.887,
+    "docs": 0.04,
+    "registry": 40.994,
+    "a2a": 17.223
+  }
+}

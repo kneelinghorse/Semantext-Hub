@@ -28,6 +28,14 @@ const DEFAULT_MCP_P95 = Number.parseInt(
   process.env.PERF_BUDGET_MCP_P95 ?? '3000',
   10
 );
+const DEFAULT_REGISTRY_GET_P95 = Number.parseInt(
+  process.env.PERF_BUDGET_REGISTRY_GET_P95 ?? '150',
+  10
+);
+const DEFAULT_RESOLVE_P95 = Number.parseInt(
+  process.env.PERF_BUDGET_RESOLVE_P95 ?? '300',
+  10
+);
 
 function resolveFromCwd(targetPath) {
   return path.resolve(process.cwd(), targetPath);
@@ -38,7 +46,9 @@ function parseArgs() {
   const options = {
     file: '.artifacts/perf.json',
     discoveryBudget: DEFAULT_DISCOVERY_P95,
-    mcpBudget: DEFAULT_MCP_P95
+    mcpBudget: DEFAULT_MCP_P95,
+    registryGetBudget: DEFAULT_REGISTRY_GET_P95,
+    resolveBudget: DEFAULT_RESOLVE_P95
   };
 
   for (let i = 0; i < args.length; i += 1) {
@@ -52,6 +62,12 @@ function parseArgs() {
       i += 1;
     } else if (arg === '--mcp-p95' && args[i + 1]) {
       options.mcpBudget = Number.parseFloat(args[i + 1]);
+      i += 1;
+    } else if (arg === '--registry-get-p95' && args[i + 1]) {
+      options.registryGetBudget = Number.parseFloat(args[i + 1]);
+      i += 1;
+    } else if (arg === '--resolve-p95' && args[i + 1]) {
+      options.resolveBudget = Number.parseFloat(args[i + 1]);
       i += 1;
     } else if (arg === '--help' || arg === '-h') {
       printHelp();
@@ -74,30 +90,80 @@ Options:
   --file, -f <path>         Path to perf.json (default: .artifacts/perf.json)
   --discovery-p95 <ms>      Discovery P95 budget in milliseconds
   --mcp-p95 <ms>            MCP P95 budget in milliseconds
+  --registry-get-p95 <ms>   Registry GET P95 budget in milliseconds
+  --resolve-p95 <ms>        Resolve P95 budget in milliseconds
   --help, -h                Show this help message
 
 Environment overrides:
   PERF_BUDGET_DISCOVERY_P95   (default: ${DEFAULT_DISCOVERY_P95})
   PERF_BUDGET_MCP_P95         (default: ${DEFAULT_MCP_P95})
+  PERF_BUDGET_REGISTRY_GET_P95 (default: ${DEFAULT_REGISTRY_GET_P95})
+  PERF_BUDGET_RESOLVE_P95     (default: ${DEFAULT_RESOLVE_P95})
 `);
 }
 
-function validateMetrics(summary) {
-  if (!summary || typeof summary !== 'object') {
-    throw new Error('Invalid perf summary: expected JSON object.');
+function calculateStats(results) {
+  const durations = results.map(r => r.duration).sort((a, b) => a - b);
+  const count = durations.length;
+  const avg = durations.reduce((sum, d) => sum + d, 0) / count;
+  const p95Index = Math.ceil(count * 0.95) - 1;
+  const p95 = durations[p95Index];
+  return { count, avg, p95 };
+}
+
+function validateMetrics(data) {
+  if (!data || typeof data !== 'object') {
+    throw new Error('Invalid perf data: expected JSON object.');
   }
 
-  const { discovery, mcp } = summary;
-
-  if (!discovery || typeof discovery.p95 !== 'number') {
-    throw new Error('Missing discovery.p95 metric in perf summary.');
+  // Handle legacy perf.json format
+  if (data.discovery && data.mcp) {
+    return {
+      discoveryP95: data.discovery.p95,
+      mcpP95: data.mcp.p95,
+      registryGetP95: null,
+      resolveP95: null
+    };
   }
 
-  if (!mcp || typeof mcp.p95 !== 'number') {
-    throw new Error('Missing mcp.p95 metric in perf summary.');
+  // Handle JSONL format from smoke test
+  if (Array.isArray(data)) {
+    const registryGetResults = data.filter((entry) => {
+      if (entry.route === 'registry_get') {
+        return true;
+      }
+      if (entry.method === 'GET' && typeof entry.path === 'string') {
+        return (
+          entry.path === '/registry' ||
+          entry.path.startsWith('/registry?') ||
+          entry.path.startsWith('/v1/registry/')
+        );
+      }
+      return false;
+    });
+
+    const resolveResults = data.filter((entry) => {
+      if (entry.route === 'resolve') {
+        return true;
+      }
+      if (entry.method === 'GET' && typeof entry.path === 'string') {
+        return entry.path.startsWith('/resolve') || entry.path.startsWith('/v1/resolve');
+      }
+      return false;
+    });
+
+    const registryGetStats = calculateStats(registryGetResults);
+    const resolveStats = calculateStats(resolveResults);
+
+    return {
+      discoveryP95: null,
+      mcpP95: null,
+      registryGetP95: registryGetStats.p95,
+      resolveP95: resolveStats.p95
+    };
   }
 
-  return { discoveryP95: discovery.p95, mcpP95: mcp.p95 };
+  throw new Error('Invalid perf data format: expected legacy perf.json or JSONL array.');
 }
 
 async function main() {
@@ -113,33 +179,66 @@ async function main() {
     );
   }
 
-  let summary;
+  let data;
   try {
-    summary = JSON.parse(metricsRaw);
+    // Try to parse as JSON first
+    data = JSON.parse(metricsRaw);
   } catch (error) {
-    throw new Error(
-      `Invalid JSON in ${perfFile}: ${error.message}`
-    );
+    // If JSON parsing fails, try parsing as JSONL
+    try {
+      const lines = metricsRaw.trim().split('\n').filter(line => line.trim());
+      data = lines.map(line => JSON.parse(line));
+    } catch (jsonlError) {
+      throw new Error(
+        `Invalid JSON/JSONL in ${perfFile}: ${error.message}`
+      );
+    }
   }
 
-  const { discoveryP95, mcpP95 } = validateMetrics(summary);
+  const { discoveryP95, mcpP95, registryGetP95, resolveP95 } = validateMetrics(data);
 
   const violations = [];
 
-  if (!Number.isFinite(discoveryP95)) {
-    violations.push('discovery.p95 is not a finite number.');
-  } else if (discoveryP95 > options.discoveryBudget) {
-    violations.push(
-      `discovery.p95 ${discoveryP95.toFixed(2)}ms exceeds budget ${options.discoveryBudget}ms`
-    );
+  // Legacy metrics
+  if (discoveryP95 !== null) {
+    if (!Number.isFinite(discoveryP95)) {
+      violations.push('discovery.p95 is not a finite number.');
+    } else if (discoveryP95 > options.discoveryBudget) {
+      violations.push(
+        `discovery.p95 ${discoveryP95.toFixed(2)}ms exceeds budget ${options.discoveryBudget}ms`
+      );
+    }
   }
 
-  if (!Number.isFinite(mcpP95)) {
-    violations.push('mcp.p95 is not a finite number.');
-  } else if (mcpP95 > options.mcpBudget) {
-    violations.push(
-      `mcp.p95 ${mcpP95.toFixed(2)}ms exceeds budget ${options.mcpBudget}ms`
-    );
+  if (mcpP95 !== null) {
+    if (!Number.isFinite(mcpP95)) {
+      violations.push('mcp.p95 is not a finite number.');
+    } else if (mcpP95 > options.mcpBudget) {
+      violations.push(
+        `mcp.p95 ${mcpP95.toFixed(2)}ms exceeds budget ${options.mcpBudget}ms`
+      );
+    }
+  }
+
+  // Registry HTTP metrics
+  if (registryGetP95 !== null) {
+    if (!Number.isFinite(registryGetP95)) {
+      violations.push('registry.get.p95 is not a finite number.');
+    } else if (registryGetP95 > options.registryGetBudget) {
+      violations.push(
+        `registry.get.p95 ${registryGetP95.toFixed(2)}ms exceeds budget ${options.registryGetBudget}ms`
+      );
+    }
+  }
+
+  if (resolveP95 !== null) {
+    if (!Number.isFinite(resolveP95)) {
+      violations.push('resolve.p95 is not a finite number.');
+    } else if (resolveP95 > options.resolveBudget) {
+      violations.push(
+        `resolve.p95 ${resolveP95.toFixed(2)}ms exceeds budget ${options.resolveBudget}ms`
+      );
+    }
   }
 
   if (violations.length > 0) {
@@ -150,11 +249,25 @@ async function main() {
     throw new Error(message);
   }
 
+  const passedBudgets = [];
+  
+  if (discoveryP95 !== null) {
+    passedBudgets.push(`discovery.p95 ${discoveryP95.toFixed(2)}ms ≤ ${options.discoveryBudget}ms`);
+  }
+  if (mcpP95 !== null) {
+    passedBudgets.push(`mcp.p95 ${mcpP95.toFixed(2)}ms ≤ ${options.mcpBudget}ms`);
+  }
+  if (registryGetP95 !== null) {
+    passedBudgets.push(`registry.get.p95 ${registryGetP95.toFixed(2)}ms ≤ ${options.registryGetBudget}ms`);
+  }
+  if (resolveP95 !== null) {
+    passedBudgets.push(`resolve.p95 ${resolveP95.toFixed(2)}ms ≤ ${options.resolveBudget}ms`);
+  }
+
   console.log(
     [
       '✅ Performance budgets met:',
-      `  - discovery.p95 ${discoveryP95.toFixed(2)}ms ≤ ${options.discoveryBudget}ms`,
-      `  - mcp.p95 ${mcpP95.toFixed(2)}ms ≤ ${options.mcpBudget}ms`
+      ...passedBudgets.map(budget => `  - ${budget}`)
     ].join('\n')
   );
 }
@@ -163,4 +276,3 @@ main().catch((error) => {
   console.error(error.message || error);
   process.exit(1);
 });
-

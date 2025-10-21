@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>OSSP Authoring UI</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header>
+      <h1>OSSP Authoring UI</h1>
+      <button id="theme-toggle" title="Toggle theme">🌓</button>
+      <a href="/docs/authoring/guide-v2.md#validation" target="_blank" rel="noopener noreferrer" title="Open Authoring Guide">Help</a>
+    </header>
+
+    <main>
+      <section>
+        <h2>Manifest</h2>
+        <textarea id="manifest" spellcheck="false" placeholder='{"name":"example","version":"1.0.0"}'></textarea>
+      </section>
+
+      <section>
+        <h2>Schema</h2>
+        <textarea id="schema" spellcheck="false" placeholder='{"$id":"/schema.json","$schema":"https://json-schema.org/draft/2020-12/schema","type":"object","properties":{"name":{"type":"string"}}}'></textarea>
+        <div class="row">
+          <label>baseDir</label>
+          <input id="baseDir" placeholder="./" />
+          <button id="validate">Validate</button>
+        </div>
+        <pre id="validate-result" class="result"></pre>
+      </section>
+
+      <section>
+        <h2>Preview</h2>
+        <div class="row">
+          <button id="preview-graph">Preview Graph</button>
+          <button id="preview-docs">Preview Docs</button>
+        </div>
+        <pre id="preview-result" class="result"></pre>
+      </section>
+    </main>
+
+    <footer>
+      <small>Local only. No network refs permitted.</small>
+    </footer>
+
+    <script type="module" src="/main.js"></script>
+  </body>
+  </html>

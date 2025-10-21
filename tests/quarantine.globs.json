@@ -1,0 +1,7 @@
+{
+  "testPathIgnorePatterns": [],
+  "coveragePathIgnorePatterns": [
+    "artifacts/scaffold-smoke/.+\\.test\\.js$",
+    "packages/.+/__fixtures__/.+"
+  ]
+}

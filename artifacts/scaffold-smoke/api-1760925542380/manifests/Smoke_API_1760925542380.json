@@ -1,0 +1,21 @@
+{
+  "type": "api",
+  "name": "Smoke_API_1760925542380",
+  "version": "1.0.0",
+  "description": "Generated api protocol for Smoke_API_1760925542380",
+  "protocol": {
+    "baseUrl": "https://api.example.com",
+    "authentication": "bearer",
+    "endpoints": [
+      {
+        "path": "/v1/resource",
+        "method": "GET",
+        "description": "Main API endpoint"
+      }
+    ]
+  },
+  "metadata": {
+    "created": "2025-10-20T01:59:02.422Z",
+    "author": "protocol-discover"
+  }
+}

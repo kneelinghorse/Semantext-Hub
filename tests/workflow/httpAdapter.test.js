@@ -115,7 +115,9 @@ describe('HttpAdapter', () => {
 
       expect(result.status).toBe(200);
       expect(result.ok).toBe(true);
-      expect(result.data).toEqual({ success: true });
+      expect(result.data).toEqual(expect.objectContaining({ success: true }));
+      expect(typeof result.data.requestId).toBe('string');
+      expect(result.data.requestId).toHaveLength(36);
       expect(fetch).toHaveBeenCalledWith(
         'https://example.com',
         expect.objectContaining({
@@ -154,6 +156,8 @@ describe('HttpAdapter', () => {
           body: JSON.stringify({ name: 'test' })
         })
       );
+      expect(typeof result.data.requestId).toBe('string');
+      expect(result.data.requestId).toHaveLength(36);
     });
 
     it('should handle query parameters', async () => {
@@ -195,7 +199,8 @@ describe('HttpAdapter', () => {
         url: 'https://example.com'
       };
 
-      await expect(adapter.execute(context, input)).rejects.toThrow(AdapterExecutionError);
+      const fastAdapter = new HttpAdapter({ retries: 0, retryDelay: 0, timeout: 500 });
+      await expect(fastAdapter.execute(context, input)).rejects.toThrow(AdapterExecutionError);
     });
 
     it('should handle timeout', async () => {

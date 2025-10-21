@@ -15,13 +15,14 @@ import { MetricsIngestWriter } from '../services/obs/ingest.mjs';
 import { loadBudgets, summarizeMetrics, evaluateBudgets, loadLogEntries } from './perf-status.mjs';
 import { discoverCommand } from '../../packages/runtime/cli/commands/discover.js';
 import { approveCommand, getApprovedPath } from '../../packages/runtime/cli/commands/approve.js';
-import { catalogBuildGraphCommand } from '../../cli/commands/catalog-build-graph.js';
-import { generateDiagram } from '../../cli/commands/catalog-generate-diagram.js';
+import { writeCatalogGraph } from '../../src/catalog/graph/artifacts.js';
+import { evaluateGraphSafety, writeChunkedGraph } from '../../src/catalog/graph/chunking.js';
+import { generateCatalogDiagram } from '../../src/visualization/drawio/catalog.js';
 import { writeCytoscape } from '../../src/visualization/cytoscape/exporter.js';
 import { launch as launchWithGuardian } from '../../src/cli/utils/open-guardian.js';
 import { createRegistryServer } from '../services/registry/server.mjs';
 import { signJws, verifyJws } from '../libs/signing/jws.mjs';
-import { callAgent } from '../libs/a2a/client.mjs';
+import { callAgent, resetA2aState } from '../libs/a2a/client.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const APP_ROOT = path.resolve(__dirname, '..');
@@ -343,6 +344,8 @@ async function writeSummaryDoc(summaryPath, context) {
 }
 
 export async function runWsap(options = {}) {
+  resetA2aState();
+
   const startedAt = new Date();
   const sessionId = options.sessionId ?? generateSessionId(startedAt);
   const seedId = options.seed ?? 'github-api';
@@ -502,25 +505,39 @@ export async function runWsap(options = {}) {
     context.artifacts.approvedManifest = approveResult.approvedPath;
 
     catalogGraphResult = await runStep('catalog', async () => {
-      const result = await catalogBuildGraphCommand({
+      const result = await writeCatalogGraph({
         workspace: runDir,
         catalogPaths: [directories.approved],
         output: path.join(directories.catalog, 'catalog-graph.json'),
         overwrite: true,
         pretty: true,
-        silent: true,
       });
       return result;
     });
     context.artifacts.catalogGraph = catalogGraphResult.outputPath;
+    // Enforce graph safety thresholds in WARN mode for Sprint 18
+    const safety = evaluateGraphSafety(catalogGraphResult.graph, {
+      thresholds: { nodes_warn: 2000, edges_warn: 6000, memory_warn_mb: 80 },
+    });
+    if (safety.exceeds) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        `WARN: graph exceeds thresholds (nodes=${safety.nodes}, edges=${safety.edges}, ~${safety.approx_memory_mb}MB). Chunking output...`,
+      );
+      const outDir = path.dirname(catalogGraphResult.outputPath);
+      const chunkResult = await writeChunkedGraph(catalogGraphResult.graph, outDir, {
+        chunking: { part_size_nodes: 500, index_file: 'graph.index.json', part_pattern: 'graph.part-###.json' },
+      });
+      context.artifacts.catalogGraphIndex = chunkResult.indexPath;
+      context.artifacts.catalogGraphParts = chunkResult.parts;
+    }
 
     diagramResult = await runStep('diagram', async () => {
-      const result = await generateDiagram({
+      const result = await generateCatalogDiagram({
         workspace: runDir,
         graph: catalogGraphResult.graph,
         output: path.join(directories.drawio, 'catalog.drawio'),
         overwrite: true,
-        silent: true,
       });
       return result;
     });
@@ -582,6 +599,8 @@ export async function runWsap(options = {}) {
         capIndexPath,
         apiKey: registryApiKey,
         signaturePolicyPath,
+        performanceSessionId: sessionId,
+        performanceLogRoot: logRoot,
       });
 
       registryServer = registryApp.listen(0, '127.0.0.1');

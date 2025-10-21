@@ -99,53 +99,156 @@ describe('API Client', () => {
   });
 
   describe('getValidation', () => {
-    it('returns semantic validation stub data', async () => {
-      const result = await api.getValidation();
+    it('posts manifest list and returns live results', async () => {
+      const responseBody = {
+        summary: { total: 1, passed: 1, warnings: 0, failed: 0 },
+        manifests: [
+          { id: 'api-test', urn: 'urn:proto:manifest:api-test', validationStatus: 'pass', errors: [], warnings: [] }
+        ],
+        valid: true
+      };
 
-      expect(result.urn).toBe('urn:proto:validation:summary');
-      expect(result.manifests).toBeDefined();
-      expect(result.summary).toBeDefined();
-      expect(result.summary.total).toBeGreaterThanOrEqual(0);
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => responseBody,
+      });
+
+      const result = await api.getValidation(['api-test.json']);
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        '/api/validate',
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ manifests: ['api-test.json'] })
+        })
+      );
+
+      expect(result.summary.total).toBe(1);
+      expect(result.source).toBe('live');
+      expect(result.manifests[0].id).toBe('api-test');
     });
 
-    it('includes URN identifiers for each manifest', async () => {
+    it('fetches manifest list when none provided', async () => {
+      const manifestsResponse = { manifests: [{ filename: 'api-test.json' }] };
+      const validateResponse = {
+        summary: { total: 1, passed: 1, warnings: 0, failed: 0 },
+        manifests: [
+          { id: 'api-test', urn: 'urn:proto:manifest:api-test', validationStatus: 'pass', errors: [], warnings: [] }
+        ],
+        valid: true
+      };
+
+      fetchMock
+        .mockResolvedValueOnce({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => manifestsResponse,
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => validateResponse,
+        });
+
       const result = await api.getValidation();
 
-      result.manifests.forEach((manifest) => {
-        expect(manifest.urn).toMatch(/^urn:proto:manifest:/);
-        expect(manifest.validationStatus).toMatch(/^(pass|warning|fail)$/);
-      });
+      expect(fetchMock).toHaveBeenNthCalledWith(1, '/api/manifests', expect.any(Object));
+      expect(fetchMock).toHaveBeenNthCalledWith(
+        2,
+        '/api/validate',
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ manifests: ['api-test.json'] })
+        })
+      );
+
+      expect(result.valid).toBe(true);
     });
   });
 
   describe('getGraph', () => {
-    it('returns semantic graph stub data', async () => {
-      const result = await api.getGraph();
+    it('posts manifests and fetches first graph chunk', async () => {
+      const graphResponse = {
+        index: { node_count: 2, edge_count: 1, depth: 2, parts: 1 },
+        parts: [{ id: 'chunk-1', url: '/api/graph/part/chunk-1', size: 128 }]
+      };
+      const chunkResponse = {
+        nodes: [{ id: 'api-test', urn: 'urn:proto:manifest:api-test', type: 'api', format: 'api' }],
+        edges: [{ source: 'api-test', target: 'data-test', type: 'depends-on', urn: 'urn:proto:graph:edge:api-test:data-test' }],
+        summary: { nodes: 1, edges: 1, depth: 2 }
+      };
 
-      expect(result.urn).toBe('urn:proto:graph:protocol-network');
-      expect(result.nodes).toBeDefined();
-      expect(result.edges).toBeDefined();
-      expect(result.metadata).toBeDefined();
+      fetchMock
+        .mockResolvedValueOnce({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => graphResponse,
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => chunkResponse,
+        });
+
+      const result = await api.getGraph(['api-test.json']);
+
+      expect(fetchMock).toHaveBeenNthCalledWith(
+        1,
+        '/api/graph',
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ manifests: ['api-test.json'] })
+        })
+      );
+
+      expect(fetchMock).toHaveBeenNthCalledWith(2, '/api/graph/part/chunk-1', expect.any(Object));
+      expect(result.nodes.length).toBe(1);
+      expect(result.metadata.nodeCount).toBe(2);
+      expect(result.source).toBe('live');
     });
 
-    it('includes URNs for nodes and edges', async () => {
+    it('pulls manifest list when not provided', async () => {
+      const manifestsResponse = { manifests: [{ filename: 'api-test.json' }] };
+      const graphResponse = {
+        index: { node_count: 1, edge_count: 0, depth: 1, parts: 1 },
+        parts: [{ id: 'chunk-1', url: '/api/graph/part/chunk-1', size: 64 }]
+      };
+      const chunkResponse = {
+        nodes: [{ id: 'api-test', urn: 'urn:proto:manifest:api-test', type: 'api', format: 'api' }],
+        edges: [],
+        summary: { nodes: 1, edges: 0, depth: 1 }
+      };
+
+      fetchMock
+        .mockResolvedValueOnce({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => manifestsResponse,
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => graphResponse,
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => chunkResponse,
+        });
+
       const result = await api.getGraph();
 
-      result.nodes.forEach((node) => {
-        expect(node.urn).toMatch(/^urn:proto:manifest:/);
-      });
-
-      result.edges.forEach((edge) => {
-        expect(edge.urn).toMatch(/^urn:proto:graph:edge:/);
-      });
-    });
-
-    it('provides graph metadata', async () => {
-      const result = await api.getGraph();
-
-      expect(result.metadata.nodeCount).toBeGreaterThanOrEqual(0);
-      expect(result.metadata.edgeCount).toBeGreaterThanOrEqual(0);
-      expect(result.metadata.depth).toBeGreaterThanOrEqual(0);
+      expect(fetchMock).toHaveBeenNthCalledWith(1, '/api/manifests', expect.any(Object));
+      expect(fetchMock).toHaveBeenNthCalledWith(
+        2,
+        '/api/graph',
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ manifests: ['api-test.json'] })
+        })
+      );
+      expect(result.nodes.length).toBe(1);
     });
   });
 

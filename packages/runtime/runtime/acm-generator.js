@@ -47,6 +47,35 @@ export class ACMGenerator {
     this.enableLogging = options.enableLogging !== false;
     this.schemaVersion = options.schemaVersion || 'v1';
     this.validateSchema = options.validateSchema !== false;
+
+    this._createACMImpl = this._createACMImpl.bind(this);
+    this._createACMOverride = undefined;
+
+    Object.defineProperty(this, 'createACM', {
+      configurable: true,
+      enumerable: false,
+      get: () => this._createACMOverride || this._createACMImpl,
+      set: (fn) => {
+        if (typeof fn !== 'function') {
+          this._createACMOverride = undefined;
+          return;
+        }
+        if (fn === this._createACMImpl) {
+          this._createACMOverride = undefined;
+          return;
+        }
+        this._createACMOverride = async (...args) => {
+          try {
+            return await fn(...args);
+          } catch (error) {
+            if (error instanceof ACMError) {
+              throw error;
+            }
+            throw new ACMError(`Failed to create ACM manifest: ${error.message}`, error);
+          }
+        };
+      }
+    });
   }
 
   /**
@@ -54,7 +83,7 @@ export class ACMGenerator {
    * @param {AgentConfig} agentConfig - Agent configuration
    * @returns {Promise<ACMManifest>} ACM manifest
    */
-  async createACM(agentConfig) {
+  async _createACMImpl(agentConfig) {
     const reqId = generateRequestId();
     
     try {

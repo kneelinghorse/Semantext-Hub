@@ -159,6 +159,16 @@ npm test -- tests/integration/agent-full-suite.test.js
 
 ## ✅ Test Coverage
 
+<!-- TEST-COUNTS:BEGIN -->
+Suites: 133 passed / 0 failed / 134 total
+Tests: 2068 passed / 0 failed / 2070 total
+Coverage: statements 39.73% · functions 41.55% · branches 31.53% · lines 49.18%
+Thresholds met: false
+<!-- TEST-COUNTS:END -->
+
+
+
+
 - **480+ tests** across all protocols
 - **19 agent integration tests** covering:
   - URN validation across all 18 protocols

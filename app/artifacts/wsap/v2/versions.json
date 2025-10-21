@@ -1,0 +1,21 @@
+{
+  "version": 2,
+  "seeds": [
+    {
+      "name": "asyncapi-streetlights",
+      "type": "asyncapi",
+      "source_url": null,
+      "sha256": "7e6543695589465667c75658ee92a942f3512b40b33768fd5b1a3a359d18f6f4",
+      "saved_as": "seeds/streetlights.asyncapi.yml",
+      "fetched_at": "2025-10-18T00:20:25.234Z"
+    },
+    {
+      "name": "pagila-ddl",
+      "type": "ddl",
+      "source_url": "https://raw.githubusercontent.com/devrimgunduz/pagila/master/pagila-schema.sql",
+      "sha256": "8ce358e4c8014087b85296694a0893887bd7a4190e3ce407f2721b86b98e5707",
+      "saved_as": "seeds/pagila.schema.sql",
+      "fetched_at": "2025-10-18T00:20:25.316Z"
+    }
+  ]
+}

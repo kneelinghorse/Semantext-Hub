@@ -1,0 +1,116 @@
+{
+  "total": {
+    "all": 28,
+    "success": 20,
+    "error": 5,
+    "unknown": 3
+  },
+  "byToolStep": [
+    {
+      "tool": "registry",
+      "step": "health",
+      "key": "registry/health",
+      "counts": {
+        "all": 5,
+        "success": 4,
+        "error": 0,
+        "unknown": 1
+      },
+      "stats": {
+        "count": 4,
+        "min": 41.45,
+        "max": 54.21,
+        "avg": 47.98,
+        "p5": 42.08,
+        "p50": 48.13,
+        "p95": 53.67,
+        "monotonicValid": true
+      }
+    },
+    {
+      "tool": "registry",
+      "step": "openapi",
+      "key": "registry/openapi",
+      "counts": {
+        "all": 4,
+        "success": 4,
+        "error": 0,
+        "unknown": 0
+      },
+      "stats": {
+        "count": 4,
+        "min": 65.78,
+        "max": 84.03,
+        "avg": 72.4,
+        "p5": 65.81,
+        "p50": 69.89,
+        "p95": 82.5,
+        "monotonicValid": true
+      }
+    },
+    {
+      "tool": "registry",
+      "step": "registry_get",
+      "key": "registry/registry_get",
+      "counts": {
+        "all": 7,
+        "success": 4,
+        "error": 2,
+        "unknown": 1
+      },
+      "stats": {
+        "count": 4,
+        "min": 93.26,
+        "max": 109.59,
+        "avg": 100.03,
+        "p5": 93.58,
+        "p50": 98.63,
+        "p95": 108.43,
+        "monotonicValid": true
+      }
+    },
+    {
+      "tool": "registry",
+      "step": "registry_put",
+      "key": "registry/registry_put",
+      "counts": {
+        "all": 6,
+        "success": 4,
+        "error": 2,
+        "unknown": 0
+      },
+      "stats": {
+        "count": 4,
+        "min": 117.29,
+        "max": 129.49,
+        "avg": 123.15,
+        "p5": 117.46,
+        "p50": 122.92,
+        "p95": 129.18,
+        "monotonicValid": true
+      }
+    },
+    {
+      "tool": "registry",
+      "step": "resolve",
+      "key": "registry/resolve",
+      "counts": {
+        "all": 6,
+        "success": 4,
+        "error": 1,
+        "unknown": 1
+      },
+      "stats": {
+        "count": 4,
+        "min": 190.09,
+        "max": 208.92,
+        "avg": 196.49,
+        "p5": 190.49,
+        "p50": 193.47,
+        "p95": 206.71,
+        "monotonicValid": true
+      }
+    }
+  ],
+  "monotonicViolations": []
+}

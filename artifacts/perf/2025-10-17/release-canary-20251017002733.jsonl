@@ -1,0 +1,20 @@
+{"ts":"2025-10-17T00:27:34.199Z","sessionId":"release-canary-20251017002733","tool":"a2a","step":"echo","ms":622,"ok":false,"err":"Agent urn:ossp:agent:echo does not expose a default endpoint"}
+{"ts":"2025-10-17T00:27:34.200Z","sessionId":"release-canary-20251017002733","tool":"release:canary","step":"a2a.echo","ms":622,"ok":false,"err":"Agent urn:ossp:agent:echo does not expose a default endpoint"}
+{"ts":"2025-10-17T00:27:35.250Z","sessionId":"release-canary-20251017002733","tool":"a2a","step":"echo","ms":672,"ok":false,"err":"Agent urn:ossp:agent:echo does not expose a default endpoint"}
+{"ts":"2025-10-17T00:27:35.250Z","sessionId":"release-canary-20251017002733","tool":"release:canary","step":"a2a.echo","ms":672,"ok":false,"err":"Agent urn:ossp:agent:echo does not expose a default endpoint"}
+{"ts":"2025-10-17T00:27:36.164Z","sessionId":"release-canary-20251017002733","tool":"a2a","step":"echo","ms":584,"ok":false,"err":"Agent urn:ossp:agent:echo does not expose a default endpoint"}
+{"ts":"2025-10-17T00:27:36.164Z","sessionId":"release-canary-20251017002733","tool":"release:canary","step":"a2a.echo","ms":584,"ok":false,"err":"Agent urn:ossp:agent:echo does not expose a default endpoint"}
+{"ts":"2025-10-17T00:27:36.580Z","sessionId":"release-canary-20251017002733","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-17T00:27:36.580Z","sessionId":"release-canary-20251017002733","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-17T00:27:37.581Z","sessionId":"release-canary-20251017002733","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-17T00:27:37.582Z","sessionId":"release-canary-20251017002733","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-17T00:27:38.580Z","sessionId":"release-canary-20251017002733","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-17T00:27:38.581Z","sessionId":"release-canary-20251017002733","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-17T00:27:39.581Z","sessionId":"release-canary-20251017002733","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-17T00:27:39.582Z","sessionId":"release-canary-20251017002733","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-17T00:27:40.582Z","sessionId":"release-canary-20251017002733","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-17T00:27:40.583Z","sessionId":"release-canary-20251017002733","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-17T00:27:41.583Z","sessionId":"release-canary-20251017002733","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-17T00:27:41.584Z","sessionId":"release-canary-20251017002733","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-17T00:27:42.584Z","sessionId":"release-canary-20251017002733","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-17T00:27:42.585Z","sessionId":"release-canary-20251017002733","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}

@@ -1,0 +1,1174 @@
+{
+  "service": {
+    "name": "GitHub API (Demo Subset)",
+    "version": "2022-11-28",
+    "urn": "urn:proto:api:github-api-demo-subset/service",
+    "description": "Simplified GitHub REST API for demonstration purposes"
+  },
+  "interface": {
+    "authentication": {
+      "type": "apiKey",
+      "in": "header"
+    },
+    "endpoints": [
+      {
+        "method": "GET",
+        "path": "/users/{username}",
+        "summary": "Get a user",
+        "operationId": "getUser",
+        "urn": "urn:proto:api.endpoint:github-api-demo-subset/op/getuser",
+        "params": [
+          {
+            "name": "username",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": [
+          {
+            "status": 200,
+            "description": "Success",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "integer"
+                },
+                "login": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string",
+                  "x-pii": true
+                },
+                "email": {
+                  "type": "string",
+                  "format": "email",
+                  "x-pii": true
+                },
+                "avatar_url": {
+                  "type": "string"
+                },
+                "html_url": {
+                  "type": "string"
+                },
+                "bio": {
+                  "type": "string"
+                },
+                "public_repos": {
+                  "type": "integer"
+                },
+                "followers": {
+                  "type": "integer"
+                },
+                "following": {
+                  "type": "integer"
+                },
+                "created_at": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            }
+          }
+        ],
+        "tags": [
+          "Users"
+        ]
+      },
+      {
+        "method": "GET",
+        "path": "/user",
+        "summary": "Get authenticated user",
+        "operationId": "getAuthenticatedUser",
+        "urn": "urn:proto:api.endpoint:github-api-demo-subset/op/getauthenticateduser",
+        "responses": [
+          {
+            "status": 200,
+            "description": "Success",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "integer"
+                },
+                "login": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string",
+                  "x-pii": true
+                },
+                "email": {
+                  "type": "string",
+                  "format": "email",
+                  "x-pii": true
+                },
+                "avatar_url": {
+                  "type": "string"
+                },
+                "html_url": {
+                  "type": "string"
+                },
+                "bio": {
+                  "type": "string"
+                },
+                "public_repos": {
+                  "type": "integer"
+                },
+                "followers": {
+                  "type": "integer"
+                },
+                "following": {
+                  "type": "integer"
+                },
+                "created_at": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            }
+          }
+        ],
+        "tags": [
+          "Users"
+        ]
+      },
+      {
+        "method": "GET",
+        "path": "/user/repos",
+        "summary": "List repositories for authenticated user",
+        "operationId": "listUserRepos",
+        "urn": "urn:proto:api.endpoint:github-api-demo-subset/op/listuserrepos",
+        "params": [
+          {
+            "name": "per_page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": [
+          {
+            "status": 200,
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "full_name": {
+                    "type": "string"
+                  },
+                  "owner": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "integer"
+                      },
+                      "login": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string",
+                        "x-pii": true
+                      },
+                      "email": {
+                        "type": "string",
+                        "format": "email",
+                        "x-pii": true
+                      },
+                      "avatar_url": {
+                        "type": "string"
+                      },
+                      "html_url": {
+                        "type": "string"
+                      },
+                      "bio": {
+                        "type": "string"
+                      },
+                      "public_repos": {
+                        "type": "integer"
+                      },
+                      "followers": {
+                        "type": "integer"
+                      },
+                      "following": {
+                        "type": "integer"
+                      },
+                      "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
+                    }
+                  },
+                  "private": {
+                    "type": "boolean"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "html_url": {
+                    "type": "string"
+                  },
+                  "language": {
+                    "type": "string"
+                  },
+                  "stargazers_count": {
+                    "type": "integer"
+                  },
+                  "watchers_count": {
+                    "type": "integer"
+                  },
+                  "forks_count": {
+                    "type": "integer"
+                  },
+                  "open_issues_count": {
+                    "type": "integer"
+                  },
+                  "created_at": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "updated_at": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "pagination": {
+          "style": "page",
+          "params": {
+            "page": "page",
+            "limit": "per_page"
+          }
+        },
+        "tags": [
+          "Repositories"
+        ]
+      },
+      {
+        "method": "GET",
+        "path": "/repos/{owner}/{repo}",
+        "summary": "Get a repository",
+        "operationId": "getRepo",
+        "urn": "urn:proto:api.endpoint:github-api-demo-subset/op/getrepo",
+        "params": [
+          {
+            "name": "owner",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "repo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": [
+          {
+            "status": 200,
+            "description": "Success",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "integer"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "full_name": {
+                  "type": "string"
+                },
+                "owner": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "login": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string",
+                      "x-pii": true
+                    },
+                    "email": {
+                      "type": "string",
+                      "format": "email",
+                      "x-pii": true
+                    },
+                    "avatar_url": {
+                      "type": "string"
+                    },
+                    "html_url": {
+                      "type": "string"
+                    },
+                    "bio": {
+                      "type": "string"
+                    },
+                    "public_repos": {
+                      "type": "integer"
+                    },
+                    "followers": {
+                      "type": "integer"
+                    },
+                    "following": {
+                      "type": "integer"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                },
+                "private": {
+                  "type": "boolean"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "html_url": {
+                  "type": "string"
+                },
+                "language": {
+                  "type": "string"
+                },
+                "stargazers_count": {
+                  "type": "integer"
+                },
+                "watchers_count": {
+                  "type": "integer"
+                },
+                "forks_count": {
+                  "type": "integer"
+                },
+                "open_issues_count": {
+                  "type": "integer"
+                },
+                "created_at": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "updated_at": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            }
+          }
+        ],
+        "tags": [
+          "Repositories"
+        ]
+      },
+      {
+        "method": "GET",
+        "path": "/repos/{owner}/{repo}/issues",
+        "summary": "List repository issues",
+        "operationId": "listIssues",
+        "urn": "urn:proto:api.endpoint:github-api-demo-subset/op/listissues",
+        "params": [
+          {
+            "name": "owner",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "repo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": [
+          {
+            "status": 200,
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer"
+                  },
+                  "number": {
+                    "type": "integer"
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "body": {
+                    "type": "string"
+                  },
+                  "state": {
+                    "type": "string",
+                    "enum": [
+                      "open",
+                      "closed"
+                    ]
+                  },
+                  "user": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "integer"
+                      },
+                      "login": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string",
+                        "x-pii": true
+                      },
+                      "email": {
+                        "type": "string",
+                        "format": "email",
+                        "x-pii": true
+                      },
+                      "avatar_url": {
+                        "type": "string"
+                      },
+                      "html_url": {
+                        "type": "string"
+                      },
+                      "bio": {
+                        "type": "string"
+                      },
+                      "public_repos": {
+                        "type": "integer"
+                      },
+                      "followers": {
+                        "type": "integer"
+                      },
+                      "following": {
+                        "type": "integer"
+                      },
+                      "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
+                    }
+                  },
+                  "labels": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "color": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  },
+                  "created_at": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "updated_at": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "closed_at": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "pagination": {
+          "style": "page",
+          "params": {
+            "page": "page",
+            "limit": "per_page"
+          }
+        },
+        "tags": [
+          "Issues"
+        ]
+      },
+      {
+        "method": "POST",
+        "path": "/repos/{owner}/{repo}/issues",
+        "summary": "Create an issue",
+        "operationId": "createIssue",
+        "urn": "urn:proto:api.endpoint:github-api-demo-subset/op/createissue",
+        "params": [
+          {
+            "name": "owner",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "repo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "request": {
+          "contentType": "application/json",
+          "required": true,
+          "schema": {
+            "type": "object",
+            "required": [
+              "title"
+            ],
+            "properties": {
+              "title": {
+                "type": "string"
+              },
+              "body": {
+                "type": "string"
+              },
+              "assignees": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "labels": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "responses": [
+          {
+            "status": 201,
+            "description": "Created",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "integer"
+                },
+                "number": {
+                  "type": "integer"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "body": {
+                  "type": "string"
+                },
+                "state": {
+                  "type": "string",
+                  "enum": [
+                    "open",
+                    "closed"
+                  ]
+                },
+                "user": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "login": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string",
+                      "x-pii": true
+                    },
+                    "email": {
+                      "type": "string",
+                      "format": "email",
+                      "x-pii": true
+                    },
+                    "avatar_url": {
+                      "type": "string"
+                    },
+                    "html_url": {
+                      "type": "string"
+                    },
+                    "bio": {
+                      "type": "string"
+                    },
+                    "public_repos": {
+                      "type": "integer"
+                    },
+                    "followers": {
+                      "type": "integer"
+                    },
+                    "following": {
+                      "type": "integer"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                },
+                "labels": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "integer"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "color": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "created_at": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "updated_at": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "closed_at": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            }
+          }
+        ],
+        "tags": [
+          "Issues"
+        ]
+      },
+      {
+        "method": "GET",
+        "path": "/repos/{owner}/{repo}/issues/{issue_number}",
+        "summary": "Get an issue",
+        "operationId": "getIssue",
+        "urn": "urn:proto:api.endpoint:github-api-demo-subset/op/getissue",
+        "params": [
+          {
+            "name": "owner",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "repo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "issue_number",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": [
+          {
+            "status": 200,
+            "description": "Success",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "integer"
+                },
+                "number": {
+                  "type": "integer"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "body": {
+                  "type": "string"
+                },
+                "state": {
+                  "type": "string",
+                  "enum": [
+                    "open",
+                    "closed"
+                  ]
+                },
+                "user": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "login": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string",
+                      "x-pii": true
+                    },
+                    "email": {
+                      "type": "string",
+                      "format": "email",
+                      "x-pii": true
+                    },
+                    "avatar_url": {
+                      "type": "string"
+                    },
+                    "html_url": {
+                      "type": "string"
+                    },
+                    "bio": {
+                      "type": "string"
+                    },
+                    "public_repos": {
+                      "type": "integer"
+                    },
+                    "followers": {
+                      "type": "integer"
+                    },
+                    "following": {
+                      "type": "integer"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                },
+                "labels": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "integer"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "color": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "created_at": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "updated_at": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "closed_at": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            }
+          }
+        ],
+        "tags": [
+          "Issues"
+        ]
+      }
+    ]
+  },
+  "context": {
+    "servers": [
+      {
+        "url": "https://api.github.com"
+      }
+    ]
+  },
+  "validation": {
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "login": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "x-pii": true
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "x-pii": true
+          },
+          "avatar_url": {
+            "type": "string"
+          },
+          "html_url": {
+            "type": "string"
+          },
+          "bio": {
+            "type": "string"
+          },
+          "public_repos": {
+            "type": "integer"
+          },
+          "followers": {
+            "type": "integer"
+          },
+          "following": {
+            "type": "integer"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Repository": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "full_name": {
+            "type": "string"
+          },
+          "owner": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "login": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string",
+                "x-pii": true
+              },
+              "email": {
+                "type": "string",
+                "format": "email",
+                "x-pii": true
+              },
+              "avatar_url": {
+                "type": "string"
+              },
+              "html_url": {
+                "type": "string"
+              },
+              "bio": {
+                "type": "string"
+              },
+              "public_repos": {
+                "type": "integer"
+              },
+              "followers": {
+                "type": "integer"
+              },
+              "following": {
+                "type": "integer"
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          },
+          "private": {
+            "type": "boolean"
+          },
+          "description": {
+            "type": "string"
+          },
+          "html_url": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          },
+          "stargazers_count": {
+            "type": "integer"
+          },
+          "watchers_count": {
+            "type": "integer"
+          },
+          "forks_count": {
+            "type": "integer"
+          },
+          "open_issues_count": {
+            "type": "integer"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Issue": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "number": {
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "open",
+              "closed"
+            ]
+          },
+          "user": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "login": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string",
+                "x-pii": true
+              },
+              "email": {
+                "type": "string",
+                "format": "email",
+                "x-pii": true
+              },
+              "avatar_url": {
+                "type": "string"
+              },
+              "html_url": {
+                "type": "string"
+              },
+              "bio": {
+                "type": "string"
+              },
+              "public_repos": {
+                "type": "integer"
+              },
+              "followers": {
+                "type": "integer"
+              },
+              "following": {
+                "type": "integer"
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          },
+          "labels": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "integer"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "color": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "closed_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "IssueCreate": {
+        "type": "object",
+        "required": [
+          "title"
+        ],
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "assignees": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "labels": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "Label": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "color": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "metadata": {
+    "status": "approved",
+    "source": {
+      "type": "openapi",
+      "version": "3.0.0",
+      "imported_at": "2025-10-16T23:40:56.186Z",
+      "input_type": "string",
+      "reference": "/Users/d/portfolio/OSSP-AGI/seeds/openapi/github/spec.json"
+    },
+    "approved_at": "2025-10-16T23:40:56.197Z",
+    "approved_by": "d",
+    "state_history": [
+      {
+        "from": "draft",
+        "to": "approved",
+        "timestamp": "2025-10-16T23:40:56.197Z",
+        "forced": true,
+        "by": "d"
+      }
+    ]
+  },
+  "provenance": {
+    "importer": "OpenAPIImporter",
+    "importer_version": "0.1.0",
+    "imported_at": "2025-10-16T23:40:56.186Z",
+    "spec_version": "3.0.0",
+    "spec_hash": "5e784540c84917860dcfd0ce3e599a359949a6968c82b1178dae3760455be2de",
+    "source": "/Users/d/portfolio/OSSP-AGI/seeds/openapi/github/spec.json",
+    "source_type": "string",
+    "source_location": "/Users/d/portfolio/OSSP-AGI/seeds/openapi/github/spec.json",
+    "generated_at": "2025-10-16T23:40:56.186Z",
+    "tool": "protocol-discover",
+    "tool_version": "0.1.0"
+  }
+}

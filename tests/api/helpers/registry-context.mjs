@@ -25,7 +25,12 @@ export const BASE_CARD = {
 const cleanupFns = [];
 
 export async function createRegistryTestContext(overrides = {}) {
-  const { rateLimit: rateLimitOverrides, signaturePolicy, ...serverOverrides } = overrides;
+  const {
+    rateLimit: rateLimitOverrides,
+    signaturePolicy,
+    preloadStoreRecords = [],
+    ...serverOverrides
+  } = overrides;
   const workDir = await mkdtemp(join(tmpdir(), 'registry-service-'));
   const storePath = join(workDir, 'store.jsonl');
   const indexPath = join(workDir, 'index.urn.json');
@@ -48,6 +53,13 @@ export async function createRegistryTestContext(overrides = {}) {
     ],
   };
   await writeFile(policyPath, `${JSON.stringify(policy, null, 2)}\n`, 'utf8');
+
+  if (preloadStoreRecords.length > 0) {
+    const lines = preloadStoreRecords.map((entry) =>
+      typeof entry === 'string' ? entry : JSON.stringify(entry)
+    );
+    await writeFile(storePath, `${lines.join('\n')}\n`, 'utf8');
+  }
 
   const baseOptions = {
     apiKey: API_KEY,
@@ -82,6 +94,8 @@ export async function createRegistryTestContext(overrides = {}) {
     indexPath,
     capIndexPath,
     policyPath,
+    publicKeyPem,
+    privateKeyPem,
     signCard: (card) =>
       signJws(card, { privateKey: privateKeyPem, keyId: KEY_ID, algorithm: 'EdDSA' }),
   };

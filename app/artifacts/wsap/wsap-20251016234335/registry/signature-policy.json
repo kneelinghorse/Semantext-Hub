@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "requireSignature": true,
+  "keys": [
+    {
+      "keyId": "urn:proto:wsap:signing:wsap-20251016234335",
+      "algorithm": "EdDSA",
+      "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAAAyM4ZzXFAsNZQremyb76jo/UX+9X7KZBmfJDcy7NEg=\n-----END PUBLIC KEY-----\n"
+    }
+  ]
+}

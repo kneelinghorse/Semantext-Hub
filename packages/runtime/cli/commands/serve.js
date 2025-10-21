@@ -1,8 +1,6 @@
 import path from 'path';
 import fs from 'fs';
-import { createRequire } from 'module';
-const require = createRequire(import.meta.url);
-const { ProtocolViewerServer } = require('../../viewer/server.js');
+import { ProtocolViewerServer } from '../../viewer/server.mjs';
 
 /**
  * CLI command to start the protocol viewer server

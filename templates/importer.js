@@ -1,10 +1,10 @@
+import { BaseImporter } from '../../../../packages/runtime/importers/base-importer.mjs';
+
 /**
  * {{name}} Importer
  * Generated on {{timestamp}}
  */
-
-// Minimal importer skeleton; no external base class dependency
-export class {{className}}Importer {
+export class {{className}}Importer extends BaseImporter {
   constructor() {}
 
   /**

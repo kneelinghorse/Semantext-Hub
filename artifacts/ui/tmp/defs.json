@@ -1,0 +1,10 @@
+{
+  "$id": "defs.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "name": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

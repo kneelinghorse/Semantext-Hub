@@ -199,7 +199,7 @@ describe('EventAdapter', () => {
     });
 
     it('should handle missing event bus', async () => {
-      const adapter = new EventAdapter({ eventBus: null });
+      const adapter = new EventAdapter();
 
       const input = {
         event: 'test.event',

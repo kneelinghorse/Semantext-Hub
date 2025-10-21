@@ -10,17 +10,33 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
-import { promises as fs } from 'fs';
 import { join } from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 
-import { 
-  URNRegistry, 
-  createURNRegistry, 
-  registerAgent, 
-  getAgent 
-} from '../../packages/runtime/runtime/urn-registry.js';
+const mkdirMock = jest.fn();
+const readFileMock = jest.fn();
+const writeFileMock = jest.fn();
+const unlinkMock = jest.fn();
+const rmMock = jest.fn();
+
+jest.unstable_mockModule('node:fs/promises', () => ({
+  mkdir: mkdirMock,
+  readFile: readFileMock,
+  writeFile: writeFileMock,
+  unlink: unlinkMock,
+  rm: rmMock
+}));
+
+const fs = await import('node:fs/promises');
+
+const {
+  URNRegistry,
+  createURNRegistry,
+  registerAgent,
+  getAgent,
+  __resetRegistryCache
+} = await import('../../packages/runtime/runtime/urn-registry.js');
 
 import { 
   URNError, 
@@ -30,17 +46,6 @@ import {
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-
-// Mock file system operations
-jest.mock('fs', () => ({
-  promises: {
-    mkdir: jest.fn(),
-    readFile: jest.fn(),
-    writeFile: jest.fn(),
-    unlink: jest.fn(),
-    rmdir: jest.fn()
-  }
-}));
 
 describe('URN Registry', () => {
   let registry;
@@ -82,13 +87,19 @@ describe('URN Registry', () => {
     fs.readFile.mockRejectedValue({ code: 'ENOENT' }); // File doesn't exist
     fs.writeFile.mockResolvedValue();
     fs.unlink.mockResolvedValue();
-    fs.rmdir.mockResolvedValue();
+    fs.rm.mockResolvedValue();
   });
 
   afterEach(async () => {
     if (registry) {
-      await registry.shutdown();
+      try {
+        await registry.shutdown();
+      } catch {
+        // Ignore shutdown errors in cleanup
+      }
+      registry = null;
     }
+    await __resetRegistryCache();
   });
 
   describe('Registry Initialization', () => {

@@ -1,0 +1,127 @@
+{
+  "missionId": "B18.13-20251020",
+  "objective": "Ensure the Authoring UI uses real Viewer routes (POST /api/validate, POST /api/graph) with crisp UX and tests",
+  "status": "COMPLETE",
+  "completedAt": "2025-10-20T20:24:44.556Z",
+  "successCriteria": {
+    "e2eFlows": {
+      "status": "PASS",
+      "flows": [
+        {
+          "name": "edit→validate→save→graph",
+          "status": "PASS",
+          "details": "Complete workflow tested with viewer routes"
+        },
+        {
+          "name": "schema error shows pointer",
+          "status": "PASS",
+          "details": "Error pointer field verified in all validation errors"
+        },
+        {
+          "name": "dark/light persists",
+          "status": "PASS",
+          "details": "Theme persistence via localStorage confirmed"
+        }
+      ]
+    },
+    "performance": {
+      "status": "PASS",
+      "metrics": {
+        "graph": {
+          "requests": 296,
+          "p95_ms": 1,
+          "avg_ms": 0.37,
+          "budget_ms": 500,
+          "result": "EXCELLENT"
+        },
+        "validate": {
+          "requests": 100,
+          "p95_ms": 10,
+          "avg_ms": 7.29,
+          "budget_ms": 500,
+          "result": "EXCELLENT"
+        }
+      }
+    },
+    "networkErrors": {
+      "status": "PASS",
+      "http4xx": 0,
+      "http5xx": 0,
+      "details": "Zero network 4xx/5xx errors in all E2E flows"
+    }
+  },
+  "deliverables": {
+    "e2eTests": {
+      "path": "/tests/ui/authoring.e2e.spec.mjs",
+      "status": "CREATED",
+      "tests": 12,
+      "passed": 12,
+      "failed": 0
+    },
+    "authoringUiPatches": {
+      "status": "APPLIED",
+      "files": [
+        "/app/ui/authoring/server.mjs",
+        "/app/ui/authoring/web/main.js"
+      ],
+      "changes": [
+        "Migrated /validate → /api/validate",
+        "Migrated /preview/graph → /api/graph",
+        "Migrated /preview/docs → /api/docs",
+        "Added pointer field to validation errors",
+        "Increased rate limit to 200 req/sec"
+      ]
+    },
+    "performanceArtifacts": {
+      "path": "/artifacts/perf/ui-preview.jsonl",
+      "status": "GENERATED",
+      "totalRecords": 469,
+      "format": "JSONL",
+      "fields": ["ts", "kind", "took_ms"]
+    }
+  },
+  "implementationScope": {
+    "coreDeliverable": "Fit & finish on authoring previews via viewer API",
+    "completed": true,
+    "outOfScope": ["Multi-user/auth", "remote storage"]
+  },
+  "validationProtocol": [
+    {
+      "name": "E2E flows",
+      "status": "PASS",
+      "steps": ["Run test spec: edit→validate→save→graph", "Test error display", "Test theme toggle"],
+      "passCriteria": "All flows pass",
+      "result": "12/12 tests passed"
+    },
+    {
+      "name": "Preview budget",
+      "status": "PASS",
+      "steps": ["50 preview calls", "compute p95"],
+      "passCriteria": "p95 ≤ 500 ms",
+      "result": "Graph p95: 1ms, Validate p95: 10ms"
+    }
+  ],
+  "handoffContext": {
+    "interfaces": [
+      "POST /api/validate",
+      "POST /api/graph"
+    ],
+    "nextMission": "B18.14",
+    "readyForHandoff": true
+  },
+  "testExecution": {
+    "command": "npm test -- --testPathPattern=\"tests/ui/authoring\"",
+    "testSuites": 2,
+    "testsPassed": 14,
+    "testsFailed": 0,
+    "duration": "1.117s"
+  },
+  "domainFields": {
+    "type": "Build.Implementation.v1",
+    "implementationScope": {
+      "coreDeliverable": "Fit & finish on authoring previews via viewer API.",
+      "outOfScope": ["Multi-user/auth", "remote storage"]
+    }
+  }
+}
+

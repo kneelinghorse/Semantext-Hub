@@ -4,6 +4,7 @@ import { appendFile, mkdir, open, readFile, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { verifyJws } from '../../libs/signing/jws.mjs';
+import { MetricsIngestWriter } from '../obs/ingest.mjs';
 
 const DEFAULT_STORE_PATH = fileURLToPath(new URL('./store.jsonl', import.meta.url));
 const DEFAULT_INDEX_PATH = fileURLToPath(new URL('./index.urn.json', import.meta.url));
@@ -29,12 +30,117 @@ const WELL_KNOWN_PAYLOAD = {
     'Provides API-key protected register/resolve endpoints for OSSP Agent Cards.',
   links: {
     register: '/registry',
+    register_v1: '/v1/registry/{urn}',
     resolve: '/resolve/{urn}',
+    resolve_v1: '/v1/resolve?urn={urn}',
     health: '/health',
   },
   auth: {
     type: 'api-key',
     header: 'X-API-Key',
+  },
+};
+
+const OPENAPI_SPEC = {
+  openapi: '3.0.0',
+  info: {
+    title: 'OSSP-AGI Registry Service API',
+    version: '1.0.0',
+    description:
+      'Minimal OpenAPI description for the Registry Service: health, listing, registration, and resolve.',
+  },
+  paths: {
+    '/health': {
+      get: {
+        summary: 'Service health',
+        responses: {
+          '200': {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: { type: 'object', properties: { status: { type: 'string' } } },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/registry': {
+      get: {
+        summary: 'List agents by capability match',
+        parameters: [
+          { in: 'query', name: 'cap', schema: { type: 'string' }, required: true },
+          { in: 'query', name: 'limit', schema: { type: 'integer', minimum: 1 } },
+          { in: 'query', name: 'offset', schema: { type: 'integer', minimum: 0 } },
+        ],
+        responses: { '200': { description: 'OK' }, '400': { description: 'Bad Request' } },
+      },
+      post: {
+        summary: 'Register an agent card',
+        requestBody: {
+          required: true,
+          content: { 'application/json': { schema: { type: 'object' } } },
+        },
+        responses: {
+          '201': { description: 'Created' },
+          '400': { description: 'Validation error' },
+          '401': { description: 'Unauthorized' },
+          '409': { description: 'Conflict' },
+        },
+      },
+    },
+    '/resolve/{urn}': {
+      get: {
+        summary: 'Resolve agent by URN',
+        parameters: [
+          { in: 'path', name: 'urn', required: true, schema: { type: 'string' } },
+        ],
+        responses: { '200': { description: 'OK' }, '404': { description: 'Not Found' } },
+      },
+    },
+    '/v1/registry/{urn}': {
+      get: {
+        summary: 'Fetch agent by URN',
+        parameters: [
+          { in: 'path', name: 'urn', required: true, schema: { type: 'string' } },
+        ],
+        responses: {
+          '200': { description: 'OK' },
+          '401': { description: 'Unauthorized' },
+          '404': { description: 'Not Found' },
+        },
+      },
+      put: {
+        summary: 'Register or update an agent card',
+        parameters: [
+          { in: 'path', name: 'urn', required: true, schema: { type: 'string' } },
+        ],
+        requestBody: {
+          required: true,
+          content: { 'application/json': { schema: { type: 'object' } } },
+        },
+        responses: {
+          '200': { description: 'Updated' },
+          '201': { description: 'Created' },
+          '400': { description: 'Validation error' },
+          '401': { description: 'Unauthorized' },
+        },
+      },
+    },
+    '/v1/resolve': {
+      get: {
+        summary: 'Resolve agent by URN',
+        parameters: [
+          { in: 'query', name: 'urn', required: true, schema: { type: 'string' } },
+        ],
+        responses: {
+          '200': { description: 'OK' },
+          '400': { description: 'Bad Request' },
+          '401': { description: 'Unauthorized' },
+          '404': { description: 'Not Found' },
+        },
+      },
+    },
   },
 };
 
@@ -728,31 +834,42 @@ class RegistryStore {
     };
   }
 
-  async register({ urn, card, sig, verification }) {
+  async register({ urn, card, sig, verification }, options = {}) {
     if (!urn) {
       throw new Error('URN is required.');
     }
     await this.initialize();
-    if (this.cache.has(urn)) {
-      return { inserted: false, record: this.cache.get(urn) };
+    const existing = this.cache.has(urn) ? this.cache.get(urn) : null;
+    const overwrite = options.overwrite === true;
+    if (existing && !overwrite) {
+      return { inserted: false, updated: false, record: existing };
     }
 
     const timestamp = nowIso();
+    const verificationRecord = verification
+      ? {
+          ...verification,
+          verifiedAt: verification.verifiedAt ?? timestamp,
+        }
+      : null;
     const record = {
       urn,
       card,
       sig,
-      verification: verification
-        ? {
-            ...verification,
-            verifiedAt: verification.verifiedAt ?? timestamp,
-          }
-        : null,
+      verification: verificationRecord,
       ts: timestamp,
     };
 
     const payload = `${JSON.stringify(record)}\n`;
     await appendFile(this.storePath, payload, 'utf8');
+    if (existing && overwrite) {
+      await this.#hydrate();
+      return {
+        inserted: false,
+        updated: true,
+        record: this.cache.get(urn) ?? record,
+      };
+    }
     this.cache.set(urn, record);
     this.index.set(urn, {
       urn,
@@ -764,7 +881,7 @@ class RegistryStore {
     this.lastUpdated = record.ts;
     await this.#persistIndex();
     await this.#persistCapabilityIndex();
-    return { inserted: true, record };
+    return { inserted: true, updated: false, record };
   }
 }
 
@@ -810,6 +927,9 @@ export async function createRegistryServer(options = {}) {
     signaturePolicyPath,
     apiKey = DEFAULT_API_KEY,
     jsonLimit = '512kb',
+    enablePerformanceLogging = true,
+    performanceLogRoot,
+    performanceSessionId,
   } = options;
 
   if (!apiKey) {
@@ -825,16 +945,116 @@ export async function createRegistryServer(options = {}) {
   const signaturePolicy = await loadSignaturePolicy(signaturePolicyPath);
   const signatureVerifier = new SignatureVerifier(signaturePolicy);
 
+  // Initialize performance logging if enabled
+  let metricsWriter = null;
+  if (enablePerformanceLogging && performanceSessionId) {
+    metricsWriter = new MetricsIngestWriter({
+      sessionId: performanceSessionId,
+      root: performanceLogRoot,
+    });
+  }
+
   const app = express();
   app.disable('x-powered-by');
   app.set('registryStore', store);
   app.set('signatureVerifier', signatureVerifier);
 
   app.use(express.json({ limit: jsonLimit }));
+  // Localhost-only CORS
+  app.use((request, response, next) => {
+    const origin = request.headers.origin;
+    if (typeof origin === 'string') {
+      try {
+        const url = new URL(origin);
+        const hostname = url.hostname.toLowerCase();
+        if (
+          hostname === 'localhost' ||
+          hostname === '127.0.0.1' ||
+          hostname === '::1'
+        ) {
+          response.setHeader('Access-Control-Allow-Origin', origin);
+          response.setHeader('Vary', 'Origin');
+          response.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+          response.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-API-Key');
+          response.setHeader('Access-Control-Max-Age', '600');
+        }
+      } catch {}
+    }
+    if (request.method === 'OPTIONS') {
+      response.status(204).end();
+      return;
+    }
+    next();
+  });
   app.use((request, response, next) => {
     response.setHeader('Cache-Control', 'no-store');
     next();
   });
+
+  // Performance logging middleware
+  if (metricsWriter) {
+    app.use((request, response, next) => {
+      const startTime = performance.now();
+      
+      // Track route for logging
+      const originalUrl = request.originalUrl || request.url;
+      let step = 'unknown';
+      
+      // Map routes to step names
+      if (originalUrl.includes('/health')) {
+        step = 'health';
+      } else if (originalUrl.includes('/openapi.json')) {
+        step = 'openapi';
+      } else if (originalUrl.includes('/registry') && request.method === 'GET') {
+        step = 'registry_get';
+      } else if (originalUrl.includes('/registry') && request.method === 'POST') {
+        step = 'registry_put';
+      } else if (originalUrl.includes('/resolve')) {
+        step = 'resolve';
+      }
+      
+      // Hook into response finish
+      const logPerformance = () => {
+        const duration = performance.now() - startTime;
+        const ok = response.statusCode >= 200 && response.statusCode < 400;
+        
+        const logEntry = {
+          tool: 'registry',
+          step,
+          ms: Math.round(duration * 100) / 100,
+          ok,
+          ts: new Date().toISOString(),
+        };
+
+        // Add errorReason for failures
+        if (!ok) {
+          const statusText = {
+            400: 'bad_request',
+            401: 'unauthorized',
+            404: 'not_found',
+            409: 'conflict',
+            422: 'validation_error',
+            429: 'rate_limited',
+            500: 'internal_error',
+            502: 'bad_gateway',
+            503: 'service_unavailable',
+            504: 'gateway_timeout',
+          };
+          logEntry.errorReason = statusText[response.statusCode] || `http_${response.statusCode}`;
+        }
+        
+        metricsWriter.log(logEntry).catch(err => {
+          // Silently ignore logging errors
+          console.error('[registry] Performance logging error:', err.message);
+        });
+      };
+      
+      response.once('finish', logPerformance);
+      response.once('close', logPerformance);
+      
+      next();
+    });
+  }
 
   const requireApiKey = (request, response, next) => {
     const provided = request.get('X-API-Key');
@@ -849,6 +1069,11 @@ export async function createRegistryServer(options = {}) {
 
   app.get('/.well-known/ossp-agi.json', (request, response) => {
     response.json(WELL_KNOWN_PAYLOAD);
+  });
+
+  // OpenAPI description for basic endpoints
+  app.get('/openapi.json', (request, response) => {
+    response.json(OPENAPI_SPEC);
   });
 
   app.get('/health', async (request, response, next) => {
@@ -868,6 +1093,23 @@ export async function createRegistryServer(options = {}) {
       next(error);
     }
   });
+
+  const toVerificationRecord = (verification) => {
+    const status = verification.valid ? 'verified' : 'unverified';
+    const record = {
+      status,
+      keyId: verification.keyId,
+      algorithm: verification.algorithm,
+      digestValid: verification.digestValid,
+      signatureValid: verification.signatureValid,
+      verifiedAt: verification.verifiedAt,
+      enforced: verification.enforced,
+    };
+    if (!verification.valid && verification.errors?.length) {
+      record.errors = verification.errors;
+    }
+    return record;
+  };
 
   const registryRouter = express.Router();
   registryRouter.use(limiter, requireApiKey);
@@ -989,19 +1231,7 @@ export async function createRegistryServer(options = {}) {
         });
       }
 
-      const verificationStatus = verification.valid ? 'verified' : 'unverified';
-      const verificationRecord = {
-        status: verificationStatus,
-        keyId: verification.keyId,
-        algorithm: verification.algorithm,
-        digestValid: verification.digestValid,
-        signatureValid: verification.signatureValid,
-        verifiedAt: verification.verifiedAt,
-        enforced: verification.enforced,
-      };
-      if (!verification.valid && verification.errors?.length) {
-        verificationRecord.errors = verification.errors;
-      }
+      const verificationRecord = toVerificationRecord(verification);
 
       const result = await store.register({
         urn,
@@ -1028,9 +1258,155 @@ export async function createRegistryServer(options = {}) {
     } catch (error) {
       return next(error);
     }
-  });
+	  });
 
   app.use('/registry', registryRouter);
+
+  const v1Router = express.Router();
+
+  v1Router.get(
+    '/registry/:urn',
+    limiter,
+    requireApiKey,
+    async (request, response, next) => {
+      try {
+        const urn = decodeURIComponent(request.params.urn);
+        const record = await store.find(urn);
+        if (!record) {
+          return response.status(404).json({
+            error: 'not_found',
+            message: `No agent registered for urn '${urn}'.`,
+            urn,
+          });
+        }
+        return response.json({
+          urn: record.urn,
+          card: record.card,
+          sig: record.sig ?? null,
+          ts: record.ts,
+          verification: record.verification ?? null,
+        });
+      } catch (error) {
+        return next(error);
+      }
+    },
+  );
+
+  v1Router.put(
+    '/registry/:urn',
+    limiter,
+    requireApiKey,
+    async (request, response, next) => {
+      try {
+        const urn = decodeURIComponent(request.params.urn);
+        const payload = {
+          urn: request.body?.urn ?? urn,
+          card: request.body?.card,
+          sig: request.body?.sig,
+        };
+        if (payload.urn !== urn) {
+          return response.status(400).json({
+            error: 'urn_mismatch',
+            message: 'URN in path must match payload.',
+            expected: urn,
+            received: payload.urn,
+          });
+        }
+
+        const validation = validateAgentPayload(payload);
+        if (!validation.valid) {
+          return response.status(400).json({
+            error: 'invalid_request',
+            message: 'Payload failed validation.',
+            details: validation.errors,
+          });
+        }
+
+        const signatureVerifier = app.get('signatureVerifier');
+        const verification = signatureVerifier.verify({
+          card: payload.card,
+          sig: payload.sig,
+        });
+
+        if (verification.shouldReject) {
+          return response.status(422).json({
+            error: 'signature_invalid',
+            message: 'Signature verification failed.',
+            urn,
+            details: verification.errors,
+            verification: {
+              status: 'failed',
+              keyId: verification.keyId,
+              algorithm: verification.algorithm,
+              digestValid: verification.digestValid,
+              signatureValid: verification.signatureValid,
+              enforced: verification.enforced,
+            },
+          });
+        }
+
+        const verificationRecord = toVerificationRecord(verification);
+        const result = await store.register(
+          {
+            urn,
+            card: payload.card,
+            sig: payload.sig,
+            verification: verificationRecord,
+          },
+          { overwrite: true },
+        );
+
+        const statusCode = result.inserted ? 201 : 200;
+        const status = result.updated ? 'updated' : 'registered';
+
+        return response.status(statusCode).json({
+          status,
+          urn: result.record.urn,
+          ts: result.record.ts,
+          verification: result.record.verification ?? verificationRecord,
+        });
+      } catch (error) {
+        return next(error);
+      }
+    },
+  );
+
+  v1Router.get(
+    '/resolve',
+    limiter,
+    requireApiKey,
+    async (request, response, next) => {
+      try {
+        const urnCandidate = request.query.urn;
+        if (typeof urnCandidate !== 'string' || urnCandidate.trim().length === 0) {
+          return response.status(400).json({
+            error: 'invalid_query',
+            message: '`urn` query parameter is required.',
+          });
+        }
+        const urn = decodeURIComponent(urnCandidate);
+        const record = await store.find(urn);
+        if (!record) {
+          return response.status(404).json({
+            error: 'not_found',
+            message: `No agent registered for urn '${urn}'.`,
+            urn,
+          });
+        }
+        return response.json({
+          urn: record.urn,
+          card: record.card,
+          sig: record.sig ?? null,
+          ts: record.ts,
+          verification: record.verification ?? null,
+        });
+      } catch (error) {
+        return next(error);
+      }
+    },
+  );
+
+  app.use('/v1', v1Router);
 
   app.get('/resolve/:urn', limiter, requireApiKey, async (request, response, next) => {
     try {

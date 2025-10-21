@@ -3,3 +3,5 @@ cmos/
 .DS_Store
 node_modules/
 coverage/
+cli/commands/dist/
+app/cli/dist/

@@ -65,8 +65,9 @@ export class RetryMetrics {
   /**
    * Record retry attempt
    */
-  recordRetry() {
+  recordRetry(delay = 0) {
     this.retryAttempts++;
+    this.totalRetryTime += delay;
   }
 
   /**
@@ -140,25 +141,30 @@ export class RetryPolicy extends EventEmitter {
     let lastError;
     
     for (let attempt = 0; attempt <= config.maxRetries; attempt++) {
+      const attemptNumber = attempt + 1;
+      const attemptStart = Date.now();
       try {
         const result = await fn();
         
         // Record successful attempt
-        const retryTime = Date.now() - startTime;
-        this.metrics.recordAttempt(true, retryTime);
+        const attemptDuration = Date.now() - attemptStart;
+        this.metrics.recordAttempt(true, attemptDuration);
         
         if (this.config.enableLogging && attempt > 0) {
-          console.log(`[RetryPolicy] Function succeeded on attempt ${attempt + 1}`);
+          console.log(`[RetryPolicy] Function succeeded on attempt ${attemptNumber}`);
         }
         
-        this.emit('success', { attempt: attempt + 1, retryTime });
+        const totalRetryTime = Date.now() - startTime;
+        this.emit('success', { attempt: attemptNumber, retryTime: totalRetryTime });
         return result;
       } catch (error) {
         lastError = error;
+        const attemptDuration = Date.now() - attemptStart;
+
+        this.metrics.recordAttempt(false, attemptDuration);
         
         // Check if error is retryable
         if (!this.isRetryableError(error)) {
-          this.metrics.recordAttempt(false, Date.now() - startTime);
           throw error;
         }
         
@@ -169,13 +175,13 @@ export class RetryPolicy extends EventEmitter {
         
         // Calculate delay for next attempt
         const delay = this.calculateDelay(attempt, config);
-        this.metrics.recordRetry();
+        this.metrics.recordRetry(delay);
         
         if (this.config.enableLogging) {
-          console.log(`[RetryPolicy] Attempt ${attempt + 1} failed: ${error.message}, retrying in ${delay}ms`);
+          console.log(`[RetryPolicy] Attempt ${attemptNumber} failed: ${error.message}, retrying in ${delay}ms`);
         }
         
-        this.emit('retry', { attempt: attempt + 1, error, delay });
+        this.emit('retry', { attempt: attemptNumber, error, delay });
         
         // Wait before next attempt
         await this.sleep(delay);
@@ -184,7 +190,6 @@ export class RetryPolicy extends EventEmitter {
     
     // All retries exhausted
     const retryTime = Date.now() - startTime;
-    this.metrics.recordAttempt(false, retryTime);
     
     throw new RetryError(
       `Function failed after ${config.maxRetries + 1} attempts`,
@@ -298,8 +303,9 @@ export class RetryPolicy extends EventEmitter {
 /**
  * Retry policy manager
  */
-export class RetryPolicyManager {
+export class RetryPolicyManager extends EventEmitter {
   constructor(options = {}) {
+    super();
     this.policies = new Map();
     this.defaultConfig = { ...DEFAULT_CONFIG, ...options };
     this.enableLogging = options.enableLogging !== false;

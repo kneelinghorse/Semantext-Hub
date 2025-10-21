@@ -256,45 +256,46 @@ export class WellKnownServer extends EventEmitter {
    */
   async handleRequest(request) {
     const reqId = generateRequestId();
-    
+    const normalizedRequest = this._normalizeRequest(request);
+
     try {
       if (this.config.enableLogging) {
         const logEntry = createLogEntry(reqId, 'request_received', {
-          method: request.method,
-          url: request.url
+          method: normalizedRequest.method,
+          url: normalizedRequest.url
         });
         console.debug('[Well-Known Server]', logEntry);
       }
 
       // Handle CORS preflight
-      if (request.method === 'OPTIONS') {
-        return this._handleCorsPreflight(request);
+      if (normalizedRequest.method === 'OPTIONS') {
+        return this._handleCorsPreflight(normalizedRequest);
       }
 
       // Route requests
-      if (request.url === '/.well-known/agent-capabilities') {
-        return this._handleCapabilitiesList(request);
+      if (normalizedRequest.path === '/.well-known/agent-capabilities') {
+        return await this._handleCapabilitiesList(normalizedRequest);
       }
 
-      const urnMatch = request.url.match(/^\/\.well-known\/agent-capabilities\/(.+)$/);
+      const urnMatch = normalizedRequest.path.match(/^\/\.well-known\/agent-capabilities\/(.+)$/);
       if (urnMatch) {
         const urn = decodeURIComponent(urnMatch[1]);
-        return this._handleCapabilitiesByUrn(request, urn);
+        return await this._handleCapabilitiesByUrn(normalizedRequest, urn);
       }
 
       // 404 for unknown routes
-      return this._handleNotFound(request);
+      return this._handleNotFound(normalizedRequest);
     } catch (error) {
       if (this.config.enableLogging) {
         const logEntry = createLogEntry(reqId, 'request_failed', {
-          method: request.method,
-          url: request.url,
+          method: normalizedRequest.method,
+          url: normalizedRequest.url,
           error: error.message
         });
         console.error('[Well-Known Server]', logEntry);
       }
 
-      return this._handleError(request, error);
+      return this._handleError(normalizedRequest, error);
     }
   }
 
@@ -324,7 +325,7 @@ export class WellKnownServer extends EventEmitter {
    * @returns {Promise<ResponseContext>} Response context
    */
   async _handleCapabilitiesList(request) {
-    const domain = request.query.domain || 'default';
+    const domain = request.query?.domain || 'default';
     
     try {
       const agents = await this.urnResolver.discoverCapabilities(domain);
@@ -364,7 +365,15 @@ export class WellKnownServer extends EventEmitter {
    */
   async _handleCapabilitiesByUrn(request, urn) {
     try {
-      const result = await this.urnResolver.resolveAgentUrn(urn);
+      const result = await this.urnResolver.resolveAgentUrn(urn, { useCache: true });
+      const metadata = {
+        urn,
+        ...(result.metadata || {})
+      };
+
+      if (request.query?.domain && !metadata.domain) {
+        metadata.domain = request.query.domain;
+      }
       
       return {
         statusCode: 200,
@@ -376,7 +385,7 @@ export class WellKnownServer extends EventEmitter {
         body: {
           apiVersion: 'well-known.ossp-agi.io/v1',
           kind: 'AgentCapabilityManifest',
-          metadata: result.metadata,
+          metadata,
           spec: {
             capabilities: result.capabilities,
             resolvedAt: result.resolvedAt,
@@ -400,7 +409,7 @@ export class WellKnownServer extends EventEmitter {
         };
       }
 
-      if (error.name === 'URNResolutionError') {
+      if (error.name === 'URNResolutionError' || error.message === 'Agent not found') {
         return {
           statusCode: 404,
           headers: {
@@ -451,6 +460,11 @@ export class WellKnownServer extends EventEmitter {
    * @returns {ResponseContext} Response context
    */
   _handleError(request, error) {
+    const wrappedError = error instanceof WellKnownError
+      ? error
+      : new WellKnownServerError('Internal Server Error', error);
+    const requestId = generateRequestId();
+
     return {
       statusCode: 500,
       headers: {
@@ -459,9 +473,39 @@ export class WellKnownServer extends EventEmitter {
       },
       body: {
         error: 'Internal Server Error',
-        message: error.message,
-        requestId: generateRequestId()
+        message: wrappedError.cause?.message || error.message,
+        requestId,
+        details: {
+          type: wrappedError.name,
+          path: request.url
+        },
+        timestamp: wrappedError.timestamp
       }
+    };
+  }
+
+  /**
+   * Normalize incoming request with parsed URL/query data
+   * @private
+   * @param {RequestContext} request
+   * @returns {RequestContext & {path: string}}
+   */
+  _normalizeRequest(request) {
+    const method = request.method || 'GET';
+    const originalUrl = request.url || '/';
+    const parsedUrl = new URL(originalUrl, `http://${this.config.host}:${this.config.port}`);
+    const queryFromUrl = Object.fromEntries(parsedUrl.searchParams.entries());
+    const mergedQuery = {
+      ...queryFromUrl,
+      ...(request.query || {})
+    };
+
+    return {
+      ...request,
+      method,
+      url: originalUrl,
+      path: parsedUrl.pathname,
+      query: mergedQuery
     };
   }
 }

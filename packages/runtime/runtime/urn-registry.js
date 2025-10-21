@@ -10,7 +10,7 @@
  * - Comprehensive logging
  */
 
-import { promises as fs } from 'fs';
+import * as fs from 'node:fs/promises';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { EventEmitter } from 'events';
@@ -26,6 +26,8 @@ import {
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+const registryCache = new Map();
 
 /**
  * Agent Registration Data
@@ -457,7 +459,7 @@ export class URNRegistry extends EventEmitter {
       const indexFile = join(this.config.dataDir, this.config.indexFile);
 
       try {
-        await fs.rmdir(agentsDir, { recursive: true });
+        await fs.rm(agentsDir, { recursive: true, force: true });
       } catch (error) {
         // Directory might not exist
       }
@@ -502,6 +504,11 @@ export class URNRegistry extends EventEmitter {
 
     this.isInitialized = false;
     this.emit('shutdown');
+
+    if (this.__cacheKey) {
+      registryCache.delete(this.__cacheKey);
+      this.__cacheKey = undefined;
+    }
   }
 
   /**
@@ -574,11 +581,11 @@ export class URNRegistry extends EventEmitter {
    * @returns {Promise<void>}
    */
   async _storeAgentData(agentData) {
-    const filename = `${agentData.urn.replace(/[^a-zA-Z0-9]/g, '_')}.json`;
+    const filename = `${agentData.urn.replace(/[^a-zA-Z0-9-]/g, '_')}.json`;
     const filepath = join(this.config.dataDir, this.config.agentsDir, filename);
     
     try {
-      await fs.writeFile(filepath, JSON.stringify(agentData, null, 2));
+      await fs.writeFile(filepath, JSON.stringify(agentData));
     } catch (error) {
       throw new URNError(`Failed to store agent data: ${error.message}`, error);
     }
@@ -709,6 +716,18 @@ export class URNRegistry extends EventEmitter {
 
     this._validateUrnFormat(agentData.urn);
   }
+
+  /**
+   * Cleanup registry resources
+   * @returns {Promise<void>}
+   */
+  async cleanup() {
+    if (this.indexUpdateTimer) {
+      clearInterval(this.indexUpdateTimer);
+      this.indexUpdateTimer = null;
+    }
+    this.isInitialized = false;
+  }
 }
 
 /**
@@ -720,6 +739,28 @@ export function createURNRegistry(options = {}) {
   return new URNRegistry(options);
 }
 
+function getOrCreateCachedRegistry(options = {}) {
+  const candidate = createURNRegistry(options);
+  const cacheKey = JSON.stringify({
+    dataDir: candidate.config.dataDir,
+    indexFile: candidate.config.indexFile,
+    agentsDir: candidate.config.agentsDir
+  });
+
+  const existing = registryCache.get(cacheKey);
+  if (existing) {
+    return existing;
+  }
+
+  Object.defineProperty(candidate, '__cacheKey', {
+    value: cacheKey,
+    enumerable: false,
+    configurable: true
+  });
+  registryCache.set(cacheKey, candidate);
+  return candidate;
+}
+
 /**
  * Convenience function for registering an agent
  * @param {AgentData} agentData - Agent data to register
@@ -727,8 +768,10 @@ export function createURNRegistry(options = {}) {
  * @returns {Promise<Object>} Registration result
  */
 export async function registerAgent(agentData, options = {}) {
-  const registry = createURNRegistry(options);
-  await registry.initialize();
+  const registry = getOrCreateCachedRegistry(options);
+  if (!registry.isInitialized) {
+    await registry.initialize();
+  }
   return registry.registerAgent(agentData);
 }
 
@@ -739,7 +782,26 @@ export async function registerAgent(agentData, options = {}) {
  * @returns {Promise<AgentData|null>} Agent data or null if not found
  */
 export async function getAgent(urn, options = {}) {
-  const registry = createURNRegistry(options);
-  await registry.initialize();
+  const registry = getOrCreateCachedRegistry(options);
+  if (!registry.isInitialized) {
+    await registry.initialize();
+  }
   return registry.getAgent(urn);
+}
+
+export async function __resetRegistryCache() {
+  const registries = Array.from(registryCache.values());
+  registryCache.clear();
+
+  await Promise.all(
+    registries.map(async (registry) => {
+      if (registry.isInitialized) {
+        try {
+          await registry.shutdown();
+        } catch {
+          // Ignore shutdown errors during cache reset
+        }
+      }
+    })
+  );
 }

@@ -24,7 +24,17 @@ const NodeKind = {
   AGENT: 'agent',
   INTEGRATION: 'integration',
   IAM: 'iam',
-  SEMANTIC: 'semantic'
+  SEMANTIC: 'semantic',
+  UI: 'ui',
+  INFRA: 'infra',
+  OBSERVABILITY: 'obs',
+  RELEASE: 'release',
+  CONFIG: 'config',
+  DOCS: 'docs',
+  METRIC: 'metric',
+  TESTING: 'testing',
+  AI: 'ai',
+  DEVICE: 'device'
 };
 
 /**

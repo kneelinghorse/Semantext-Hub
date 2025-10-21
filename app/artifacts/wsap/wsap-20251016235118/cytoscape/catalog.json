@@ -1,0 +1,182 @@
+{
+  "format": "cytoscape-v1",
+  "generatedAt": "2025-10-16T23:51:18.843Z",
+  "graph": {
+    "id": "catalog-graph",
+    "name": "OSSP-AGI Protocol Catalog",
+    "description": "Canonical property graph representation of the OSSP-AGI catalog manifests.",
+    "version": "1.0.0"
+  },
+  "stats": {
+    "nodes": 1,
+    "edges": 0
+  },
+  "metadata": {
+    "workspace": "/Users/d/portfolio/OSSP-AGI/app/artifacts/wsap/wsap-20251016235118",
+    "inputs": [
+      "approved/api-manifest.approved.json"
+    ],
+    "counts": {
+      "manifests": 1,
+      "nodes": 1,
+      "edges": 0
+    },
+    "filters": null,
+    "stats": {
+      "discarded": {
+        "nodes": 0
+      },
+      "externalNodes": 0,
+      "relationshipsProcessed": 0
+    }
+  },
+  "elements": {
+    "nodes": [
+      {
+        "data": {
+          "id": "206eb2b73411e6c9",
+          "label": "GitHub API (Demo Subset)",
+          "type": "api",
+          "domain": "api",
+          "description": null,
+          "metadata": {
+            "version": "1.0.0",
+            "kind": "api",
+            "domain": "api",
+            "status": "approved"
+          },
+          "urn": "urn:proto:api:github-api-demo-subset/service"
+        },
+        "classes": "type-api domain-api"
+      }
+    ],
+    "edges": []
+  },
+  "style": [
+    {
+      "selector": "node",
+      "style": {
+        "background-color": "#E6F4F1",
+        "border-color": "#0B7285",
+        "border-width": 2,
+        "border-style": "solid",
+        "label": "data(label)",
+        "color": "#1F2933",
+        "font-size": 14,
+        "font-weight": 500,
+        "text-halign": "center",
+        "text-valign": "center",
+        "text-wrap": "wrap",
+        "text-max-width": 160,
+        "padding": "12px",
+        "shape": "round-rectangle"
+      }
+    },
+    {
+      "selector": "node[type = \"protocol\"]",
+      "style": {
+        "background-color": "#EBF4FF",
+        "border-color": "#1D4ED8"
+      }
+    },
+    {
+      "selector": "node[type = \"service\"]",
+      "style": {
+        "background-color": "#F0F9FF",
+        "border-color": "#0EA5E9"
+      }
+    },
+    {
+      "selector": "node[type = \"dataset\"]",
+      "style": {
+        "background-color": "#FEF3C7",
+        "border-color": "#D97706"
+      }
+    },
+    {
+      "selector": "node[type = \"external\"]",
+      "style": {
+        "background-color": "#F9FAFB",
+        "border-color": "#94A3B8",
+        "border-style": "dashed",
+        "line-style": "dashed",
+        "color": "#475569"
+      }
+    },
+    {
+      "selector": "node[domain = \"core\"]",
+      "style": {
+        "background-color": "#DCFCE7",
+        "border-color": "#15803D"
+      }
+    },
+    {
+      "selector": "node[domain = \"platform\"]",
+      "style": {
+        "background-color": "#E0F2FE",
+        "border-color": "#0284C7"
+      }
+    },
+    {
+      "selector": "node[domain = \"governance\"]",
+      "style": {
+        "background-color": "#F3E8FF",
+        "border-color": "#7C3AED"
+      }
+    },
+    {
+      "selector": "edge",
+      "style": {
+        "curve-style": "bezier",
+        "width": 2,
+        "line-color": "#0B7285",
+        "target-arrow-shape": "triangle",
+        "target-arrow-color": "#0B7285",
+        "arrow-scale": 1,
+        "label": "data(label)",
+        "font-size": 11,
+        "color": "#0F172A",
+        "text-wrap": "wrap",
+        "text-margin-y": -10
+      }
+    },
+    {
+      "selector": "edge[type = \"consumes\"]",
+      "style": {
+        "line-style": "dashed",
+        "line-color": "#16A34A",
+        "target-arrow-color": "#16A34A"
+      }
+    },
+    {
+      "selector": "edge[type = \"publishes\"]",
+      "style": {
+        "line-color": "#0EA5E9",
+        "target-arrow-color": "#0EA5E9",
+        "target-arrow-shape": "triangle-backcurve"
+      }
+    },
+    {
+      "selector": "edge[type = \"depends_on\"]",
+      "style": {
+        "line-style": "solid",
+        "line-color": "#1D4ED8",
+        "target-arrow-color": "#1D4ED8"
+      }
+    }
+  ],
+  "layout": {
+    "name": "cola",
+    "maxSimulationTime": 4000,
+    "refresh": 1,
+    "animate": false,
+    "fit": true,
+    "padding": 40,
+    "edgeElasticity": 100,
+    "nodeSpacing": 30
+  },
+  "warnings": [
+    "No Cytoscape style entry for node type \"api\". Using base node styling.",
+    "No Cytoscape style entry for domain \"api\". Using theme defaults."
+  ]
+}

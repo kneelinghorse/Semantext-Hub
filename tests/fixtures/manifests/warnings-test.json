@@ -1,0 +1,9 @@
+{
+  "protocol": {
+    "urn": "urn:proto:test:warnings",
+    "name": "Warning Test"
+  },
+  "event": {
+    "kind": "test"
+  }
+}

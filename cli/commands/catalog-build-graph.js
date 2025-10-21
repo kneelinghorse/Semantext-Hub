@@ -7,83 +7,28 @@
  * and persists the payload to artifacts/catalog-graph.json (unless overridden).
  */
 
-import fs from 'fs/promises';
-import path from 'path';
 import chalk from 'chalk';
 
-import { buildCatalogGraph } from '../../src/catalog/graph/builder.js';
+import { writeCatalogGraph } from '../../src/catalog/graph/artifacts.js';
 
 export async function catalogBuildGraphCommand(options = {}) {
-  const workspace = resolveWorkspace(options.workspace);
-
-  const graph = await buildCatalogGraph({
-    workspace,
-    catalogPaths: options.catalogPaths,
-    filters: options.filters,
-    graphId: options.graphId,
-    graphName: options.graphName,
-    graphDescription: options.graphDescription,
-    graphVersion: options.graphVersion
-  });
-
-  const jsonPayload = JSON.stringify(graph, null, options.pretty ? 2 : 0);
+  const result = await writeCatalogGraph(options);
 
   if (options.stdout) {
-    process.stdout.write(`${jsonPayload}\n`);
-    return {
-      outputPath: null,
-      nodeCount: graph.nodes.length,
-      edgeCount: graph.edges.length,
-      graph
-    };
+    process.stdout.write(`${result.payload}\n`);
+    return result;
   }
-
-  const outputPath = resolveOutputPath(workspace, options.output);
-  await ensureWritable(outputPath, options.overwrite);
-  await fs.mkdir(path.dirname(outputPath), { recursive: true });
-  await fs.writeFile(outputPath, jsonPayload, 'utf8');
 
   if (!options.silent) {
     printSummary({
-      outputPath,
-      nodeCount: graph.nodes.length,
-      edgeCount: graph.edges.length,
+      outputPath: result.outputPath,
+      nodeCount: result.nodeCount,
+      edgeCount: result.edgeCount,
       filters: options.filters
     });
   }
 
-  return {
-    outputPath,
-    nodeCount: graph.nodes.length,
-    edgeCount: graph.edges.length,
-    graph
-  };
-}
-
-function resolveWorkspace(workspace) {
-  return workspace ? path.resolve(workspace) : process.cwd();
-}
-
-function resolveOutputPath(workspace, output) {
-  if (output) {
-    return path.resolve(output);
-  }
-  return path.join(workspace, 'artifacts', 'catalog-graph.json');
-}
-
-async function ensureWritable(outputPath, overwrite = false) {
-  if (!overwrite && (await fileExists(outputPath))) {
-    throw new Error(`Output file already exists (use --overwrite to replace): ${outputPath}`);
-  }
-}
-
-async function fileExists(target) {
-  try {
-    await fs.access(target);
-    return true;
-  } catch {
-    return false;
-  }
+  return result;
 }
 
 function printSummary(summary) {

@@ -11,9 +11,9 @@ The Protocol Viewer provides a rich, interactive UI for exploring protocol data 
 ### Core Functionality
 - **Health Dashboard**: System status and connectivity checks
 - **Manifest Browser**: Browse and inspect protocol manifests with syntax highlighting and download support
-- **Validation Panel**: View validation results for manifests (placeholder, Week 4 integration)
-- **Graph Visualization**: Explore protocol relationships (placeholder, Week 4 integration)
-- **Governance Panel**: View governance scores and recommendations (placeholder, Week 4 integration)
+- **Validation Panel**: View live validation results powered by `POST /api/validate`
+- **Graph Visualization**: Explore protocol relationships with chunked graph data from `POST /api/graph`
+- **Governance Panel**: View governance scores and recommendations (placeholder)
 
 ### Developer Tools (Week 3)
 
@@ -75,6 +75,16 @@ The Inspection Overlay provides real-time insight into semantic metadata attache
 - **Framework**: Express
 - **Purpose**: Serves API endpoints for health, manifests, validation, graph, and governance data
 - **Middleware**: JSON parsing, CORS, static file serving
+
+### API Routes (Sprint 18)
+- `GET /api/health` — Server health + artifact stats
+- `GET /api/manifests` — Manifest metadata (filterable via `?kind=`)
+- `GET /api/manifest/:filename` — Raw manifest JSON (path-safe)
+- `POST /api/validate` — Body `{ manifests: ["api-test.json"] }` → `{ valid, summary, manifests, errors }`
+- `POST /api/graph` — Body `{ manifests: [...] }` → graph index + chunk descriptors
+- `GET /api/graph/part/:id` — Retrieve graph chunk JSON (nodes, edges, summary)
+
+See `artifacts/viewer/api-smoke.json` for an example payload recorded from the smoke workflow.
 
 ### Semantic Instrumentation
 - **Registry**: `src/contexts/SemanticRegistry.jsx` - Tracks active panels and semantic metadata

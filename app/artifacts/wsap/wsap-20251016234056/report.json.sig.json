@@ -1,0 +1,18 @@
+{
+  "spec": "identity-access.signing.v1",
+  "protected": "eyJhbGciOiJFZERTQSIsImtpZCI6InVybjpwcm90bzp3c2FwOnNpZ25pbmc6d3NhcC0yMDI1MTAxNjIzNDA1NiIsInR5cCI6ImlkZW50aXR5LWFjY2Vzcy5zaWduaW5nLnYxIiwiY2Fub25pY2FsIjoiamNzQHJmYzg3ODUiLCJkaWdlc3QiOiJzaGEtMjU2IiwiaWF0IjoiMjAyNS0xMC0xNlQyMzo0MDo1Ni4yNzZaIn0",
+  "payload": "eyJhcnRpZmFjdCI6InJlcG9ydC5qc29uIiwicGF0aCI6InJlcG9ydC5qc29uIiwic2Vzc2lvbklkIjoid3NhcC0yMDI1MTAxNjIzNDA1NiIsInNoYTI1NiI6IlRiblpoYWxhWnd4VEhBa1pvcFMyUm8xTW1yT0JRMDQ3a2JTQlRNcnFBdDAiLCJzaWduZWRBdCI6IjIwMjUtMTAtMTZUMjM6NDA6NTYuMjc2WiJ9",
+  "signature": "3Hfaw9m8MxR-WngAOXS6u0YxdgjCv4qHv-w_tzhhjzBL08vhYM12SoxzizkxQf7b6zDvu4qDIfqKqNcBIDn-BQ",
+  "hash": {
+    "alg": "sha-256",
+    "value": "v3IiEEYtBFMXERIybUdf-a190iN7x_X6uoBrgJbC-uo"
+  },
+  "header": {
+    "alg": "EdDSA",
+    "kid": "urn:proto:wsap:signing:wsap-20251016234056",
+    "typ": "identity-access.signing.v1",
+    "canonical": "jcs@rfc8785",
+    "digest": "sha-256",
+    "iat": "2025-10-16T23:40:56.276Z"
+  }
+}

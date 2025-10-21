@@ -11,6 +11,7 @@ import { parseYamlOrJson } from '../../util/io.js';
 import { createA2AClient } from '../../runtime/a2a-client.js';
 import { createAuthProvider } from '../../runtime/a2a-auth.js';
 import { A2AError, AuthError, TimeoutError } from '../../runtime/a2a-types.js';
+import { authorize } from '../../security/iam.mjs';
 
 /**
  * @typedef {Object} AgentCall
@@ -205,6 +206,11 @@ async function execAgent(call) {
       // Extract agent URN from endpoint or use a default format
       const agentUrn = extractAgentUrnFromEndpoint(call.endpoint) || 
                       `urn:agent:runtime:agent@latest`;
+
+      // IAM: authorize agent execution (permissive by default)
+      const agentId = process.env.AGENT_ID || 'mcp:codex';
+      const resourceUrn = agentUrn || call.endpoint || 'urn:unknown:resource';
+      await authorize(agentId, 'execute', resourceUrn);
 
       // Make A2A request
       const response = await client.request(agentUrn, `/skills/${call.skill}`, {

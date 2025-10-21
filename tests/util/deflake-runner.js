@@ -15,6 +15,14 @@ import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const repoRoot = path.join(__dirname, '../..');
+const artifactsDir = path.join(repoRoot, 'artifacts', 'test');
+const flakinessLogPath = path.join(artifactsDir, 'flakiness.jsonl');
+const stripAnsi = (value) =>
+  value
+    .replace(/\u001b\[[0-9;]*[A-Za-z]/g, '')
+    .replace(/\u001b\[[0-9;]*m/g, '')
+    .replace(/\r/g, '');
 
 // Parse command line arguments
 const args = process.argv.slice(2);
@@ -23,7 +31,7 @@ const options = {
   maxRetries: 3,
   iteration: 1,
   iterations: 10,
-  reportFlakiness: false,
+  reportFlakiness: true,
   timeout: 30000,
   verbose: false
 };
@@ -56,10 +64,18 @@ for (let i = 0; i < args.length; i++) {
         options.timeout = parseInt(value);
         i++;
         break;
-      case 'reportFlakiness':
-        options.reportFlakiness = value === 'true';
-        i++;
+      case 'reportFlakiness': {
+        if (value === 'false') {
+          options.reportFlakiness = false;
+          i++;
+        } else if (value === 'true') {
+          options.reportFlakiness = true;
+          i++;
+        } else {
+          options.reportFlakiness = true;
+        }
         break;
+      }
       case 'verbose':
         options.verbose = true;
         break;
@@ -87,7 +103,7 @@ class DeflakeRunner {
       this.results.push(result);
       
       if (this.options.reportFlakiness) {
-        await this.saveResults();
+        await this.saveResults(result);
       }
       
       const duration = performance.now() - this.startTime;
@@ -108,24 +124,31 @@ class DeflakeRunner {
   }
 
   async runJestTests() {
+    await fs.mkdir(artifactsDir, { recursive: true });
     return new Promise((resolve, reject) => {
+      const resultsFile = path.join(artifactsDir, `deflake-results-${this.options.iteration}.json`);
       const jestArgs = [
         '--experimental-vm-modules',
         './node_modules/jest/bin/jest.js',
         '--testPathPattern', this.options.testPathPattern,
         '--maxWorkers', '1', // Run sequentially to avoid interference
+        '--runInBand', // Force a single worker to ensure deterministic cleanup
+        '--detectOpenHandles',
+        '--forceExit',
         '--testTimeout', this.options.timeout.toString(),
-        '--verbose',
         '--no-coverage', // Disable coverage for deflake runs
-        '--passWithNoTests'
+        '--json',
+        '--outputFile', resultsFile,
+        '--passWithNoTests',
       ];
 
       if (this.options.verbose) {
+        jestArgs.push('--runInBand');
         jestArgs.push('--verbose');
       }
 
       const jestProcess = spawn('node', jestArgs, {
-        cwd: path.join(__dirname, '../..'),
+        cwd: repoRoot,
         stdio: ['pipe', 'pipe', 'pipe'],
         env: {
           ...process.env,
@@ -154,9 +177,25 @@ class DeflakeRunner {
         }
       });
 
-      jestProcess.on('close', (code) => {
-        const result = this.parseJestOutput(stdout, stderr, code);
-        resolve(result);
+      jestProcess.on('close', async (code) => {
+        try {
+          let jestJson = null;
+          try {
+            const contents = await fs.readFile(resultsFile, 'utf8');
+            jestJson = JSON.parse(contents);
+          } catch (error) {
+            if (code === 0) {
+              console.warn('Unable to read Jest JSON results:', error.message);
+            }
+          } finally {
+            await fs.rm(resultsFile, { force: true });
+          }
+
+          const result = this.parseJestOutput(stdout, stderr, code, jestJson);
+          resolve(result);
+        } catch (error) {
+          reject(error);
+        }
       });
 
       jestProcess.on('error', (error) => {
@@ -165,46 +204,88 @@ class DeflakeRunner {
     });
   }
 
-  parseJestOutput(stdout, stderr, exitCode) {
-    const lines = stdout.split('\n');
+  parseJestOutput(stdout, stderr, exitCode, jestJson) {
+    const lines = stdout.split('\n').map(stripAnsi);
     const testResults = [];
     const flakyTests = [];
     let totalTests = 0;
     let passedTests = 0;
     let failedTests = 0;
 
-    // Parse test results
-    for (const line of lines) {
-      if (line.includes('PASS') && line.includes('.test.js')) {
-        const match = line.match(/PASS\s+(.+\.test\.js)/);
-        if (match) {
-          testResults.push({
-            file: match[1],
-            status: 'passed',
-            flaky: false
-          });
-          passedTests++;
-        }
-      } else if (line.includes('FAIL') && line.includes('.test.js')) {
-        const match = line.match(/FAIL\s+(.+\.test\.js)/);
-        if (match) {
-          testResults.push({
-            file: match[1],
-            status: 'failed',
-            flaky: true
-          });
-          failedTests++;
-          flakyTests.push(match[1]);
+    if (jestJson) {
+      totalTests = jestJson.numTotalTests ?? 0;
+      passedTests = jestJson.numPassedTests ?? 0;
+      failedTests = jestJson.numFailedTests ?? 0;
+
+      for (const suite of jestJson.testResults ?? []) {
+        const relativePath = suite.name ? path.relative(repoRoot, suite.name) : undefined;
+        const suiteStatus = suite.status ?? 'unknown';
+
+        testResults.push({
+          file: relativePath ?? suite.name,
+          status: suiteStatus,
+          flaky: suiteStatus === 'failed',
+        });
+
+        for (const assertion of suite.assertionResults ?? []) {
+          if (assertion.status === 'failed') {
+            const identifier = assertion.fullName ?? assertion.title ?? 'unnamed-test';
+            flakyTests.push(`${relativePath ?? suite.name} :: ${identifier}`);
+          }
         }
       }
-    }
+    } else {
+      let suitePasses = 0;
+      let suiteFailures = 0;
 
-    // Extract total test count
-    const totalMatch = stdout.match(/Tests:\s+(\d+)\s+failed,\s+(\d+)\s+passed,\s+(\d+)\s+total/);
-    if (totalMatch) {
-      totalTests = parseInt(totalMatch[3]);
-      failedTests = parseInt(totalMatch[1]);
-      passedTests = parseInt(totalMatch[2]);
+      for (const line of lines) {
+        if (line.includes('PASS') && (line.includes('.test.') || line.includes('.spec.'))) {
+          const match = line.match(/PASS\s+(.+\.(test|spec)\.(mjs|cjs|jsx?|tsx?))/);
+          if (match) {
+            testResults.push({
+              file: match[1],
+              status: 'passed',
+              flaky: false
+            });
+            suitePasses++;
+          }
+        } else if (line.includes('FAIL') && (line.includes('.test.') || line.includes('.spec.'))) {
+          const match = line.match(/FAIL\s+(.+\.(test|spec)\.(mjs|cjs|jsx?|tsx?))/);
+          if (match) {
+            testResults.push({
+              file: match[1],
+              status: 'failed',
+              flaky: true
+            });
+            suiteFailures++;
+            flakyTests.push(match[1]);
+          }
+        }
+      }
+
+      const summaryLine = lines.find(line => line.trim().startsWith('Tests:'));
+      if (summaryLine) {
+        const matchNumber = (pattern) => {
+          const match = summaryLine.match(pattern);
+          return match ? parseInt(match[1], 10) : 0;
+        };
+
+        failedTests = matchNumber(/(\d+)\s+failed/);
+        passedTests = matchNumber(/(\d+)\s+passed/);
+        const skippedTests = matchNumber(/(\d+)\s+skipped/);
+        totalTests = matchNumber(/(\d+)\s+total/);
+
+        if (totalTests === 0) {
+          totalTests = passedTests + failedTests + skippedTests;
+        }
+      }
+
+      if (totalTests === 0) {
+        totalTests = suitePasses + suiteFailures;
+      }
+      if (passedTests === 0) {
+        passedTests = totalTests - failedTests;
+      }
     }
 
     const duration = performance.now() - this.startTime;
@@ -226,14 +307,27 @@ class DeflakeRunner {
     };
   }
 
-  async saveResults() {
-    const resultsDir = path.join(__dirname, '../..');
-    const filename = `deflake-results-${this.options.iteration}.json`;
-    const filepath = path.join(resultsDir, filename);
+  async saveResults(result) {
+    const payload = {
+      ts: result.timestamp,
+      iteration: result.iteration,
+      iterationOf: this.options.iterations,
+      testPathPattern: this.options.testPathPattern,
+      stats: {
+        totalTests: result.totalTests,
+        passedTests: result.passedTests,
+        failedTests: result.failedTests,
+        flakeRate: result.flakeRate,
+      },
+      flakyTests: result.flakyTests,
+      durationMs: Math.round(result.duration),
+      exitCode: result.exitCode,
+    };
 
     try {
-      await fs.writeFile(filepath, JSON.stringify(this.results[0], null, 2));
-      console.log(`📊 Results saved to ${filename}`);
+      await fs.mkdir(artifactsDir, { recursive: true });
+      await fs.appendFile(flakinessLogPath, `${JSON.stringify(payload)}\n`);
+      console.log(`📊 Flakiness metrics appended to ${path.relative(repoRoot, flakinessLogPath)}`);
     } catch (error) {
       console.error('Failed to save results:', error.message);
     }
@@ -241,9 +335,9 @@ class DeflakeRunner {
 }
 
 // Run if called directly
-if (import.meta.url === `file://${process.argv[1]}`) {
-  const runner = new DeflakeRunner(options);
-  runner.run().catch(error => {
+  if (import.meta.url === `file://${process.argv[1]}`) {
+    const runner = new DeflakeRunner(options);
+    runner.run().catch(error => {
     console.error('Deflake runner failed:', error);
     process.exit(1);
   });

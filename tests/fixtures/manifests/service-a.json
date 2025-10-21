@@ -1,0 +1,18 @@
+{
+  "protocol": {
+    "urn": "urn:proto:test:service-a",
+    "kind": "api",
+    "version": "1.0.0",
+    "name": "Service A",
+    "dependencies": [
+      {
+        "target": "Service B",
+        "type": "depends-on"
+      }
+    ]
+  },
+  "event": {
+    "urn": "urn:event:test:service-a",
+    "kind": "api"
+  }
+}

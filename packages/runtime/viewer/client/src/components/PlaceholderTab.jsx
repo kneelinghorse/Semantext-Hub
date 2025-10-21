@@ -83,7 +83,7 @@ export function ValidationTab({ data }) {
         <div className="placeholder-icon" aria-hidden="true">✓</div>
         <h2 className="placeholder-title">Manifest Validation</h2>
         <p className="placeholder-description">
-          Preview of validation data with semantic instrumentation
+          Validation results generated via the viewer API with semantic instrumentation
         </p>
 
         {data.summary && (
@@ -130,8 +130,8 @@ export function ValidationTab({ data }) {
         )}
 
         <div className="placeholder-status">
-          <span className="status-badge">Preview Data</span>
-          <p className="status-text">Backend endpoint pending - showing semantic sample data</p>
+          <span className="status-badge">Live Data</span>
+          <p className="status-text">Powered by POST /api/validate</p>
         </div>
       </div>
     </div>
@@ -180,7 +180,7 @@ export function GraphTab({ data }) {
         <div className="placeholder-icon" aria-hidden="true">🕸️</div>
         <h2 className="placeholder-title">Protocol Graph</h2>
         <p className="placeholder-description">
-          Preview of graph data with semantic instrumentation
+          Graph index and chunks served from the viewer API with semantic instrumentation
         </p>
 
         {data.metadata && (
@@ -222,8 +222,8 @@ export function GraphTab({ data }) {
         )}
 
         <div className="placeholder-status">
-          <span className="status-badge">Preview Data</span>
-          <p className="status-text">Backend endpoint pending - showing semantic sample data</p>
+          <span className="status-badge">Live Data</span>
+          <p className="status-text">Powered by POST /api/graph</p>
         </div>
       </div>
     </div>

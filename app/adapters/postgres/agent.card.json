@@ -1,0 +1,58 @@
+{
+  "id": "urn:adapter:data:postgres@0.1.0",
+  "urn": "urn:adapter:data:postgres@0.1.0",
+  "name": "Postgres DDL Reference",
+  "version": "0.1.0",
+  "description": "Reference Postgres DDL adapter for OSSP Pack v1",
+  "tags": [
+    "data",
+    "adapter"
+  ],
+  "capabilities": {
+    "tags": [
+      "data",
+      "adapter"
+    ],
+    "tools": [
+      {
+        "name": "adapter.data.discover",
+        "capability": "adapter.data.discover",
+        "description": "Implements adapter.data.discover for Postgres DDL Reference.",
+        "urn": "urn:capability:adapter.data.discover",
+        "tags": [
+          "data",
+          "adapter"
+        ]
+      },
+      {
+        "name": "adapter.data.extract",
+        "capability": "adapter.data.extract",
+        "description": "Implements adapter.data.extract for Postgres DDL Reference.",
+        "urn": "urn:capability:adapter.data.extract",
+        "tags": [
+          "data",
+          "adapter"
+        ]
+      }
+    ]
+  },
+  "communication": {
+    "supported": [
+      "http"
+    ],
+    "endpoints": {
+      "default": "http://localhost:0",
+      "http": "http://localhost:0"
+    }
+  },
+  "authorization": {
+    "type": "none",
+    "scopes": []
+  },
+  "metadata": {
+    "generated_at": "2025-10-18T00:03:04.946Z",
+    "spec": "./fixtures/minimal.json",
+    "spec_checksum": "21e9a9ae83485601f076d36af91cf24670c7801c6b01ede727034333a1f398db",
+    "wizard": "ossp init adapter"
+  }
+}

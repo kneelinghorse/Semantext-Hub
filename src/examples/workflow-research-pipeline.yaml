@@ -1,0 +1,40 @@
+apiVersion: workflow/v1.1.2
+kind: WorkflowManifest
+metadata:
+  name: "research_pipeline"
+  urn: "urn:proto:workflow:research_pipeline@1.1.2"
+  status: "draft"
+  source: "internal"
+workflow:
+  version: "1.1.2"
+  description: "Research pipeline workflow"
+spec:
+  nodes:
+    - id: research
+      type: service
+      service:
+        endpoint: "https://api.example.com/research"
+        method: GET
+
+    - id: write
+      type: agent
+      dependsOn: [research]
+      agent:
+        urn: "urn:proto:agent:writer@1.1.1"
+        protocol: a2a
+        skill: "write_article"
+        inputMapping:
+          research: "${node.research.outputs.summary}"
+        outputMapping:
+          article: "${node.write.artifacts[0]}"
+        delegation:
+          urn: "urn:proto:iam:writer@1.1.2"
+
+    - id: publish
+      type: service
+      dependsOn: [write]
+      service:
+        endpoint: "https://cms.example.com/api/v1/publish"
+        method: POST
+        body:
+          content: "${node.write.outputs.article}"

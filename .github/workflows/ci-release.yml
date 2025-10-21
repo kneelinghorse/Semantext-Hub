@@ -1,0 +1,179 @@
+name: CI Release Gate
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+env:
+  NODE_VERSION: '20'
+  REGISTRY_PORT: 3000
+  REGISTRY_API_KEY: 'ci-release-test-key'
+
+jobs:
+  preflight:
+    name: Release Preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: 'package-lock.json'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Start Registry Service
+        run: |
+          REGISTRY_API_KEY="${{ env.REGISTRY_API_KEY }}" node app/services/registry/start.mjs &
+          REGISTRY_PID=$!
+          echo "REGISTRY_PID=$REGISTRY_PID" >> $GITHUB_ENV
+          sleep 3
+          # Verify service is running
+          curl -f http://localhost:${{ env.REGISTRY_PORT }}/health || exit 1
+
+      - name: Run Registry HTTP Smoke Tests & Collect Metrics
+        run: |
+          mkdir -p artifacts/perf
+          node tests/runtime/registry-http.smoke.mjs \
+            --base-url "http://localhost:${{ env.REGISTRY_PORT }}" \
+            --api-key "${{ env.REGISTRY_API_KEY }}" \
+            --samples 50 \
+            --output artifacts/perf/release-preflight.jsonl
+
+      - name: Summarize Performance Metrics
+        run: |
+          node scripts/perf/summarize.mjs \
+            --input artifacts/perf/release-preflight.jsonl \
+            --output artifacts/perf/preflight-summary.json \
+            --min-samples 50 \
+            --verbose
+
+      - name: Enforce Performance Budgets
+        run: |
+          node scripts/perf/evaluate.mjs \
+            --input artifacts/perf/release-preflight.jsonl \
+            --budgets app/config/perf-budgets.json \
+            --tool registry \
+            --min-samples 50 \
+            --fail-on-insufficient \
+            --verbose
+
+      - name: Upload Performance Artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: release-preflight-metrics
+          path: |
+            artifacts/perf/release-preflight.jsonl
+            artifacts/perf/preflight-summary.json
+
+      - name: Stop Registry Service
+        if: always()
+        run: |
+          if [ -n "$REGISTRY_PID" ]; then
+            kill $REGISTRY_PID 2>/dev/null || true
+          fi
+
+  canary:
+    name: Release Canary
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: preflight
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: 'package-lock.json'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download Preflight Metrics
+        uses: actions/download-artifact@v4
+        with:
+          name: release-preflight-metrics
+          path: artifacts/perf/
+
+      - name: Start Registry Service
+        run: |
+          REGISTRY_API_KEY="${{ env.REGISTRY_API_KEY }}" node app/services/registry/start.mjs &
+          REGISTRY_PID=$!
+          echo "REGISTRY_PID=$REGISTRY_PID" >> $GITHUB_ENV
+          sleep 3
+
+      - name: Run Canary Probe
+        run: |
+          mkdir -p artifacts/perf
+          node tests/runtime/registry-http.smoke.mjs \
+            --base-url "http://localhost:${{ env.REGISTRY_PORT }}" \
+            --api-key "${{ env.REGISTRY_API_KEY }}" \
+            --samples 50 \
+            --output artifacts/perf/release-canary.jsonl
+
+      - name: Evaluate Canary Budgets
+        run: |
+          node scripts/perf/evaluate.mjs \
+            --input artifacts/perf/release-canary.jsonl \
+            --budgets app/config/perf-budgets.json \
+            --tool registry \
+            --min-samples 50 \
+            --fail-on-insufficient \
+            --verbose
+
+      - name: Generate CI Summary
+        run: |
+          mkdir -p artifacts
+          cat > artifacts/ci-summary.json << EOF
+          {
+            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "workflow": "${{ github.workflow }}",
+            "run_id": "${{ github.run_id }}",
+            "branch": "${{ github.ref_name }}",
+            "commit": "${{ github.sha }}",
+            "preflight": "passed",
+            "canary": "passed",
+            "performance": {
+              "registry_get_p95": "≤150ms",
+              "registry_put_p95": "≤200ms",
+              "resolve_p95": "≤300ms",
+              "health_p95": "≤100ms",
+              "openapi_p95": "≤150ms"
+            },
+            "budgets_enforced": true,
+            "real_endpoints_tested": true
+          }
+          EOF
+
+      - name: Upload CI Summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-summary
+          path: artifacts/ci-summary.json
+
+      - name: Stop Registry Service
+        if: always()
+        run: |
+          if [ -n "$REGISTRY_PID" ]; then
+            kill $REGISTRY_PID 2>/dev/null || true
+          fi

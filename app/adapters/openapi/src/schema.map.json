@@ -1,0 +1,16 @@
+{
+  "$schema": "https://ossp.dev/schemas/adapter-schema-map.json",
+  "adapter": "openapi",
+  "type": "api",
+  "source": "./fixtures/spec.json",
+  "notes": [
+    "Update this map as you align the source specification with catalog primitives."
+  ],
+  "mappings": [
+    {
+      "from": "$.paths[*]",
+      "to": "$.catalog.http.endpoints[]",
+      "description": "Map OpenAPI path+method pairs to catalog HTTP endpoints."
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+{"ts":"2025-10-21T21:13:30.963Z","agent":"mcp:codex","capability":"registry:read","resource":"urn:protocol:api:get-users","allowed":false,"effective":true,"mode":"permissive","reason":"resource_not_matched"}
+{"ts":"2025-10-21T21:13:30.966Z","agent":"cli:local","capability":"registry:write","resource":"urn:protocol:api:update-user","allowed":false,"effective":true,"mode":"permissive","reason":"capability_not_allowed"}
+{"ts":"2025-10-21T21:13:30.967Z","agent":"mcp:codex","capability":"resolve:read","resource":"urn:protocol:api:list","allowed":false,"effective":true,"mode":"permissive","reason":"resource_not_matched"}
+{"ts":"2025-10-21T21:13:30.968Z","agent":"cli:local","capability":"execute","resource":"urn:protocol:api:exec","allowed":false,"effective":true,"mode":"permissive","reason":"capability_not_allowed"}

@@ -1,19 +1,13 @@
 {
-  "event": {
-    "type": "protocol.manifest.created",
-    "version": "1.0",
-    "timestamp": "2025-10-02T10:00:00Z",
-    "urn": "urn:proto:api:fixtures/billing@1.0.0",
-    "kind": "api"
-  },
   "protocol": {
-    "urn": "urn:proto:api:fixtures/billing@1.0.0",
+    "urn": "urn:proto:test:api",
     "kind": "api",
-    "name": "Billing API",
-    "version": "1.0.0"
+    "version": "1.0.0",
+    "name": "Test API",
+    "dependencies": []
   },
-  "metadata": {
-    "source": "test-fixture",
-    "generated_at": "2025-10-02T10:00:00Z"
+  "event": {
+    "urn": "urn:event:test:api",
+    "kind": "api"
   }
 }

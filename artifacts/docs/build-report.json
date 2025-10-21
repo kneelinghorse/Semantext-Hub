@@ -1,0 +1,29 @@
+{
+  "ts": "2025-10-18T00:28:55.018Z",
+  "ok": true,
+  "generated_files": [
+    "app/docs/authoring/guide-v2.md",
+    "app/docs/adapters/cookbook.md"
+  ],
+  "adapters": [
+    {
+      "id": "asyncapi",
+      "name": "@ossp/asyncapi-adapter",
+      "version": "0.1.0"
+    },
+    {
+      "id": "openapi",
+      "name": "@ossp/openapi-adapter",
+      "version": "0.1.0"
+    },
+    {
+      "id": "postgres",
+      "name": "@ossp/postgres-adapter",
+      "version": "0.1.0"
+    }
+  ],
+  "link_check": {
+    "broken": [],
+    "total": 0
+  }
+}

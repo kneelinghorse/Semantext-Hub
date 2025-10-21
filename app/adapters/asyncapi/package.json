@@ -1,0 +1,12 @@
+{
+  "name": "@ossp/asyncapi-adapter",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "description": "Reference AsyncAPI adapter for OSSP Pack v1",
+  "scripts": {
+    "build": "node ./src/index.mjs --spec ./fixtures/minimal.json --out ../../artifacts/adapters/asyncapi",
+    "run": "node ./src/index.mjs",
+    "test": "node --test ./tests"
+  }
+}

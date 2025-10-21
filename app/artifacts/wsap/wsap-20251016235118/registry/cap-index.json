@@ -1,0 +1,136 @@
+{
+  "version": 1,
+  "updatedAt": "2025-10-16T23:51:18.876Z",
+  "entries": [
+    {
+      "capability": "analytics",
+      "urns": [
+        "urn:agent:wsap:analytics@1.0.0"
+      ]
+    },
+    {
+      "capability": "analytics.echo",
+      "urns": [
+        "urn:agent:wsap:analytics@1.0.0"
+      ]
+    },
+    {
+      "capability": "analytics.report",
+      "urns": [
+        "urn:agent:wsap:analytics@1.0.0"
+      ]
+    },
+    {
+      "capability": "approval",
+      "urns": [
+        "urn:agent:wsap:workflow@1.0.0"
+      ]
+    },
+    {
+      "capability": "diagnostic",
+      "urns": [
+        "urn:agent:wsap:analytics@1.0.0"
+      ]
+    },
+    {
+      "capability": "echo",
+      "urns": [
+        "urn:agent:wsap:analytics@1.0.0",
+        "urn:agent:wsap:monitor@1.0.0",
+        "urn:agent:wsap:workflow@1.0.0"
+      ]
+    },
+    {
+      "capability": "health",
+      "urns": [
+        "urn:agent:wsap:monitor@1.0.0"
+      ]
+    },
+    {
+      "capability": "monitor.echo",
+      "urns": [
+        "urn:agent:wsap:monitor@1.0.0"
+      ]
+    },
+    {
+      "capability": "monitor.health",
+      "urns": [
+        "urn:agent:wsap:monitor@1.0.0"
+      ]
+    },
+    {
+      "capability": "monitoring",
+      "urns": [
+        "urn:agent:wsap:monitor@1.0.0"
+      ]
+    },
+    {
+      "capability": "report",
+      "urns": [
+        "urn:agent:wsap:analytics@1.0.0"
+      ]
+    },
+    {
+      "capability": "urn:capability:analytics.echo",
+      "urns": [
+        "urn:agent:wsap:analytics@1.0.0"
+      ]
+    },
+    {
+      "capability": "urn:capability:analytics.report",
+      "urns": [
+        "urn:agent:wsap:analytics@1.0.0"
+      ]
+    },
+    {
+      "capability": "urn:capability:monitor.echo",
+      "urns": [
+        "urn:agent:wsap:monitor@1.0.0"
+      ]
+    },
+    {
+      "capability": "urn:capability:monitor.health",
+      "urns": [
+        "urn:agent:wsap:monitor@1.0.0"
+      ]
+    },
+    {
+      "capability": "urn:capability:workflow.approval",
+      "urns": [
+        "urn:agent:wsap:workflow@1.0.0"
+      ]
+    },
+    {
+      "capability": "urn:capability:workflow.echo",
+      "urns": [
+        "urn:agent:wsap:workflow@1.0.0"
+      ]
+    },
+    {
+      "capability": "workflow",
+      "urns": [
+        "urn:agent:wsap:workflow@1.0.0"
+      ]
+    },
+    {
+      "capability": "workflow.approval",
+      "urns": [
+        "urn:agent:wsap:workflow@1.0.0"
+      ]
+    },
+    {
+      "capability": "workflow.echo",
+      "urns": [
+        "urn:agent:wsap:workflow@1.0.0"
+      ]
+    },
+    {
+      "capability": "wsap",
+      "urns": [
+        "urn:agent:wsap:analytics@1.0.0",
+        "urn:agent:wsap:monitor@1.0.0",
+        "urn:agent:wsap:workflow@1.0.0"
+      ]
+    }
+  ]
+}

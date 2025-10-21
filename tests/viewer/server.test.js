@@ -1,6 +1,6 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { ProtocolViewerServer } from '../../packages/runtime/viewer/server.js';
+import { ProtocolViewerServer } from '../../packages/runtime/viewer/server.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const FIXTURES_DIR = path.join(__dirname, '../fixtures/manifests');

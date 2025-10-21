@@ -1,0 +1,58 @@
+{
+  "id": "urn:adapter:event:asyncapi@0.1.0",
+  "urn": "urn:adapter:event:asyncapi@0.1.0",
+  "name": "AsyncAPI Reference",
+  "version": "0.1.0",
+  "description": "Reference AsyncAPI adapter for OSSP Pack v1",
+  "tags": [
+    "event",
+    "adapter"
+  ],
+  "capabilities": {
+    "tags": [
+      "event",
+      "adapter"
+    ],
+    "tools": [
+      {
+        "name": "adapter.event.discover",
+        "capability": "adapter.event.discover",
+        "description": "Implements adapter.event.discover for AsyncAPI Reference.",
+        "urn": "urn:capability:adapter.event.discover",
+        "tags": [
+          "event",
+          "adapter"
+        ]
+      },
+      {
+        "name": "adapter.event.normalize",
+        "capability": "adapter.event.normalize",
+        "description": "Implements adapter.event.normalize for AsyncAPI Reference.",
+        "urn": "urn:capability:adapter.event.normalize",
+        "tags": [
+          "event",
+          "adapter"
+        ]
+      }
+    ]
+  },
+  "communication": {
+    "supported": [
+      "http"
+    ],
+    "endpoints": {
+      "default": "http://localhost:0",
+      "http": "http://localhost:0"
+    }
+  },
+  "authorization": {
+    "type": "none",
+    "scopes": []
+  },
+  "metadata": {
+    "generated_at": "2025-10-18T00:03:04.846Z",
+    "spec": "./fixtures/minimal.json",
+    "spec_checksum": "512fbd6aea623abbfe470084ba4198ee5983ce34a8312f89e45e4c718767bc7f",
+    "wizard": "ossp init adapter"
+  }
+}

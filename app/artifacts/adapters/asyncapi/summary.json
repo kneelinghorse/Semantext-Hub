@@ -1,0 +1,12 @@
+{
+  "status": "ok",
+  "generated_at": "2025-10-18T00:03:37.032Z",
+  "adapter": {
+    "name": "asyncapi",
+    "type": "event",
+    "version": "0.1.0"
+  },
+  "metrics": {
+    "items": 2
+  }
+}

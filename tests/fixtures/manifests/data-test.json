@@ -1,19 +1,12 @@
 {
-  "event": {
-    "type": "protocol.manifest.created",
-    "version": "1.0",
-    "timestamp": "2025-10-02T10:00:00Z",
-    "urn": "urn:proto:data:fixtures/users@1.0.0",
-    "kind": "data"
-  },
   "protocol": {
-    "urn": "urn:proto:data:fixtures/users@1.0.0",
+    "urn": "urn:proto:test:data",
     "kind": "data",
-    "name": "Users Schema",
-    "version": "1.0.0"
+    "version": "1.0.0",
+    "name": "Test Data"
   },
-  "metadata": {
-    "source": "test-fixture",
-    "generated_at": "2025-10-02T10:00:00Z"
+  "event": {
+    "urn": "urn:event:test:data",
+    "kind": "data"
   }
 }

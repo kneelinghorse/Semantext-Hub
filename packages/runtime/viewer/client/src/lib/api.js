@@ -70,6 +70,44 @@ async function fetchApi(endpoint, options = {}) {
  * API Client
  */
 export const api = {
+  async _resolveManifestFiles(manifests = []) {
+    let entries = manifests;
+
+    if (!Array.isArray(entries) || entries.length === 0) {
+      const manifestMeta = await this.getManifests();
+      entries = manifestMeta;
+    }
+
+    const files = entries
+      .map((entry) => {
+        if (typeof entry === 'string') {
+          return entry.endsWith('.json') ? entry : `${entry}.json`;
+        }
+
+        if (entry && typeof entry === 'object') {
+          if (typeof entry.filename === 'string') {
+            return entry.filename;
+          }
+
+          if (typeof entry.id === 'string') {
+            return entry.id.endsWith('.json') ? entry.id : `${entry.id}.json`;
+          }
+
+          if (typeof entry.urn === 'string') {
+            const slug = entry.urn.split(':').pop();
+            if (!slug) return null;
+            const base = slug.includes('@') ? slug.split('@')[0] : slug;
+            return `${base}.json`;
+          }
+        }
+
+        return null;
+      })
+      .filter(Boolean);
+
+    return [...new Set(files)];
+  },
+
   /**
    * Get health status
    * @returns {Promise<object>} Health data
@@ -105,99 +143,69 @@ export const api = {
    * Get validation results (placeholder with semantic stubs)
    * @returns {Promise<object>} Validation data
    */
-  async getValidation() {
-    // TODO: Implement when backend endpoint is ready
-    // Return structured semantic sample data for dogfooding
-    return Promise.resolve({
-      urn: 'urn:proto:validation:summary',
-      status: 'pending',
-      message: 'Validation endpoint not yet implemented',
-      manifests: [
-        {
-          id: 'api-test',
-          urn: 'urn:proto:manifest:api-test',
-          validationStatus: 'pass',
-          checks: {
-            schema: { status: 'pass', errors: [] },
-            breaking: { status: 'pass', changes: [] },
-            governance: { status: 'pass', violations: [] }
-          },
-          lastValidated: new Date().toISOString()
-        },
-        {
-          id: 'openapi-sample',
-          urn: 'urn:proto:manifest:openapi-sample',
-          validationStatus: 'warning',
-          checks: {
-            schema: { status: 'pass', errors: [] },
-            breaking: { status: 'warning', changes: ['field renamed'] },
-            governance: { status: 'pass', violations: [] }
-          },
-          lastValidated: new Date().toISOString()
-        }
-      ],
-      summary: {
-        total: 2,
-        passed: 1,
-        warnings: 1,
-        failed: 0
-      }
+  async getValidation(manifests = []) {
+    const manifestFiles = await this._resolveManifestFiles(manifests);
+
+    if (manifestFiles.length === 0) {
+      throw new ApiError('No manifests available for validation', 404, null);
+    }
+
+    const response = await fetchApi('/validate', {
+      method: 'POST',
+      body: JSON.stringify({ manifests: manifestFiles })
     });
+
+    return {
+      ...response,
+      source: 'live',
+      summary: response.summary || { total: 0, passed: 0, warnings: 0, failed: 0 },
+      manifests: response.manifests || []
+    };
   },
 
   /**
    * Get graph data (placeholder with semantic stubs)
    * @returns {Promise<object>} Graph data
    */
-  async getGraph() {
-    // TODO: Implement when backend endpoint is ready
-    // Return structured semantic sample data for dogfooding
-    return Promise.resolve({
-      urn: 'urn:proto:graph:protocol-network',
-      message: 'Graph endpoint not yet implemented',
-      nodes: [
-        {
-          id: 'api-test',
-          urn: 'urn:proto:manifest:api-test',
-          type: 'manifest',
-          format: 'proto',
-          dependencies: ['common-types']
-        },
-        {
-          id: 'common-types',
-          urn: 'urn:proto:manifest:common-types',
-          type: 'manifest',
-          format: 'proto',
-          dependencies: []
-        },
-        {
-          id: 'openapi-sample',
-          urn: 'urn:proto:manifest:openapi-sample',
-          type: 'manifest',
-          format: 'openapi',
-          dependencies: ['api-test']
-        }
-      ],
-      edges: [
-        {
-          source: 'api-test',
-          target: 'common-types',
-          type: 'depends-on',
-          urn: 'urn:proto:graph:edge:api-test:common-types'
-        },
-        {
-          source: 'openapi-sample',
-          target: 'api-test',
-          type: 'depends-on',
-          urn: 'urn:proto:graph:edge:openapi-sample:api-test'
-        }
-      ],
-      metadata: {
-        nodeCount: 3,
-        edgeCount: 2,
-        depth: 2
-      }
+  async getGraph(manifests = []) {
+    const manifestFiles = await this._resolveManifestFiles(manifests);
+
+    if (manifestFiles.length === 0) {
+      throw new ApiError('No manifests available for graph generation', 404, null);
+    }
+
+    const response = await fetchApi('/graph', {
+      method: 'POST',
+      body: JSON.stringify({ manifests: manifestFiles })
     });
+
+    const result = {
+      ...response,
+      source: 'live',
+      nodes: [],
+      edges: [],
+      metadata: {
+        nodeCount: response.index?.node_count || 0,
+        edgeCount: response.index?.edge_count || 0,
+        depth: response.index?.depth || 0
+      }
+    };
+
+    if (Array.isArray(response.parts) && response.parts.length > 0) {
+      const firstPart = response.parts[0];
+      const chunk = await fetchApi(`/graph/part/${encodeURIComponent(firstPart.id)}`);
+
+      result.primary = chunk;
+      result.nodes = chunk.nodes || [];
+      result.edges = chunk.edges || [];
+      result.metadata = {
+        nodeCount: response.index?.node_count ?? chunk.summary?.nodes ?? result.nodes.length ?? 0,
+        edgeCount: response.index?.edge_count ?? chunk.summary?.edges ?? result.edges.length ?? 0,
+        depth: response.index?.depth ?? chunk.summary?.depth ?? 0
+      };
+    }
+
+    return result;
   },
 
   /**

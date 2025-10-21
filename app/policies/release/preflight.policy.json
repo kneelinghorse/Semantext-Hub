@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "description": "Release preflight thresholds for promotion readiness",
+  "performance": {
+    "logPath": "artifacts/perf/latest.jsonl",
+    "budgetsPath": "app/config/perf-budgets.json",
+    "maxErrorRate": 0.05
+  },
+  "coverage": {
+    "lcovPath": "coverage/lcov.info",
+    "minimums": {
+      "lines": 0.6,
+      "functions": 0.6,
+      "branches": 0.5
+    }
+  },
+  "health": {
+    "timeoutMs": 2500,
+    "endpoints": [
+      {
+        "name": "registry-health",
+        "url": "http://localhost:3333/health",
+        "expect": {
+          "status": "ok"
+        }
+      },
+      {
+        "name": "registry-resolve",
+        "url": "http://localhost:3333/resolve",
+        "expect": {
+          "httpStatus": 200
+        }
+      }
+    ]
+  },
+  "artifacts": {
+    "maxAgeMinutes": 180
+  }
+}

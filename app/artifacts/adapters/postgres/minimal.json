@@ -1,0 +1,24 @@
+{
+  "name": "Minimal Postgres Schema",
+  "version": "0.1.0",
+  "tables": [
+    {
+      "name": "users",
+      "description": "Application users",
+      "columns": [
+        { "name": "id", "type": "uuid" },
+        { "name": "email", "type": "text" },
+        { "name": "created_at", "type": "timestamp" }
+      ]
+    },
+    {
+      "name": "orders",
+      "description": "Orders placed by users",
+      "columns": [
+        { "name": "id", "type": "uuid" },
+        { "name": "user_id", "type": "uuid" },
+        { "name": "total", "type": "numeric" }
+      ]
+    }
+  ]
+}

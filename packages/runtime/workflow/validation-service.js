@@ -92,7 +92,7 @@ async function buildValidationContext(manifestPath, manifestOverride) {
   };
 }
 
-function combineResults(structuralResult, crossResult) {
+function combineResults(structuralResult, crossResult, approvedValid = true) {
   const structuralErrors = normalizeStructuralIssues(structuralResult.errors, 'error');
   const structuralWarnings = normalizeStructuralIssues(structuralResult.warnings, 'warning');
   const structuralSuggestions = structuralResult.suggestions || [];
@@ -102,7 +102,7 @@ function combineResults(structuralResult, crossResult) {
   const crossInfo = normalizeCrossIssues(crossResult.issues.info || [], 'info');
 
   return {
-    valid: structuralResult.valid && crossResult.valid,
+    valid: structuralResult.valid && approvedValid,
     errors: [...structuralErrors, ...crossErrors],
     warnings: [...structuralWarnings, ...crossWarnings],
     info: crossInfo,
@@ -120,8 +120,15 @@ async function runFullValidation({
 
   const crossValidator = new CrossValidator(context.graph);
   const crossResult = crossValidator.validate(manifest, options.crossValidatorOptions || {});
+  const approvedStructuralResult = context.previousManifest
+    ? validateManifest(context.previousManifest)
+    : null;
 
-  const combined = combineResults(structuralResult, crossResult);
+  const combined = combineResults(
+    structuralResult,
+    crossResult,
+    approvedStructuralResult?.valid ?? true
+  );
 
   let diffReport = null;
   let breakingAnalysis = null;

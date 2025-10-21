@@ -1,0 +1,216 @@
+name: CI Performance Gate
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - 'release/**'
+  pull_request:
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
+    inputs:
+      session:
+        description: 'Specific session ID to evaluate (optional)'
+        required: false
+        type: string
+
+jobs:
+  perf-collect-and-gate:
+    name: Collect & Evaluate Performance
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci --prefer-offline --no-audit
+      
+      - name: Collect performance logs
+        id: collect
+        run: |
+          echo "Collecting performance logs..."
+          
+          # Run collector with optional session filter
+          if [ -n "${{ inputs.session }}" ]; then
+            node scripts/perf/collect.mjs --session "${{ inputs.session }}" --verbose
+          else
+            node scripts/perf/collect.mjs --verbose
+          fi
+          
+          # Check if output was created
+          if [ ! -f "artifacts/perf/latest.jsonl" ]; then
+            echo "::warning::No performance logs collected. Skipping budget evaluation."
+            echo "has_logs=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          # Count entries
+          ENTRY_COUNT=$(wc -l < artifacts/perf/latest.jsonl | tr -d ' ')
+          echo "Collected ${ENTRY_COUNT} performance entries"
+          echo "has_logs=true" >> $GITHUB_OUTPUT
+          echo "entry_count=${ENTRY_COUNT}" >> $GITHUB_OUTPUT
+      
+      - name: Evaluate WSAP budgets
+        if: steps.collect.outputs.has_logs == 'true'
+        id: wsap_budgets
+        continue-on-error: true
+        run: |
+          echo "Evaluating WSAP performance budgets..."
+          
+          # Check each WSAP step against budgets
+          EXIT_CODE=0
+          
+          for STEP in ingest plan runtime; do
+            echo "Checking WSAP ${STEP}..."
+            
+            if ./app/ci/perf-gate.sh \
+              --log artifacts/perf/latest.jsonl \
+              --tool wsap \
+              --step "${STEP}" \
+              --budgets app/config/perf-budgets.json; then
+              echo "✓ WSAP ${STEP} passed"
+            else
+              EXIT_CODE=$?
+              echo "✗ WSAP ${STEP} failed"
+            fi
+          done
+          
+          exit $EXIT_CODE
+      
+      - name: Evaluate Registry budgets
+        if: steps.collect.outputs.has_logs == 'true'
+        id: registry_budgets
+        continue-on-error: true
+        run: |
+          echo "Evaluating Registry performance budgets..."
+          
+          # Check each Registry step against budgets
+          EXIT_CODE=0
+          
+          for STEP in health openapi registry_get registry_put resolve; do
+            echo "Checking Registry ${STEP}..."
+            
+            # Check if entries exist for this step
+            if ! grep -q "\"tool\":\"registry\"" artifacts/perf/latest.jsonl 2>/dev/null || \
+               ! grep -q "\"step\":\"${STEP}\"" artifacts/perf/latest.jsonl 2>/dev/null; then
+              echo "⊘ Registry ${STEP} - no data"
+              continue
+            fi
+            
+            if ./app/ci/perf-gate.sh \
+              --log artifacts/perf/latest.jsonl \
+              --tool registry \
+              --step "${STEP}" \
+              --budgets app/config/perf-budgets.json; then
+              echo "✓ Registry ${STEP} passed"
+            else
+              EXIT_CODE=$?
+              echo "✗ Registry ${STEP} failed"
+            fi
+          done
+          
+          exit $EXIT_CODE
+      
+      - name: Evaluate CLI budgets
+        if: steps.collect.outputs.has_logs == 'true'
+        id: cli_budgets
+        continue-on-error: true
+        run: |
+          echo "Evaluating CLI performance budgets..."
+          
+          # Check if CLI perf-status entries exist
+          if ! grep -q "\"tool\":\"cli\"" artifacts/perf/latest.jsonl 2>/dev/null; then
+            echo "⊘ No CLI performance data found"
+            exit 0
+          fi
+          
+          ./app/ci/perf-gate.sh \
+            --log artifacts/perf/latest.jsonl \
+            --tool cli \
+            --step perf-status \
+            --budgets app/config/perf-budgets.json
+      
+      - name: Generate performance summary
+        if: steps.collect.outputs.has_logs == 'true'
+        id: summary
+        run: |
+          echo "## Performance Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "📊 Total entries: ${{ steps.collect.outputs.entry_count }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Summarize results
+          echo "### Budget Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          WSAP_STATUS="✅ Passed"
+          if [ "${{ steps.wsap_budgets.outcome }}" = "failure" ]; then
+            WSAP_STATUS="❌ Failed"
+          fi
+          
+          REGISTRY_STATUS="✅ Passed"
+          if [ "${{ steps.registry_budgets.outcome }}" = "failure" ]; then
+            REGISTRY_STATUS="❌ Failed"
+          fi
+          
+          CLI_STATUS="✅ Passed"
+          if [ "${{ steps.cli_budgets.outcome }}" = "failure" ]; then
+            CLI_STATUS="❌ Failed"
+          fi
+          
+          echo "- **WSAP**: ${WSAP_STATUS}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Registry**: ${REGISTRY_STATUS}" >> $GITHUB_STEP_SUMMARY
+          echo "- **CLI**: ${CLI_STATUS}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Add budget file reference
+          echo "Budget configuration: \`app/config/perf-budgets.json\`" >> $GITHUB_STEP_SUMMARY
+      
+      - name: Upload performance artifact
+        if: steps.collect.outputs.has_logs == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-logs
+          path: artifacts/perf/latest.jsonl
+          retention-days: 30
+      
+      - name: Fail if budgets exceeded
+        if: steps.collect.outputs.has_logs == 'true'
+        run: |
+          # Fail the workflow if any budget check failed
+          if [ "${{ steps.wsap_budgets.outcome }}" = "failure" ] || \
+             [ "${{ steps.registry_budgets.outcome }}" = "failure" ] || \
+             [ "${{ steps.cli_budgets.outcome }}" = "failure" ]; then
+            echo "❌ Performance budgets exceeded. See logs above for details."
+            echo ""
+            echo "To fix:"
+            echo "1. Review the failed budget checks above"
+            echo "2. Optimize the slow operations"
+            echo "3. Or update budgets in app/config/perf-budgets.json if intentional"
+            exit 1
+          fi
+          
+          echo "✅ All performance budgets passed"
+      
+      - name: No logs warning
+        if: steps.collect.outputs.has_logs != 'true'
+        run: |
+          echo "⚠️ No performance logs found to evaluate"
+          echo "This is OK if:"
+          echo "  - This is a documentation-only change"
+          echo "  - Performance monitoring hasn't been run yet"
+          echo ""
+          echo "To generate performance logs:"
+          echo "  npm test -- tests/performance/"
+          echo "  node app/cli/wsap.mjs --seed github-api"
+

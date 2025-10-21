@@ -594,6 +594,18 @@ export class AgentDiscoveryService extends EventEmitter {
     // Simplified implementation
     return this.cache.size > 0 ? 0.85 : 0;
   }
+
+  /**
+   * Cleanup discovery resources
+   * @returns {Promise<void>}
+   */
+  async cleanup() {
+    this.cache.clear();
+    this.isInitialized = false;
+    if (this.registry && typeof this.registry.cleanup === 'function') {
+      await this.registry.cleanup();
+    }
+  }
 }
 
 /**

@@ -7,12 +7,14 @@
  * and optional auto-open behaviour for interactive workflows.
  */
 
-import fs from 'fs/promises';
-import path from 'path';
 import chalk from 'chalk';
 import { fileURLToPath } from 'url';
 
-import { writeDrawio, DrawioExportError } from '../../src/visualization/drawio/exporter.js';
+import {
+  generateCatalogDiagram,
+  DEFAULT_DIAGRAM_PREFIX,
+} from '../../src/visualization/drawio/catalog.js';
+import { DrawioExportError } from '../../src/visualization/drawio/exporter.js';
 import { createConsole } from '../../src/cli/ux/console.js';
 import { launch as launchWithGuardian } from '../../src/cli/utils/open-guardian.js';
 import {
@@ -20,67 +22,21 @@ import {
   createSubgraphForNode,
   findProtocolNode,
   loadCatalogGraph,
-  timestampedFilename,
-  ensureDirectory
-} from './catalog-shared.js';
+} from '../../src/catalog/shared.js';
 
-const DEFAULT_DIAGRAM_PREFIX = 'catalog';
 const SUPPORTED_FORMATS = new Set(['drawio']);
 
-function resolveWorkspace(workspace) {
-  return workspace ? path.resolve(workspace) : process.cwd();
-}
-
-async function readGraphPayload(graphPath) {
-  const payload = await fs.readFile(graphPath, 'utf-8');
-  try {
-    return JSON.parse(payload);
-  } catch (error) {
-    throw new DrawioExportError(`Failed to parse canonical graph JSON at ${graphPath}`, error);
-  }
-}
-
-async function resolveOutputTarget(workspace, output, prefix) {
-  if (!output) {
-    const defaultDir = path.join(workspace, 'artifacts', 'diagrams');
-    await ensureDirectory(defaultDir);
-    return path.join(defaultDir, timestampedFilename(prefix));
-  }
-
-  const resolved = path.resolve(output);
-  try {
-    const stat = await fs.stat(resolved);
-    if (stat.isDirectory()) {
-      await ensureDirectory(resolved);
-      return path.join(resolved, timestampedFilename(prefix));
-    }
-  } catch {
-    // File or directory does not yet exist.
-    if (!path.extname(resolved)) {
-      await ensureDirectory(resolved);
-      return path.join(resolved, timestampedFilename(prefix));
-    }
-  }
-
-  await ensureDirectory(path.dirname(resolved));
-  return resolved;
-}
-
 export async function generateDiagram(options = {}) {
-  const workspace = resolveWorkspace(options.workspace);
-  const graph =
-    options.graph ??
-    (await readGraphPayload(
-      options.input ? path.resolve(options.input) : path.join(workspace, 'artifacts', 'catalog-graph.json')
-    ));
-
-  const outputPath = await resolveOutputTarget(workspace, options.output, options.prefix ?? DEFAULT_DIAGRAM_PREFIX);
-
-  const result = await writeDrawio(graph, outputPath, {
-    overwrite: Boolean(options.overwrite),
+  const result = await generateCatalogDiagram({
+    workspace: options.workspace,
+    graph: options.graph,
+    input: options.input,
+    output: options.output,
+    prefix: options.prefix ?? DEFAULT_DIAGRAM_PREFIX,
+    overwrite: options.overwrite,
     layerBy: options.layerBy,
     splitBy: options.splitBy,
-    themeId: options.themeId
+    themeId: options.themeId,
   });
 
   if (!options.silent) {
@@ -112,7 +68,7 @@ export async function generateDiagram(options = {}) {
 }
 
 export async function catalogGenerateDiagramCommand(identifier, options = {}) {
-  const workspace = resolveWorkspace(options.workspace);
+  const workspace = options.workspace;
   const consoleUi = createConsole();
   const label = identifier ? `protocol "${identifier}"` : 'catalog';
   const spinner = consoleUi.spinner(`Generating diagram for ${label}...`);

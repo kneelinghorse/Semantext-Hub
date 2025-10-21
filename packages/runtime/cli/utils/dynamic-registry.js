@@ -476,6 +476,25 @@ const defaultCommands = {
       'VALIDATION_FAILED': ['Review the validation report', 'Fix the identified issues']
     }
   },
+
+  ui: {
+    module: '../commands/ui.js',
+    description: 'Start local authoring UI server',
+    usage: 'ossp ui [options]',
+    options: [
+      { name: '--port <port>', description: 'Port to listen on', default: '3030' },
+      { name: '--baseDir <path>', description: 'Base directory for local schema $ref resolution', default: process.cwd() }
+    ],
+    examples: [
+      'ossp ui',
+      'ossp ui --port 4000',
+      'ossp ui --baseDir ./app'
+    ],
+    errorMapping: {
+      'EADDRINUSE': ['Choose a different --port', 'Stop the process using the port and retry'],
+      'ENOENT': ['Verify baseDir exists and is readable']
+    }
+  },
   
   scaffold: {
     module: '../commands/scaffold-wrapper.js',

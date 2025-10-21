@@ -11,13 +11,7 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
 // Runtime components
-import { createAgentDiscoveryService } from '../../packages/runtime/runtime/agent-discovery-service.js';
-import { createURNRegistry } from '../../packages/runtime/runtime/urn-registry.js';
-import { createA2AClient } from '../../packages/runtime/runtime/a2a-client.js';
-import { createMCPClient } from '../../packages/runtime/runtime/mcp-client.js';
-import { createCircuitBreaker } from '../../packages/runtime/runtime/circuit-breaker.js';
 import { createRetryPolicy } from '../../packages/runtime/runtime/retry-policies.js';
-import { createStructuredLogger } from '../../packages/runtime/runtime/structured-logger.js';
 import { handleError } from '../../packages/runtime/runtime/error-handler.js';
 
 // Demo class
@@ -69,6 +63,35 @@ const TEST_CONFIG = {
     enableTracing: false
   }
 };
+
+function createMockA2AClient() {
+  return {
+    request: jest.fn(async (targetUrn, route) => ({
+      status: 200,
+      headers: {},
+      data: {
+        targetUrn,
+        route,
+        timestamp: new Date().toISOString()
+      }
+    }))
+  };
+}
+
+function createMockMCPClient() {
+  const state = { connected: false };
+  return {
+    state,
+    connect: jest.fn(async () => {
+      state.connected = true;
+      return { serverName: 'mock-server', serverVersion: '1.0.0', capabilities: {} };
+    }),
+    executeTool: jest.fn(async () => ({ status: 'success', timestamp: new Date().toISOString() })),
+    disconnect: jest.fn(async () => {
+      state.connected = false;
+    })
+  };
+}
 
 // Test agent configurations
 const TEST_AGENTS = [
@@ -130,21 +153,18 @@ describe('Multi-Agent E2E Integration Tests', () => {
 
   beforeEach(async () => {
     // Initialize components
-    registry = createURNRegistry(TEST_CONFIG.registry);
-    await registry.initialize();
-
-    discovery = createAgentDiscoveryService(TEST_CONFIG.discovery);
-    await discovery.initialize();
-
-    a2aClient = createA2AClient(TEST_CONFIG.a2a);
-    mcpClient = createMCPClient(TEST_CONFIG.mcp);
-    circuitBreaker = createCircuitBreaker(TEST_CONFIG.circuitBreaker);
-    retryPolicy = createRetryPolicy(TEST_CONFIG.retryPolicy);
-    logger = createStructuredLogger(TEST_CONFIG.logger);
+    a2aClient = createMockA2AClient();
+    mcpClient = createMockMCPClient();
 
     // Initialize demo
     demo = new MultiAgentE2EDemo(TEST_CONFIG);
     await demo.initialize();
+
+    registry = demo.registry;
+    discovery = demo.discovery;
+    circuitBreaker = demo.circuitBreaker;
+    retryPolicy = demo.retryPolicy;
+    logger = demo.logger;
 
     // Register test agents
     for (const agent of TEST_AGENTS) {
@@ -331,7 +351,7 @@ describe('Multi-Agent E2E Integration Tests', () => {
       try {
         await timeoutPolicy.execute(async () => {
           // Simulate slow operation
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await new Promise(resolve => setTimeout(resolve, 600));
           throw new Error('Simulated timeout');
         });
       } catch (error) {

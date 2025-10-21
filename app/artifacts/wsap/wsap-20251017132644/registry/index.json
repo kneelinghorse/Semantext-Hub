@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "updatedAt": "2025-10-17T13:26:44.795Z",
+  "entries": [
+    {
+      "urn": "urn:agent:wsap:analytics@1.0.0",
+      "ts": "2025-10-17T13:26:44.786Z",
+      "keyId": "urn:proto:wsap:signing:wsap-20251017132644",
+      "algorithm": "EdDSA"
+    },
+    {
+      "urn": "urn:agent:wsap:monitor@1.0.0",
+      "ts": "2025-10-17T13:26:44.795Z",
+      "keyId": "urn:proto:wsap:signing:wsap-20251017132644",
+      "algorithm": "EdDSA"
+    },
+    {
+      "urn": "urn:agent:wsap:workflow@1.0.0",
+      "ts": "2025-10-17T13:26:44.792Z",
+      "keyId": "urn:proto:wsap:signing:wsap-20251017132644",
+      "algorithm": "EdDSA"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "type": "data",
+  "name": "Smoke_DATA_1760755512428",
+  "version": "1.0.0",
+  "description": "Generated data protocol for Smoke_DATA_1760755512428",
+  "protocol": {
+    "format": "json",
+    "schema": {
+      "fields": []
+    },
+    "compression": "none"
+  },
+  "metadata": {
+    "created": "2025-10-18T02:45:12.465Z",
+    "author": "protocol-discover"
+  }
+}

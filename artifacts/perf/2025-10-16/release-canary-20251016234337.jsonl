@@ -1,0 +1,238 @@
+{"ts":"2025-10-16T23:43:38.245Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":618,"ok":false,"err":"Registry resolve failed (404)"}
+{"ts":"2025-10-16T23:43:38.246Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":618,"ok":false,"err":"Registry resolve failed (404)"}
+{"ts":"2025-10-16T23:43:38.884Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":638,"ok":false,"err":"Registry resolve failed (404)"}
+{"ts":"2025-10-16T23:43:38.885Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":638,"ok":false,"err":"Registry resolve failed (404)"}
+{"ts":"2025-10-16T23:43:39.544Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":659,"ok":false,"err":"Registry resolve failed (404)"}
+{"ts":"2025-10-16T23:43:39.544Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":659,"ok":false,"err":"Registry resolve failed (404)"}
+{"ts":"2025-10-16T23:43:39.544Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:43:39.544Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:43:40.046Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:43:40.047Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:43:40.547Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:43:40.548Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:43:41.050Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:43:41.051Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:43:41.552Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:43:41.552Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:43:42.052Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:43:42.053Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:43:42.553Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:43:42.554Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:43:43.054Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:43:43.054Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:43:43.555Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:43:43.556Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:43:44.056Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:43:44.056Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:43:44.558Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:43:44.559Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:43:45.060Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:43:45.061Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:43:45.562Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:43:45.562Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:43:46.064Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:43:46.064Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:43:46.564Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:43:46.564Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:43:47.066Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:43:47.068Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:43:47.566Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:43:47.566Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:43:48.068Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:43:48.068Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:43:48.570Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:43:48.570Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:43:49.070Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:43:49.070Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:43:49.572Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:43:49.574Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:43:50.075Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:43:50.075Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:43:50.577Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:43:50.578Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:43:51.080Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:43:51.080Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:43:51.582Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":1,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:43:51.582Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":1,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:43:52.084Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:43:52.084Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:43:52.584Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:43:52.585Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:43:53.086Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:43:53.086Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:43:53.588Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:43:53.589Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:43:54.090Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:43:54.090Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:43:54.595Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":3,"ok":false,"err":"Registry resolve failed (404)"}
+{"ts":"2025-10-16T23:43:54.596Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":3,"ok":false,"err":"Registry resolve failed (404)"}
+{"ts":"2025-10-16T23:43:55.094Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:43:55.095Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:43:55.595Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:43:55.596Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:43:56.097Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:43:56.097Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:43:56.599Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:43:56.600Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:43:57.100Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:43:57.101Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:43:57.601Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:43:57.601Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:43:58.103Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:43:58.104Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:43:58.605Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:43:58.606Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:43:59.107Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:43:59.108Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:43:59.609Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:43:59.609Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:00.111Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:00.112Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:00.613Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:00.614Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:01.115Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:01.116Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:01.617Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:01.617Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:02.118Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:02.119Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:02.618Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:02.619Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:03.120Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:03.120Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:03.620Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:03.621Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:04.121Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:04.122Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:04.622Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:04.622Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:05.122Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:05.122Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:05.624Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:05.624Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:06.126Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:06.127Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:06.628Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:06.628Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:07.130Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:07.130Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:07.631Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:07.631Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:08.132Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:08.133Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:08.633Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:08.633Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:09.136Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:09.136Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:09.641Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":3,"ok":false,"err":"Registry resolve failed (404)"}
+{"ts":"2025-10-16T23:44:09.642Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":3,"ok":false,"err":"Registry resolve failed (404)"}
+{"ts":"2025-10-16T23:44:10.143Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:10.148Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:10.643Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:10.644Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:11.145Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:11.147Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:11.646Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:11.647Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:12.149Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:12.150Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:12.651Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:12.653Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:13.151Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:13.152Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:13.652Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:13.653Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:14.154Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:14.155Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:14.655Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:14.656Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:15.157Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:15.158Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:15.659Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:15.661Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:16.160Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:16.161Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:16.662Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:16.663Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:17.162Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:17.164Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:17.664Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:17.664Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:18.166Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:18.167Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:18.668Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:18.668Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:19.168Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:19.170Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:19.669Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:19.670Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:20.171Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:20.172Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:20.673Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:20.674Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:21.175Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:21.176Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:21.680Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:21.681Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:22.182Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:22.183Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:22.684Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:22.685Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:23.186Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:23.187Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:23.688Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:23.689Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:24.189Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:24.189Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:24.693Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":4,"ok":false,"err":"Registry resolve failed (404)"}
+{"ts":"2025-10-16T23:44:24.694Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":4,"ok":false,"err":"Registry resolve failed (404)"}
+{"ts":"2025-10-16T23:44:25.190Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:25.192Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:25.693Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:25.694Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:26.195Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:26.196Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:26.695Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:26.697Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:27.198Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:27.199Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:27.700Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:27.701Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:28.202Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:28.203Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:28.702Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:28.703Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:29.203Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:29.203Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:29.704Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:29.705Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:30.205Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:30.206Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:30.706Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:30.707Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:31.207Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:31.208Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:31.708Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:31.710Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:32.210Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:32.211Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:32.713Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:32.714Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:33.213Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:33.214Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:33.714Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:33.715Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:34.215Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:34.216Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:34.716Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:34.718Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:35.218Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:35.219Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:35.720Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:35.721Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:36.220Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:36.221Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:36.722Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:36.722Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}
+{"ts":"2025-10-16T23:44:37.222Z","sessionId":"release-canary-20251016234337","tool":"a2a","step":"echo","ms":0,"ok":false,"err":"circuit_open"}
+{"ts":"2025-10-16T23:44:37.223Z","sessionId":"release-canary-20251016234337","tool":"release:canary","step":"a2a.echo","ms":0,"ok":false,"err":"Circuit breaker is open for target"}

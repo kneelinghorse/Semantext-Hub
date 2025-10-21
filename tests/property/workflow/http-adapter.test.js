@@ -218,15 +218,19 @@ describe('HTTP Adapter Property Tests', () => {
         expect(parsedBody.nested.value).toBe(i);
       }
     });
-  });
+    });
 
   describe('Error Handling Properties', () => {
     it('should always handle network errors gracefully', async () => {
+      const originalFetch = global.fetch;
+      const networkAdapter = new HttpAdapter({
+        timeout: 500,
+        retries: 0,
+        retryDelay: 0
+      });
+      
       for (let i = 0; i < 20; i++) {
-        const input = {
-          method: 'GET',
-          url: 'https://nonexistent-domain-that-should-fail.com'
-        };
+        global.fetch = jest.fn().mockRejectedValue(new Error('Network error'));
 
         const context = {
           traceId: `trace_${i}`,
@@ -235,14 +239,21 @@ describe('HTTP Adapter Property Tests', () => {
           metadata: {}
         };
 
+        const input = {
+          method: 'GET',
+          url: 'https://example.com/failure'
+        };
+
         try {
-          await adapter.execute(context, input);
+          await networkAdapter.execute(context, input);
           // If it doesn't throw, that's unexpected but not necessarily wrong
         } catch (error) {
           expect(error).toBeDefined();
           expect(error.message).toContain('HTTP request failed');
         }
       }
+
+      global.fetch = originalFetch;
     });
 
     it('should always retry on server errors but not client errors', async () => {

@@ -1,0 +1,36 @@
+{
+  "adapter": {
+    "name": "postgres",
+    "type": "data",
+    "version": "0.1.0"
+  },
+  "source": {
+    "original": "app/adapters/postgres/fixtures/minimal.json",
+    "stored": "minimal.json",
+    "format": "json",
+    "checksum": "21e9a9ae83485601f076d36af91cf24670c7801c6b01ede727034333a1f398db",
+    "bytes": 573
+  },
+  "capabilities": [
+    "adapter.data.discover",
+    "adapter.data.extract"
+  ],
+  "summary": {
+    "title": "Minimal Postgres Schema",
+    "version": "0.1.0",
+    "itemsCount": 2,
+    "entities": [
+      {
+        "name": "users",
+        "columns": 3,
+        "description": "Application users"
+      },
+      {
+        "name": "orders",
+        "columns": 3,
+        "description": "Orders placed by users"
+      }
+    ]
+  },
+  "generated_at": "2025-10-18T00:03:37.082Z"
+}

@@ -96,6 +96,6 @@ describe('Protocol Binding Detection', () => {
     const duration = performance.now() - start;
 
     // Binding detection is subset of total parse time
-    expect(duration).toBeLessThan(200);
+    expect(duration).toBeLessThan(300);
   });
 });

@@ -77,6 +77,26 @@ const REQUIRED_HEADINGS = [
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 
+function backlogPathCandidates(workspace: string): string[] {
+  const candidates: string[] = [];
+  const envBacklogPath = process.env.BACKLOG_PATH;
+
+  if (envBacklogPath && envBacklogPath.trim().length > 0) {
+    candidates.push(
+      path.isAbsolute(envBacklogPath)
+        ? envBacklogPath
+        : path.join(workspace, envBacklogPath)
+    );
+  }
+
+  candidates.push(
+    path.join(workspace, 'cmos', 'missions', 'backlog.yaml'),
+    path.join(workspace, 'missions', 'backlog.yaml')
+  );
+
+  return Array.from(new Set(candidates));
+}
+
 async function fileExists(targetPath: string): Promise<boolean> {
   try {
     await fs.access(targetPath);
@@ -128,29 +148,168 @@ async function detectWorkspace(startDir: string): Promise<string> {
   ];
 
   for (const candidate of candidates) {
-    const backlogPath = path.join(candidate, 'missions', 'backlog.yaml');
-    if (await fileExists(backlogPath)) {
-      return candidate;
+    const resolved = await findWorkspaceCandidate(candidate);
+    if (resolved) {
+      return resolved;
     }
   }
 
   return startDir;
 }
 
-async function loadBacklogSprint(workspace: string, sprintId: string): Promise<SprintBacklogEntry> {
-  const backlogPath = path.join(workspace, 'missions', 'backlog.yaml');
-  const backlog = await readYamlFile<{ domainFields?: { sprints?: SprintBacklogEntry[] } }>(backlogPath);
+async function findWorkspaceCandidate(base: string): Promise<string | undefined> {
+  const visited = new Set<string>();
+  const queue: string[] = [base];
+  let fallback: string | undefined;
+  const preferredSegment = `${path.sep}cmos${path.sep}missions${path.sep}backlog.yaml`;
 
-  if (!backlog?.domainFields?.sprints || !Array.isArray(backlog.domainFields.sprints)) {
-    throw new Error(`Unable to locate sprints inside ${backlogPath}`);
+  while (queue.length > 0) {
+    const current = queue.shift();
+    if (!current || visited.has(current)) {
+      continue;
+    }
+    visited.add(current);
+
+    for (const backlogPath of backlogPathCandidates(current)) {
+      if (await fileExists(backlogPath)) {
+        if (backlogPath.includes(preferredSegment)) {
+          return current;
+        }
+        fallback = fallback ?? current;
+      }
+    }
+
+    try {
+      const entries = await fs.readdir(current, { withFileTypes: true });
+      for (const entry of entries) {
+        if (entry.isDirectory()) {
+          queue.push(path.join(current, entry.name));
+        }
+      }
+    } catch {
+      // Ignore directories without read permission
+    }
   }
 
-  const sprint = backlog.domainFields.sprints.find((entry) => entry?.sprintId === sprintId);
+  return fallback;
+}
+
+async function loadBacklogSprint(workspace: string, sprintId: string): Promise<SprintBacklogEntry> {
+  let backlogPath: string | undefined;
+
+  for (const candidate of backlogPathCandidates(workspace)) {
+    if (await fileExists(candidate)) {
+      backlogPath = candidate;
+      break;
+    }
+  }
+
+  const resolvedBacklogPath = backlogPath ?? backlogPathCandidates(workspace)[0];
+  const backlog = await readYamlFile<{ domainFields?: { sprints?: SprintBacklogEntry[] } }>(resolvedBacklogPath);
+
+  let sprint: SprintBacklogEntry | undefined;
+  if (backlog?.domainFields?.sprints && Array.isArray(backlog.domainFields.sprints)) {
+    sprint = backlog.domainFields.sprints.find((entry) => entry?.sprintId === sprintId);
+  }
+
+  sprint = sprint ?? await loadSprintFromDirectory(workspace, sprintId);
   if (!sprint) {
     throw new Error(`Sprint ${sprintId} not found in backlog`);
   }
 
   return sprint;
+}
+
+async function loadSprintFromDirectory(workspace: string, sprintId: string): Promise<SprintBacklogEntry | undefined> {
+  const sprintSlug = sprintId.toLowerCase().replace(/\s+/g, '-');
+  const candidateDirs = [
+    path.join(workspace, 'cmos', 'missions', sprintSlug),
+    path.join(workspace, 'missions', sprintSlug)
+  ];
+
+  let sprintDirectory: string | undefined;
+  for (const dir of candidateDirs) {
+    if (await fileExists(dir)) {
+      sprintDirectory = dir;
+      break;
+    }
+  }
+
+  if (!sprintDirectory) {
+    return undefined;
+  }
+
+  let entries;
+  try {
+    entries = await fs.readdir(sprintDirectory, { withFileTypes: true });
+  } catch {
+    return undefined;
+  }
+
+  const missionFiles = entries
+    .filter((entry) => entry.isFile() && /\.ya?ml$/i.test(entry.name) && /^M\d+/i.test(entry.name))
+    .map((entry) => path.join(sprintDirectory, entry.name));
+
+  if (missionFiles.length === 0) {
+    return undefined;
+  }
+
+  const missions: MissionBacklogEntry[] = [];
+
+  for (const missionFile of missionFiles) {
+    const missionDoc = await readYamlFile<JsonRecord>(missionFile);
+    const basename = path.basename(missionFile, path.extname(missionFile));
+    const [rawId] = basename.split('_', 1);
+    const normalizedId = typeof missionDoc?.missionId === 'string'
+      ? missionDoc.missionId.split('-')[0]
+      : rawId;
+
+    const nameSegment = basename.includes('_')
+      ? basename.split('_').slice(1).join(' ')
+      : normalizedId;
+
+    const displayName = nameSegment
+      .replace(/[-_]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .replace(/\b\w/g, (char) => char.toUpperCase());
+
+    let completedAt: string | undefined;
+    if (typeof missionDoc?.missionId === 'string') {
+      const dateMatch = missionDoc.missionId.match(/(\d{4})(\d{2})(\d{2})$/);
+      if (dateMatch) {
+        completedAt = `${dateMatch[1]}-${dateMatch[2]}-${dateMatch[3]}`;
+      }
+    }
+
+    const relativePath = path.relative(workspace, missionFile).replace(/\\/g, '/');
+    missions.push({
+      id: normalizedId,
+      name: displayName || normalizedId,
+      status: typeof missionDoc?.outcome?.status === 'string' ? missionDoc.outcome.status : 'Unknown',
+      notes: typeof missionDoc?.outcome?.summary === 'string' ? missionDoc.outcome.summary : undefined,
+      path: relativePath,
+      completed_at: completedAt
+    });
+  }
+
+  const uniqueStatuses = new Set(missions.map((mission) => mission.status));
+  let sprintStatus = 'Planned';
+  if (uniqueStatuses.size === 1 && uniqueStatuses.has('Completed')) {
+    sprintStatus = 'Completed';
+  } else if (uniqueStatuses.has('Blocked')) {
+    sprintStatus = 'Blocked';
+  } else if (uniqueStatuses.has('In Progress')) {
+    sprintStatus = 'In Progress';
+  }
+
+  return {
+    sprintId,
+    title: sprintId,
+    focus: `Auto-generated summary for ${sprintId}`,
+    status: sprintStatus,
+    missions
+  };
 }
 
 async function findMissionFile(workspace: string, missionId: string): Promise<string | undefined> {

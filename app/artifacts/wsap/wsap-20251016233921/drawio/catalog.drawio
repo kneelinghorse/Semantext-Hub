@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2025-10-16T23:39:21.666Z" agent="ossp-agi-drawio-exporter" etag="1760657961666" version="21.7.9" type="device">
+  <diagram id="catalog-graph" name="OSSP-AGI Protocol Catalog">
+    <mxGraphModel dx="1024" dy="768" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="206eb2b73411e6c9" value="GitHub API (Demo Subset)" style="shape=rectangle;perimeter=rectanglePerimeter;rounded=1;html=1;whiteSpace=wrap;fontColor=#1F2933;fontSize=14;strokeColor=#0B7285;fillColor=#E6F4F1;align=center;verticalAlign=middle;spacing=12" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="180" height="80" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

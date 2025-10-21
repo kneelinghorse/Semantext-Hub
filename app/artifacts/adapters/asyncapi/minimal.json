@@ -1,0 +1,38 @@
+{
+  "asyncapi": "2.6.0",
+  "info": {
+    "title": "Minimal AsyncAPI Example",
+    "version": "0.1.0"
+  },
+  "channels": {
+    "user/created": {
+      "publish": {
+        "summary": "User created event",
+        "message": {
+          "name": "UserCreated",
+          "payload": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "email": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "user/deleted": {
+      "publish": {
+        "summary": "User deleted event",
+        "message": {
+          "name": "UserDeleted",
+          "payload": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

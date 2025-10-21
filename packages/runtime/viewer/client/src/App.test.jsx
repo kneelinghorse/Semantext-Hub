@@ -46,6 +46,82 @@ const manifestDetailPayload = {
   },
 };
 
+const validatePayload = {
+  valid: true,
+  summary: {
+    total: 2,
+    passed: 2,
+    warnings: 0,
+    failed: 0,
+  },
+  manifests: [
+    {
+      id: 'Billing API',
+      urn: 'urn:proto:api:fixtures/billing@1.0.0',
+      validationStatus: 'pass',
+      errors: [],
+      warnings: [],
+    },
+    {
+      id: 'Users Schema',
+      urn: 'urn:proto:data:fixtures/users@1.0.0',
+      validationStatus: 'pass',
+      errors: [],
+      warnings: [],
+    },
+  ],
+  errors: [],
+};
+
+const graphIndexPayload = {
+  index: {
+    generated_at: new Date().toISOString(),
+    node_count: 2,
+    edge_count: 0,
+    depth: 1,
+    parts: 1,
+    expires_in_ms: 300000,
+  },
+  parts: [
+    {
+      id: 'chunk-1',
+      url: '/api/graph/part/chunk-1',
+      size: 256,
+      nodes: 2,
+      edges: 0,
+      depth: 1,
+    },
+  ],
+};
+
+const graphChunkPayload = {
+  nodes: [
+    {
+      id: 'Billing API',
+      urn: 'urn:proto:api:fixtures/billing@1.0.0',
+      type: 'api',
+      format: 'api',
+      version: '1.0.0',
+      source: 'test-fixture',
+    },
+    {
+      id: 'Users Schema',
+      urn: 'urn:proto:data:fixtures/users@1.0.0',
+      type: 'data',
+      format: 'data',
+      version: '1.0.0',
+      source: 'test-fixture',
+    },
+  ],
+  edges: [],
+  summary: {
+    nodes: 2,
+    edges: 0,
+    depth: 1,
+  },
+  served_at: new Date().toISOString(),
+};
+
 const jsonResponse = (data) => ({
   ok: true,
   status: 200,
@@ -70,6 +146,18 @@ const createFetchMock = () =>
 
     if (url.includes('/api/manifest/')) {
       return Promise.resolve(jsonResponse(manifestDetailPayload));
+    }
+
+    if (url.endsWith('/api/validate')) {
+      return Promise.resolve(jsonResponse(validatePayload));
+    }
+
+    if (url.endsWith('/api/graph')) {
+      return Promise.resolve(jsonResponse(graphIndexPayload));
+    }
+
+    if (url.includes('/api/graph/part/')) {
+      return Promise.resolve(jsonResponse(graphChunkPayload));
     }
 
     return Promise.reject(new Error(`Unhandled fetch in test: ${url}`));

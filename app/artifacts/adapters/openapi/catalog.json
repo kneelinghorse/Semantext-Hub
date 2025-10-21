@@ -1,0 +1,74 @@
+{
+  "adapter": {
+    "name": "openapi",
+    "type": "api",
+    "version": "0.1.0"
+  },
+  "source": {
+    "original": "app/adapters/openapi/fixtures/spec.json",
+    "stored": "spec.json",
+    "format": "json",
+    "checksum": "8a02e7cafb321516bce716bd2825c084063c3f280472ca85f38c260f830d13dd",
+    "bytes": 6939
+  },
+  "capabilities": [
+    "adapter.api.discover",
+    "adapter.api.normalize"
+  ],
+  "summary": {
+    "title": "Swagger Petstore",
+    "version": "1.0.0",
+    "itemsCount": 8,
+    "operations": [
+      {
+        "method": "PUT",
+        "path": "/pet",
+        "operationId": "updatePet",
+        "summary": "Update an existing pet"
+      },
+      {
+        "method": "POST",
+        "path": "/pet",
+        "operationId": "addPet",
+        "summary": "Add a new pet to the store"
+      },
+      {
+        "method": "GET",
+        "path": "/pet/{petId}",
+        "operationId": "getPetById",
+        "summary": "Find pet by ID"
+      },
+      {
+        "method": "DELETE",
+        "path": "/pet/{petId}",
+        "operationId": "deletePet",
+        "summary": "Deletes a pet"
+      },
+      {
+        "method": "GET",
+        "path": "/store/inventory",
+        "operationId": "getInventory",
+        "summary": "Returns pet inventories by status"
+      },
+      {
+        "method": "POST",
+        "path": "/store/order",
+        "operationId": "placeOrder",
+        "summary": "Place an order for a pet"
+      },
+      {
+        "method": "POST",
+        "path": "/user",
+        "operationId": "createUser",
+        "summary": "Create user"
+      },
+      {
+        "method": "GET",
+        "path": "/user/{username}",
+        "operationId": "getUserByName",
+        "summary": "Get user by user name"
+      }
+    ]
+  },
+  "generated_at": "2025-10-18T00:03:36.975Z"
+}

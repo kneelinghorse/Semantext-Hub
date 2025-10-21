@@ -7,14 +7,27 @@
 
 import { WorkflowAdapter, EventAdapterConfig, ValidationError, AdapterExecutionError } from '../types.js';
 
+export class EventEmissionError extends AdapterExecutionError {
+  constructor(message, originalError = null, context = {}) {
+    super(message, 'event', originalError);
+    this.name = 'EventEmissionError';
+    this.context = context;
+  }
+}
+
 /**
  * Event Adapter for workflow execution
  */
 export class EventAdapter extends WorkflowAdapter {
   constructor(config = {}) {
     super();
+    const hasCustomBus = Object.prototype.hasOwnProperty.call(config, 'eventBus');
+    const providedEventBus = hasCustomBus ? config.eventBus : undefined;
+
     this.config = new EventAdapterConfig(config);
-    this.eventBus = config.eventBus || this.createDefaultEventBus();
+    const shouldUseDefaultBus =
+      providedEventBus === undefined || providedEventBus === 'default';
+    this.eventBus = shouldUseDefaultBus ? this.createDefaultEventBus() : providedEventBus;
   }
 
   /**
@@ -84,19 +97,21 @@ export class EventAdapter extends WorkflowAdapter {
       errors.push(new ValidationError('Event name must be a non-empty string', 'event'));
     }
 
-    if (input.priority !== undefined) {
-      if (typeof input.priority !== 'number' || input.priority < 0 || input.priority > 10) {
+    if ('priority' in input) {
+      const priority = input.priority;
+      if (typeof priority !== 'number' || Number.isNaN(priority) || priority < 0 || priority > 10) {
         errors.push(new ValidationError('Priority must be a number between 0 and 10', 'priority'));
       }
     }
 
-    if (input.ttl !== undefined) {
-      if (typeof input.ttl !== 'number' || input.ttl <= 0) {
+    if ('ttl' in input) {
+      const ttl = input.ttl;
+      if (typeof ttl !== 'number' || !Number.isFinite(ttl) || ttl <= 0) {
         errors.push(new ValidationError('TTL must be a positive number', 'ttl'));
       }
     }
 
-    if (input.routingKey && typeof input.routingKey !== 'string') {
+    if ('routingKey' in input && typeof input.routingKey !== 'string') {
       errors.push(new ValidationError('Routing key must be a string', 'routingKey'));
     }
 
@@ -127,11 +142,10 @@ export class EventAdapter extends WorkflowAdapter {
       const result = await this.emitEvent(eventData);
       return this.processResult(result, context);
     } catch (error) {
-      throw new AdapterExecutionError(
-        `Event emission failed: ${error.message}`,
-        'event',
-        error
-      );
+      if (error instanceof EventEmissionError) {
+        throw error;
+      }
+      throw new EventEmissionError(`Event emission failed: ${error.message}`, error, { event: input?.event });
     }
   }
 
@@ -174,11 +188,16 @@ export class EventAdapter extends WorkflowAdapter {
    */
   async emitEvent(eventData) {
     if (!this.eventBus || typeof this.eventBus.emit !== 'function') {
-      throw new Error('Event bus not available or invalid');
+      throw new EventEmissionError('Event emission failed: Event bus not available or invalid');
     }
 
-    const result = await this.eventBus.emit(eventData.event, eventData);
-    
+    let result;
+    try {
+      result = await this.eventBus.emit(eventData.event, eventData);
+    } catch (error) {
+      throw new EventEmissionError(`Event emission failed: ${error.message}`, error, { event: eventData.event });
+    }
+
     // Add event metadata to result
     return {
       ...result,

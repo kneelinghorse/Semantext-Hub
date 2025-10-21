@@ -25,7 +25,7 @@ import { HashGenerator } from './utils/hash-generator.js';
 import { ManifestConverter } from './utils/manifest-converter.js';
 import { ExternalRefResolver } from './utils/external-ref-resolver.js';
 import { CircularRefDetector } from './utils/circular-ref-detector.js';
-import { ErrorCollector, createError, wrapError } from './utils/error-model.js';
+import { ErrorCollector, createError, wrapError, ParserError } from './utils/error-model.js';
 import { ProgressTracker } from './utils/progress-tracker.js';
 import { Readable } from 'stream';
 
@@ -34,13 +34,13 @@ import { Readable } from 'stream';
  */
 class OpenAPIParser {
   constructor(options = {}) {
-    this.options = {
+    const defaultOptions = {
       // Core parsing options
       streaming: true,           // Enable streaming for large files
       resolveRefs: 'all',        // 'local' | 'all' | 'none'
       validateSpec: true,        // Validate OpenAPI spec structure
       generateHash: true,        // Generate deterministic content hash
-      strictMode: false,         // Fail on any parsing errors
+      strictMode: true,          // Fail on any parsing errors by default
 
       // B7.1.1: External ref resolution
       refCache: true,            // Cache external refs
@@ -53,15 +53,33 @@ class OpenAPIParser {
       allowCircular: false,      // Fail or warn on circular refs
 
       // B7.1.1: Error handling
-      errorMode: 'collect',      // 'throw' | 'collect' | 'ignore'
+      errorMode: 'throw',        // 'throw' | 'collect' | 'ignore'
       maxErrors: 100,            // Max errors to collect
       maxWarnings: 200,          // Max warnings to collect
 
       // B7.1.1: Progress tracking
-      progressTracking: false,   // Emit progress events (opt-in)
-
-      ...options
+      progressTracking: false    // Emit progress events (opt-in)
     };
+
+    const userRequestedErrorMode = options.errorMode;
+    const errorCollectionEnabled = options.errorCollection === true || userRequestedErrorMode === 'collect';
+    const mergedOptions = { ...defaultOptions, ...options };
+
+    mergedOptions.strictMode = options.strictMode ?? (!errorCollectionEnabled);
+    mergedOptions.errorCollection = errorCollectionEnabled;
+
+    if (userRequestedErrorMode) {
+      mergedOptions.errorMode = userRequestedErrorMode;
+    } else {
+      mergedOptions.errorMode = mergedOptions.strictMode && !errorCollectionEnabled ? 'throw' : 'collect';
+    }
+
+    if (mergedOptions.errorCollection) {
+      mergedOptions.errorMode = 'collect';
+      mergedOptions.strictMode = false;
+    }
+
+    this.options = mergedOptions;
 
     // Initialize core components
     this.streamParser = new StreamParser();
@@ -167,7 +185,7 @@ class OpenAPIParser {
         security: spec.security || [],
         tags: spec.tags || [],
         externalDocs: spec.externalDocs || null,
-        hash: specHash,
+        hash: this.options.generateHash ? specHash : undefined,
 
         // B7.1.1: Enhanced metadata
         metadata: {
@@ -211,7 +229,8 @@ class OpenAPIParser {
 
       // Collect error
       try {
-        this.errorCollector.add(wrapError(error, 'PARSE_001'));
+        const parserError = error instanceof ParserError ? error : wrapError(error, 'PARSE_001');
+        this.errorCollector.add(parserError);
       } catch (e) {
         // Error collector is full or error adding
       }
@@ -350,9 +369,11 @@ class OpenAPIParser {
       this.progressTracker.completeStage('streaming');
       return rawSpec;
     } catch (error) {
-      const parserError = wrapError(error, 'PARSE_001', {
-        path: typeof source === 'string' ? source : 'unknown'
-      });
+      const parserError = error instanceof ParserError
+        ? error
+        : wrapError(error, 'PARSE_001', {
+            path: typeof source === 'string' ? source : 'unknown'
+          });
       this.errorCollector.add(parserError);
       throw parserError;
     }
@@ -418,8 +439,7 @@ class OpenAPIParser {
       const result = this.circularDetector.detectCircular(spec, this.externalRefs);
       this.progressTracker.completeStage('detecting_circular');
 
-      if (result.hasCircular && !this.options.allowCircular) {
-        // Add as warning or error based on options
+      if (result.hasCircular) {
         const error = createError('REF_002', `Found ${result.cycles.length} circular reference(s)`, {
           severity: this.options.allowCircular ? 'WARN' : 'ERROR',
           metadata: {
@@ -524,14 +544,19 @@ class OpenAPIParser {
    * @private
    */
   _createPartialSpec(source, error) {
+    const errors = [...this.errorCollector.errors];
+    const warnings = [...this.errorCollector.warnings];
+
     return {
       error: true,
       message: error.message,
       code: error.code || 'GENERAL_001',
       source: typeof source === 'string' ? source : 'unknown',
       timestamp: new Date().toISOString(),
-      errors: this.errorCollector.errors,
-      warnings: this.errorCollector.warnings,
+      errors,
+      warnings,
+      hasErrors: errors.length > 0,
+      hasWarnings: warnings.length > 0,
       parsedSpec: this.parsedSpec // May be partially complete
     };
   }
@@ -544,7 +569,7 @@ class OpenAPIParser {
     const version = spec.openapi || spec.swagger;
 
     if (!version) {
-      throw createError('OPENAPI_002', 'Missing openapi or swagger version field', {
+      throw createError('OPENAPI_002', 'missing openapi or swagger version field', {
         path: 'openapi|swagger'
       });
     }

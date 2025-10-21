@@ -1,0 +1,13 @@
+{
+  "protocol": {
+    "urn": "urn:proto:test:service-47",
+    "kind": "api",
+    "version": "1.0.0",
+    "name": "Service 47",
+    "dependencies": []
+  },
+  "event": {
+    "urn": "urn:event:test:service-47",
+    "kind": "api"
+  }
+}

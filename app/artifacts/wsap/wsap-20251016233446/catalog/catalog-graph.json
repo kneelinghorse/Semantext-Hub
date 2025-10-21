@@ -1,0 +1,43 @@
+{
+  "id": "catalog-graph",
+  "name": "OSSP-AGI Protocol Catalog",
+  "description": "Canonical property graph representation of the OSSP-AGI catalog manifests.",
+  "version": "1.0.0",
+  "generatedAt": "2025-10-16T23:34:46.432Z",
+  "nodes": [
+    {
+      "id": "206eb2b73411e6c9",
+      "label": "GitHub API (Demo Subset)",
+      "type": "api",
+      "domain": "api",
+      "urn": "urn:proto:api:github-api-demo-subset/service",
+      "path": "approved/api-manifest.approved.json",
+      "metadata": {
+        "version": "1.0.0",
+        "kind": "api",
+        "domain": "api",
+        "status": "approved"
+      }
+    }
+  ],
+  "edges": [],
+  "metadata": {
+    "workspace": "/Users/d/portfolio/OSSP-AGI/app/artifacts/wsap/wsap-20251016233446",
+    "inputs": [
+      "approved/api-manifest.approved.json"
+    ],
+    "counts": {
+      "manifests": 1,
+      "nodes": 1,
+      "edges": 0
+    },
+    "filters": null,
+    "stats": {
+      "discarded": {
+        "nodes": 0
+      },
+      "externalNodes": 0,
+      "relationshipsProcessed": 0
+    }
+  }
+}

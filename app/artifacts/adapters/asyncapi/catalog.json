@@ -1,0 +1,38 @@
+{
+  "adapter": {
+    "name": "asyncapi",
+    "type": "event",
+    "version": "0.1.0"
+  },
+  "source": {
+    "original": "app/adapters/asyncapi/fixtures/minimal.json",
+    "stored": "minimal.json",
+    "format": "json",
+    "checksum": "512fbd6aea623abbfe470084ba4198ee5983ce34a8312f89e45e4c718767bc7f",
+    "bytes": 790
+  },
+  "capabilities": [
+    "adapter.event.discover",
+    "adapter.event.normalize"
+  ],
+  "summary": {
+    "title": "Minimal AsyncAPI Example",
+    "version": "0.1.0",
+    "itemsCount": 2,
+    "channels": [
+      {
+        "channel": "user/created",
+        "description": null,
+        "publish": true,
+        "subscribe": false
+      },
+      {
+        "channel": "user/deleted",
+        "description": null,
+        "publish": true,
+        "subscribe": false
+      }
+    ]
+  },
+  "generated_at": "2025-10-18T00:03:37.032Z"
+}

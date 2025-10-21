@@ -48,6 +48,8 @@ const isURN = s => typeof s==='string' && /^urn:proto:(api|data|event|ui|workflo
  * @property {string} [release.window]         // e.g., '2025-10-01T02:00Z..2025-10-01T03:00Z'
  * @property {SignatureEnvelope[]} [release.attestations]
  *
+ * @property {{status:'pending'|'verified'|'failed', verifiedAt?:string, summary?:string, signers?:string[], sessionIds?:string[], artifacts?:Array<{name:string, sha256:string, keyId?:string, algorithm?:string}>, attestations?:SignatureEnvelope[]}} [promotion]
+ *
  * @property {Object} strategy                 // how to roll out
  * @property {'all_at_once'|'blue_green'|'canary'|'rolling'} strategy.type
  * @property {{traffic_split?:Array<{percent:number, duration:string}>}} [strategy.canary]
@@ -145,6 +147,70 @@ registerValidator('release.attestations',(m)=>{
   return { ok: issues.length===0, issues };
 });
 
+registerValidator('promotion',(m)=>{
+  const promotion = m?.promotion;
+  const issues=[];
+  if (promotion == null) return { ok:true, issues };
+  const allowedStatus = new Set(['pending','verified','failed']);
+  if (promotion.status && !allowedStatus.has(promotion.status)){
+    issues.push({ path:'promotion.status', msg:'promotion.status must be pending|verified|failed', level:'error' });
+  }
+  if (promotion.signers != null){
+    if (!Array.isArray(promotion.signers)){
+      issues.push({ path:'promotion.signers', msg:'signers must be an array of strings', level:'error' });
+    } else {
+      promotion.signers.forEach((value,index)=>{
+        if (typeof value !== 'string' || !value.trim()){
+          issues.push({ path:`promotion.signers[${index}]`, msg:'signer must be a non-empty string', level:'error' });
+        }
+      });
+    }
+  }
+  if (promotion.sessionIds != null){
+    if (!Array.isArray(promotion.sessionIds)){
+      issues.push({ path:'promotion.sessionIds', msg:'sessionIds must be an array of strings', level:'error' });
+    } else {
+      promotion.sessionIds.forEach((value,index)=>{
+        if (typeof value !== 'string' || !value.trim()){
+          issues.push({ path:`promotion.sessionIds[${index}]`, msg:'sessionId must be a non-empty string', level:'error' });
+        }
+      });
+    }
+  }
+  if (promotion.artifacts != null){
+    if (!Array.isArray(promotion.artifacts)){
+      issues.push({ path:'promotion.artifacts', msg:'artifacts must be an array', level:'error' });
+    } else {
+      promotion.artifacts.forEach((entry,index)=>{
+        if (!entry || typeof entry !== 'object'){
+          issues.push({ path:`promotion.artifacts[${index}]`, msg:'artifact entry must be an object', level:'error' });
+        } else {
+          if (typeof entry.name !== 'string' || !entry.name.trim()){
+            issues.push({ path:`promotion.artifacts[${index}].name`, msg:'artifact.name must be a non-empty string', level:'error' });
+          }
+          if (typeof entry.sha256 !== 'string' || !entry.sha256.trim()){
+            issues.push({ path:`promotion.artifacts[${index}].sha256`, msg:'artifact.sha256 must be a non-empty string', level:'error' });
+          }
+        }
+      });
+    }
+  }
+  if (promotion.attestations != null){
+    if (!Array.isArray(promotion.attestations)){
+      issues.push({ path:'promotion.attestations', msg:'promotion.attestations must be an array', level:'error' });
+    } else {
+      promotion.attestations.forEach((sig,index)=>{
+        if (!sig || typeof sig !== 'object'){
+          issues.push({ path:`promotion.attestations[${index}]`, msg:'attestation must be an object', level:'error' });
+        } else if (sig.spec !== 'identity-access.signing.v1'){
+          issues.push({ path:`promotion.attestations[${index}].spec`, msg:'attestation must declare identity-access.signing.v1', level:'error' });
+        }
+      });
+    }
+  }
+  return { ok: issues.length===0, issues };
+});
+
 registerValidator('relationships.targets',(m)=>{
   const issues=[]; for(const [i,u] of (m?.relationships?.targets||[]).entries()){ if(!isURN(u)) issues.push({path:`relationships.targets[${i}]`,msg:'invalid URN',level:'error'}); }
   for(const [i,u] of (m?.relationships?.observability||[]).entries()){ if(!isURN(u)) issues.push({path:`relationships.observability[${i}]`,msg:'invalid URN',level:'error'}); }
@@ -180,6 +246,7 @@ function normalize(m){
   n.gates_hash     = hash(n.gates||{});
   n.rollback_hash  = hash(n.rollback||{});
   n.changeset_hash = hash(n.changeset||[]);
+  n.promotion_hash = hash(n.promotion||{});
   n.attestations_hash = hash(n.release?.attestations||[]);
   n.link_hash      = hash(n.relationships||{});
   n.comms_hash     = hash(n.comms||{});
@@ -201,6 +268,7 @@ function diff(a,b){
     if(c.path==='rollback_hash')significant.push({...c, reason:'rollback policy changed'});
     if(c.path==='changeset_hash') significant.push({...c, reason:'changeset changed'});
     if(c.path==='attestations_hash') significant.push({...c, reason:'release attestations changed'});
+    if(c.path==='promotion_hash') significant.push({...c, reason:'promotion verification changed'});
     if(c.path==='link_hash')    significant.push({...c, reason:'release coverage links changed'});
     if(c.path==='comms_hash')   significant.push({...c, reason:'comms plan changed'});
   }

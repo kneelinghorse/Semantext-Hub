@@ -45,11 +45,23 @@ export class WorkflowAdapter {
  */
 export class HttpAdapterConfig {
   constructor(options = {}) {
-    this.baseUrl = options.baseUrl || '';
-    this.timeout = options.timeout || 30000;
+    this.baseUrl = typeof options.baseUrl === 'string' ? options.baseUrl : '';
+    const timeoutCandidate = Number(
+      Object.prototype.hasOwnProperty.call(options, 'timeout') ? options.timeout : 30000,
+    );
+    this.timeout =
+      Number.isFinite(timeoutCandidate) && timeoutCandidate > 0 ? timeoutCandidate : 30000;
     this.headers = options.headers || {};
-    this.retries = options.retries || 3;
-    this.retryDelay = options.retryDelay || 1000;
+    const retriesCandidate = Object.prototype.hasOwnProperty.call(options, 'retries')
+      ? options.retries
+      : 3;
+    this.retries =
+      Number.isInteger(retriesCandidate) && retriesCandidate >= 0 ? retriesCandidate : 3;
+    const retryDelayCandidate = Number(
+      Object.prototype.hasOwnProperty.call(options, 'retryDelay') ? options.retryDelay : 1000,
+    );
+    this.retryDelay =
+      Number.isFinite(retryDelayCandidate) && retryDelayCandidate >= 0 ? retryDelayCandidate : 1000;
   }
 }
 
@@ -58,7 +70,10 @@ export class HttpAdapterConfig {
  */
 export class EventAdapterConfig {
   constructor(options = {}) {
-    this.eventBus = options.eventBus || 'default';
+    this.eventBus =
+      options.eventBus !== undefined && options.eventBus !== null
+        ? options.eventBus
+        : 'default';
     this.routingKey = options.routingKey || '';
     this.persistent = options.persistent || false;
     this.priority = options.priority || 0;

@@ -1,8 +1,28 @@
 {
   "version": 1,
-  "generated_at": "2025-10-16T00:00:00Z",
+  "generated_at": "2025-10-20T00:00:00Z",
   "budgets": {
     "wsap": {
+      "import": {
+        "avg": 200,
+        "p95": 400
+      },
+      "approve": {
+        "avg": 60,
+        "p95": 120
+      },
+      "catalog": {
+        "avg": 80,
+        "p95": 150
+      },
+      "diagram": {
+        "avg": 120,
+        "p95": 200
+      },
+      "cytoscape": {
+        "avg": 50,
+        "p95": 100
+      },
       "ingest": {
         "avg": 2500,
         "p95": 4000
@@ -16,6 +36,18 @@
         "p95": 3600
       }
     },
+    "a2a": {
+      "echo": {
+        "avg": 120,
+        "p95": 200
+      }
+    },
+    "release:canary": {
+      "a2a.echo": {
+        "avg": 120,
+        "p95": 200
+      }
+    },
     "cli": {
       "perf-status": {
         "avg": 1500,
@@ -26,6 +58,28 @@
       "dispatch": {
         "avg": 1200,
         "p95": 2000
+      }
+    },
+    "registry": {
+      "health": {
+        "avg": 50,
+        "p95": 100
+      },
+      "openapi": {
+        "avg": 75,
+        "p95": 150
+      },
+      "registry_get": {
+        "avg": 100,
+        "p95": 150
+      },
+      "registry_put": {
+        "avg": 120,
+        "p95": 200
+      },
+      "resolve": {
+        "avg": 200,
+        "p95": 300
       }
     }
   }

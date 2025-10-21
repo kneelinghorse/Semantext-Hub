@@ -2,8 +2,10 @@
 export default {
   testEnvironment: 'node',
   extensionsToTreatAsEsm: ['.ts', '.tsx'],
-  transform: { '^.+\\.(t|j)sx?$': ['babel-jest', { rootMode: 'upward' }] },
-  testMatch: ['**/tests/**/*.test.(ts|js)', '**/tests/**/*.spec.(ts|js)'],
+  transform: {
+    '^.+\\.(mjs|cjs|ts|tsx|js|jsx)$': ['babel-jest', { rootMode: 'upward' }]
+  },
+  testMatch: ['**/tests/**/*.test.(ts|js|mjs)', '**/tests/**/*.spec.(ts|js|mjs)'],
   setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
   verbose: true
 };

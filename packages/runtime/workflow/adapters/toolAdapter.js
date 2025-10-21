@@ -5,6 +5,7 @@
  * error propagation, and runtime tool registry integration.
  */
 
+import { performance } from 'node:perf_hooks';
 import { WorkflowAdapter, ToolAdapterConfig, ValidationError, AdapterExecutionError } from '../types.js';
 
 /**
@@ -51,7 +52,14 @@ export class ToolAdapter extends WorkflowAdapter {
         if (typeof ms !== 'number' || ms < 0) {
           throw new Error('ms must be a non-negative number');
         }
-        await new Promise(resolve => setTimeout(resolve, ms));
+        const delayMs = Math.max(0, Math.ceil(ms));
+        const start = performance.now();
+        let remaining = delayMs;
+        while (remaining > 0) {
+          const nextDelay = Math.max(1, Math.ceil(remaining));
+          await new Promise(resolve => setTimeout(resolve, nextDelay));
+          remaining = delayMs - (performance.now() - start);
+        }
         return { result: `Delayed for ${ms}ms` };
       }
     });

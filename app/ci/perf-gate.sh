@@ -131,21 +131,27 @@ fail=0
 
 if [[ -n "$avg_budget" ]]; then
   printf '  avg budget <= %.2fms\n' "$avg_budget"
+  avg_diff=$(awk -v actual="$avg" -v limit="$avg_budget" 'BEGIN { printf "%.2f", actual - limit }')
   if awk -v actual="$avg" -v limit="$avg_budget" 'BEGIN { exit(actual > limit ? 0 : 1) }'; then
-    printf '  [FAIL] avg exceeded: %.2fms > %.2fms\n' "$avg" "$avg_budget"
+    over=${avg_diff#-}
+    printf '  [FAIL] avg exceeded: %.2fms > %.2fms (+%.2fms)\n' "$avg" "$avg_budget" "$over"
     fail=1
   else
-    printf '  [OK] avg within budget\n'
+    headroom=$(awk -v actual="$avg" -v limit="$avg_budget" 'BEGIN { printf "%.2f", limit - actual }')
+    printf '  [OK] avg within budget (%.2fms headroom)\n' "$headroom"
   fi
 fi
 
 if [[ -n "$p95_budget" ]]; then
   printf '  p95 budget <= %.2fms\n' "$p95_budget"
+  p95_diff=$(awk -v actual="$p95" -v limit="$p95_budget" 'BEGIN { printf "%.2f", actual - limit }')
   if awk -v actual="$p95" -v limit="$p95_budget" 'BEGIN { exit(actual > limit ? 0 : 1) }'; then
-    printf '  [FAIL] p95 exceeded: %.2fms > %.2fms\n' "$p95" "$p95_budget"
+    over=${p95_diff#-}
+    printf '  [FAIL] p95 exceeded: %.2fms > %.2fms (+%.2fms)\n' "$p95" "$p95_budget" "$over"
     fail=1
   else
-    printf '  [OK] p95 within budget\n'
+    headroom=$(awk -v actual="$p95" -v limit="$p95_budget" 'BEGIN { printf "%.2f", limit - actual }')
+    printf '  [OK] p95 within budget (%.2fms headroom)\n' "$headroom"
   fi
 fi
 

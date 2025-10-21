@@ -1,0 +1,82 @@
+{
+  "release": {
+    "version": "0.1.0",
+    "lifecycle": {
+      "status": "preflight_pending",
+      "notes": "Awaiting Release Gate execution (preflight → canary → promote)."
+    }
+  },
+  "strategy": {
+    "type": "progressive",
+    "details": "Gate promotion runs after canary success with automatic rollback on breach."
+  },
+  "rollback": {
+    "mode": "automatic",
+    "contact": "release.oncall@ossp.dev"
+  },
+  "changeset": [],
+  "relationships": {},
+  "promotion": {
+    "status": "verified",
+    "verifiedAt": "2025-10-17T13:26:55.627Z",
+    "summary": "Promotion verification: report.json=ok, diagram.drawio=ok",
+    "signers": [
+      "urn:proto:wsap:signing:wsap-20251017132644"
+    ],
+    "sessionIds": [
+      "wsap-20251017132644"
+    ],
+    "artifacts": [
+      {
+        "name": "report.json",
+        "sha256": "jVXzpN-r615G6mTzydWczkzaqXv3TcZlq5i7A1FUZm8",
+        "keyId": "urn:proto:wsap:signing:wsap-20251017132644",
+        "algorithm": "EdDSA"
+      },
+      {
+        "name": "diagram.drawio",
+        "sha256": "jv01DrAjEG3sscHKVNAqJyJach7YTu8MDJ01X8NbVcM",
+        "keyId": "urn:proto:wsap:signing:wsap-20251017132644",
+        "algorithm": "EdDSA"
+      }
+    ],
+    "attestations": [
+      {
+        "spec": "identity-access.signing.v1",
+        "protected": "eyJhbGciOiJFZERTQSIsImtpZCI6InVybjpwcm90bzp3c2FwOnNpZ25pbmc6d3NhcC0yMDI1MTAxNzEzMjY0NCIsInR5cCI6ImlkZW50aXR5LWFjY2Vzcy5zaWduaW5nLnYxIiwiY2Fub25pY2FsIjoiamNzQHJmYzg3ODUiLCJkaWdlc3QiOiJzaGEtMjU2IiwiaWF0IjoiMjAyNS0xMC0xN1QxMzoyNjo0NC44MTJaIn0",
+        "payload": "eyJhcnRpZmFjdCI6InJlcG9ydC5qc29uIiwicGF0aCI6InJlcG9ydC5qc29uIiwic2Vzc2lvbklkIjoid3NhcC0yMDI1MTAxNzEzMjY0NCIsInNoYTI1NiI6ImpWWHpwTi1yNjE1RzZtVHp5ZFdjemt6YXFYdjNUY1pscTVpN0ExRlVabTgiLCJzaWduZWRBdCI6IjIwMjUtMTAtMTdUMTM6MjY6NDQuODEyWiJ9",
+        "signature": "Om20p8-3ZK3tvFpX5CYmM3Mw3kfO9p4aghbx5FciIScBAigI_oLU2kEguoSyaw73CQ0ZifbU-m1QxJTHVvkRDA",
+        "hash": {
+          "alg": "sha-256",
+          "value": "HbvqMUq-FZoXGoCWz1qS_UTgrArW39tm7r588fTdmiA"
+        },
+        "header": {
+          "alg": "EdDSA",
+          "kid": "urn:proto:wsap:signing:wsap-20251017132644",
+          "typ": "identity-access.signing.v1",
+          "canonical": "jcs@rfc8785",
+          "digest": "sha-256",
+          "iat": "2025-10-17T13:26:44.812Z"
+        }
+      },
+      {
+        "spec": "identity-access.signing.v1",
+        "protected": "eyJhbGciOiJFZERTQSIsImtpZCI6InVybjpwcm90bzp3c2FwOnNpZ25pbmc6d3NhcC0yMDI1MTAxNzEzMjY0NCIsInR5cCI6ImlkZW50aXR5LWFjY2Vzcy5zaWduaW5nLnYxIiwiY2Fub25pY2FsIjoiamNzQHJmYzg3ODUiLCJkaWdlc3QiOiJzaGEtMjU2IiwiaWF0IjoiMjAyNS0xMC0xN1QxMzoyNjo0NC44MTNaIn0",
+        "payload": "eyJhcnRpZmFjdCI6ImRpYWdyYW0uZHJhd2lvIiwicGF0aCI6ImRyYXdpby9jYXRhbG9nLmRyYXdpbyIsInNlc3Npb25JZCI6IndzYXAtMjAyNTEwMTcxMzI2NDQiLCJzaGEyNTYiOiJqdjAxRHJBakVHM3NzY0hLVk5BcUp5SmFjaDdZVHU4TURKMDFYOE5iVmNNIiwic2lnbmVkQXQiOiIyMDI1LTEwLTE3VDEzOjI2OjQ0LjgxMloifQ",
+        "signature": "e_EF49cjClhjeC03gL_2IZhb2245DlrmDcqg1MPOP2iD16GEI9mX9ADoWzOM9I7egRzN36cloiIIdPm4DZHPBg",
+        "hash": {
+          "alg": "sha-256",
+          "value": "-r7J0azIgYuBGfdI8stxWYbERJdNFEndFv9mQXHLcAg"
+        },
+        "header": {
+          "alg": "EdDSA",
+          "kid": "urn:proto:wsap:signing:wsap-20251017132644",
+          "typ": "identity-access.signing.v1",
+          "canonical": "jcs@rfc8785",
+          "digest": "sha-256",
+          "iat": "2025-10-17T13:26:44.813Z"
+        }
+      }
+    ]
+  }
+}

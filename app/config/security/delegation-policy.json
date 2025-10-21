@@ -1,0 +1,15 @@
+{
+  "mode": "permissive",
+  "agents": {
+    "mcp:codex": {
+      "allow": ["registry:read", "registry:write", "resolve:read"]
+    },
+    "cli:local": {
+      "allow": ["registry:read", "resolve:read"]
+    }
+  },
+  "resources": [
+    "urn:protocol:api:*"
+  ]
+}
+
