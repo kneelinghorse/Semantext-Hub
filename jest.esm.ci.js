@@ -6,6 +6,6 @@ export default {
     '^.+\\.(mjs|cjs|ts|tsx|js|jsx)$': ['babel-jest', { rootMode: 'upward' }]
   },
   testMatch: ['**/tests/**/*.test.(ts|js|mjs)', '**/tests/**/*.spec.(ts|js|mjs)'],
-  setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
+  setupFilesAfterEnv: ['<rootDir>/tests/setup.cjs'],
   verbose: true
 };

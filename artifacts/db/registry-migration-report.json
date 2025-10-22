@@ -1,0 +1,19 @@
+{
+  "generated_at": "2025-10-22T14:30:22.493Z",
+  "source": {
+    "path": "/Users/d/portfolio/OSSP-AGI/var/file-store",
+    "manifests": 0
+  },
+  "target": {
+    "path": "var/registry.sqlite",
+    "manifests": 3
+  },
+  "imported": 0,
+  "importErrors": 0,
+  "schemaVersion": 1,
+  "integrity": {
+    "manifestParity": null,
+    "errorFree": true
+  },
+  "status": "ok"
+}

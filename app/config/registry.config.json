@@ -1,0 +1,10 @@
+{
+  "dbPath": "var/registry.sqlite",
+  "pragmas": {
+    "journal_mode": "WAL",
+    "synchronous": "NORMAL"
+  },
+  "poolSize": 10
+}
+
+

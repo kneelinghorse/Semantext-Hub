@@ -64,10 +64,12 @@ const createProject = (overrides = {}) => {
     displayName,
     testEnvironment: 'node',
     extensionsToTreatAsEsm: ['.ts', '.tsx'],
-    transform: { '^.+\\.(t|j)sx?$': ['babel-jest', { rootMode: 'upward' }] },
+    transform: {
+      '^.+\\.(mjs|cjs|ts|tsx|js|jsx)$': ['babel-jest', { rootMode: 'upward' }],
+    },
     testMatch,
     testPathIgnorePatterns: testPathIgnorePatterns ?? BASE_IGNORE_PATTERNS,
-    setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
+    setupFilesAfterEnv: ['<rootDir>/tests/setup.cjs'],
     moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'mjs', 'json', 'node'],
     moduleNameMapper: {
       '^@/(.*)$': '<rootDir>/$1',
