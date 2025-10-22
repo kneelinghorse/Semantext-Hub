@@ -32,8 +32,11 @@ Thumbs.db
 
 # Documentation (not needed in container)
 docs/
+!docs/security/
 *.md
 !README.md
+!GOVERNANCE.md
+!docs/security/provenance-attestations.md
 
 # Development files
 .env
@@ -75,3 +78,5 @@ smart_migrate.js
 
 # Package files (will be copied separately)
 package*.json
+!package.json
+!package-lock.json

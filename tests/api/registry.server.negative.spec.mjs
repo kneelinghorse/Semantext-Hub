@@ -361,6 +361,63 @@ describe('Registry Service Negative Paths', () => {
       check: (res) => expect(JSON.stringify(res.body.details)).toContain('`sig.hash` is required and must be an object.'),
     },
     {
+      name: 'provenance not object',
+      body: {
+        urn: 'urn:test',
+        card: { id: 'test', name: 'Test', capabilities: { tools: [] }, communication: {}, authorization: {} },
+        sig: {
+          spec: 'identity-access.signing.v1',
+          protected: 'x',
+          payload: 'x',
+          signature: 'x',
+          hash: { alg: 'sha256', value: 'deadbeef' },
+        },
+        provenance: [],
+      },
+      check: (res) => expect(JSON.stringify(res.body.details)).toContain('`provenance` must be an object'),
+    },
+    {
+      name: 'provenance missing payload/signatures',
+      body: {
+        urn: 'urn:test',
+        card: { id: 'test', name: 'Test', capabilities: { tools: [] }, communication: {}, authorization: {} },
+        sig: {
+          spec: 'identity-access.signing.v1',
+          protected: 'x',
+          payload: 'x',
+          signature: 'x',
+          hash: { alg: 'sha256', value: 'deadbeef' },
+        },
+        provenance: {
+          payloadType: 'application/vnd.in-toto+json',
+        },
+      },
+      check: (res) => {
+        const details = JSON.stringify(res.body.details);
+        expect(details).toContain('`provenance.payload`');
+        expect(details).toContain('`provenance.signatures`');
+      },
+    },
+    {
+      name: 'provenance missing payloadType',
+      body: {
+        urn: 'urn:test',
+        card: { id: 'test', name: 'Test', capabilities: { tools: [] }, communication: {}, authorization: {} },
+        sig: {
+          spec: 'identity-access.signing.v1',
+          protected: 'x',
+          payload: 'x',
+          signature: 'x',
+          hash: { alg: 'sha256', value: 'deadbeef' },
+        },
+        provenance: {
+          payload: 'YWJj',
+          signatures: [{ keyid: 'k', sig: 'c2ln', alg: 'Ed25519' }],
+        },
+      },
+      check: (res) => expect(JSON.stringify(res.body.details)).toContain('`provenance.payloadType`'),
+    },
+    {
       name: 'sig.hash.value wrong type',
       body: {
         urn: 'urn:test',
@@ -972,8 +1029,159 @@ describe('Registry Service Negative Paths', () => {
   test('SignatureVerifier handles missing signature envelope', async () => {
     const context = await createRegistryTestContext();
     const verification = await context.signatureVerifier.verify({ card: cloneCard(), sig: null });
-    expect(verification.errors).toContain('invalid_protected_header');
+    expect(verification.errors).toContain('unsigned');
     expect(verification.shouldReject).toBe(true);
+  });
+
+  test('SignatureVerifier permissive mode allows missing signature', async () => {
+    const context = await createRegistryTestContext({
+      signaturePolicy: {
+        version: 2,
+        mode: 'permissive',
+        requireSignature: false,
+        allowedIssuers: [],
+        algorithms: ['EdDSA'],
+      },
+    });
+    const verification = await context.signatureVerifier.verify({ card: cloneCard(), sig: null });
+    expect(verification.errors).toContain('Signature envelope is required.');
+    expect(verification.shouldReject).toBe(false);
+  });
+
+  test('SignatureVerifier permissive mode reports missing key but does not reject', async () => {
+    const context = await createRegistryTestContext({
+      signaturePolicy: {
+        version: 2,
+        mode: 'permissive',
+        requireSignature: true,
+        allowedIssuers: [],
+        algorithms: ['EdDSA'],
+      },
+    });
+    const card = cloneCard();
+    const verification = await context.signatureVerifier.verify({
+      card,
+      sig: {
+        spec: 'identity-access.signing.v1',
+        protected: Buffer.from(JSON.stringify({ alg: 'EdDSA', kid: 'missing' })).toString('base64url'),
+        payload: Buffer.from(JSON.stringify(card)).toString('base64url'),
+        signature: 'invalid',
+        hash: { alg: 'sha256', value: 'deadbeef' },
+      },
+    });
+    expect(verification.errors.join(' ')).toContain('No signature policy entry for key');
+    expect(verification.shouldReject).toBe(false);
+  });
+
+  test('SignatureVerifier permissive mode reports invalid protected header', async () => {
+    const context = await createRegistryTestContext({
+      signaturePolicy: {
+        version: 2,
+        mode: 'permissive',
+        requireSignature: true,
+        allowedIssuers: [],
+        algorithms: ['EdDSA'],
+      },
+    });
+    const card = cloneCard();
+    const verification = await context.signatureVerifier.verify({
+      card,
+      sig: {
+        spec: 'identity-access.signing.v1',
+        protected: '!!!not-base64!!!',
+        payload: Buffer.from(JSON.stringify(card)).toString('base64url'),
+        signature: 'invalid',
+        hash: { alg: 'sha256', value: 'deadbeef' },
+      },
+    });
+    expect(verification.errors).toContain('Signature protected header is missing or invalid.');
+    expect(verification.shouldReject).toBe(false);
+  });
+
+  test('SignatureVerifier permissive mode notes missing key id in header', async () => {
+    const context = await createRegistryTestContext({
+      signaturePolicy: {
+        version: 2,
+        mode: 'permissive',
+        requireSignature: true,
+        allowedIssuers: [],
+        algorithms: ['EdDSA'],
+      },
+    });
+    const card = cloneCard();
+    const header = Buffer.from(JSON.stringify({ alg: 'EdDSA' })).toString('base64url');
+    const verification = await context.signatureVerifier.verify({
+      card,
+      sig: {
+        spec: 'identity-access.signing.v1',
+        protected: header,
+        payload: Buffer.from(JSON.stringify(card)).toString('base64url'),
+        signature: 'invalid',
+        hash: { alg: 'sha256', value: 'deadbeef' },
+      },
+    });
+    expect(verification.errors.join(' ')).toContain('Signature header is missing `kid`.');
+    expect(verification.shouldReject).toBe(false);
+  });
+
+  test('v1 PUT requires provenance in enforce mode', async () => {
+    const { app, signCard } = await createRegistryTestContext();
+    const urn = 'urn:agent:provenance:missing';
+    const card = cloneCard();
+    const sig = signCard(card);
+
+    const response = await request(app)
+      .put(`/v1/registry/${encodeURIComponent(urn)}`)
+      .set('X-API-Key', API_KEY)
+      .send({ card, sig });
+
+    expect(response.status).toBe(422);
+    expect(response.body.error).toBe('missing_provenance');
+    expect(response.body.mode).toBe('enforce');
+  });
+
+  test('v1 PUT rejects invalid provenance envelope', async () => {
+    const { app, signCard, createProvenance } = await createRegistryTestContext();
+    const urn = 'urn:agent:provenance:invalid';
+    const card = cloneCard();
+    const sig = signCard(card);
+    const provenance = createProvenance({ outputs: [{ uri: urn }] });
+    // Tamper with payload to break signature validation while keeping DSSE shape
+    provenance.payload = Buffer.from('tampered').toString('base64');
+
+    const response = await request(app)
+      .put(`/v1/registry/${encodeURIComponent(urn)}`)
+      .set('X-API-Key', API_KEY)
+      .send({ card, sig, provenance });
+
+    expect(response.status).toBe(422);
+    expect(response.body.error).toBe('invalid_provenance');
+    expect(response.body.reason).toBeDefined();
+  });
+
+  test('provenance validation skips when no verification keys available', async () => {
+    const { app, signCard, createProvenance } = await createRegistryTestContext({
+      signaturePolicy: {
+        version: 2,
+        mode: 'enforce',
+        requireSignature: true,
+        allowedIssuers: [],
+        algorithms: ['EdDSA']
+      }
+    });
+    const urn = 'urn:agent:provenance:nokeys';
+    const card = cloneCard();
+    const sig = signCard(card);
+    const provenance = createProvenance({ outputs: [{ uri: urn }] });
+
+    const response = await request(app)
+      .put(`/v1/registry/${encodeURIComponent(urn)}`)
+      .set('X-API-Key', API_KEY)
+      .send({ card, sig, provenance });
+
+    expect(response.status).toBe(422);
+    expect(response.body.error).toBe('signature_invalid');
+    expect(response.body.details).toContain('unknown_issuer');
   });
 
   test('RegistryStore capability indexing returns exact and partial matches', async () => {

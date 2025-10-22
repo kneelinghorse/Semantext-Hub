@@ -369,6 +369,21 @@ class SignatureVerifier {
     
     // Use the new signature.mjs module for enforcement
     if (this.mode === 'enforce') {
+      if (!sig || typeof sig !== 'object') {
+        return {
+          valid: false,
+          errors: ['unsigned'],
+          keyId: null,
+          algorithm: null,
+          digestValid: false,
+          signatureValid: false,
+          verifiedAt: timestamp,
+          header: null,
+          enforced: true,
+          shouldReject: true,
+        };
+      }
+
       const header = decodeEnvelopeHeader(sig);
       if (!header) {
         return {
@@ -398,12 +413,12 @@ class SignatureVerifier {
         return {
           valid: false,
           errors: [result.errorReason || 'Signature verification failed'],
-          keyId: sig?.header?.kid || null,
-          algorithm: sig?.header?.alg || null,
+          keyId: header?.kid || null,
+          algorithm: header?.alg || null,
           digestValid: false,
           signatureValid: false,
           verifiedAt: timestamp,
-          header: sig?.header || null,
+          header,
           enforced: true,
           shouldReject: true,
         };

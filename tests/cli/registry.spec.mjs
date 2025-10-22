@@ -308,16 +308,20 @@ describe('CLI Registry/Resolver Commands', () => {
 
   describe('Registry v1 routes', () => {
     it('supports PUT and GET workflow with overwrite semantics', async () => {
-      const { app, signCard } = await createRegistryTestContext();
+      const { app, signCard, createProvenance } = await createRegistryTestContext();
       const urn = 'urn:agent:test:v1-put';
       const card = JSON.parse(JSON.stringify(BASE_CARD));
       card.version = '2.0.0';
       const sig = signCard(card);
+      const provenance = createProvenance({
+        outputs: [{ uri: urn }],
+        materials: [{ uri: 'git+https://github.com/example/repo', digest: { sha256: 'abc123' } }],
+      });
 
       const putResponse = await request(app)
         .put(`/v1/registry/${encodeURIComponent(urn)}`)
         .set('X-API-Key', API_KEY)
-        .send({ card, sig });
+        .send({ card, sig, provenance });
 
       expect([200, 201]).toContain(putResponse.status);
       expect(putResponse.body.urn).toBe(urn);
@@ -547,9 +551,11 @@ describe('CLI Registry/Resolver Commands', () => {
     it('rejects signatures when key is not in the policy', async () => {
       const { app, signCard } = await createRegistryTestContext({
         signaturePolicy: {
-          version: 1,
+          version: 2,
+          mode: 'enforce',
           requireSignature: true,
-          keys: []
+          allowedIssuers: [],
+          algorithms: ['EdDSA']
         }
       });
 
@@ -562,7 +568,7 @@ describe('CLI Registry/Resolver Commands', () => {
         .send({ urn: 'urn:agent:test:unknown-key', card, sig });
 
       expect(response.status).toBe(422);
-      expect(response.body.details[0]).toContain('No signature policy entry for key');
+      expect(response.body.details).toContain('unknown_issuer');
     });
 
     it('rejects signatures missing key identifiers in the protected header', async () => {
@@ -579,7 +585,7 @@ describe('CLI Registry/Resolver Commands', () => {
         .send({ urn: 'urn:agent:test:no-kid', card, sig });
 
       expect(response.status).toBe(422);
-      expect(response.body.details).toContain('Signature header is missing `kid`.');
+      expect(response.body.details).toContain('missing_key_id');
     });
 
     it('rejects signatures with algorithm mismatches', async () => {
@@ -597,7 +603,7 @@ describe('CLI Registry/Resolver Commands', () => {
         .send({ urn, card, sig });
 
       expect(response.status).toBe(422);
-      expect(response.body.details.some((msg) => msg.includes('algorithm mismatch'))).toBe(true);
+      expect(response.body.details).toContain('unsupported_algorithm');
     });
 
     it.skip('detects tampered card signatures', async () => {

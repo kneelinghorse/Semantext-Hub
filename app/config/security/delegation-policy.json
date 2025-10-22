@@ -9,10 +9,12 @@
       "allow": [
         "registry:read",
         "registry:write",
-        "resolve:read"
+        "resolve:read",
+        "execute"
       ],
       "resources": [
-        "urn:protocol:*"
+        "urn:protocol:*",
+        "urn:agent:*"
       ]
     },
     "cli:local": {

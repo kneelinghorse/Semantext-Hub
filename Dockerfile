@@ -7,6 +7,9 @@ FROM node:18-alpine AS base
 RUN apk add --no-cache \
     curl \
     dumb-init \
+    python3 \
+    make \
+    g++ \
     && rm -rf /var/cache/apk/*
 
 # Create app directory
