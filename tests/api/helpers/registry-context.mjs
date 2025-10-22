@@ -1,9 +1,10 @@
-import { generateKeyPairSync } from 'node:crypto';
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, rm, writeFile, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { signJws } from '../../../app/libs/signing/jws.mjs';
+import { createEnvelope } from '../../../packages/runtime/security/dsse.mjs';
+import { createProvenancePayload } from '../../../packages/runtime/security/provenance.mjs';
 import { createRegistryServer } from '../../../app/services/registry/server.mjs';
 
 export const API_KEY = 'test-secret';
@@ -23,6 +24,8 @@ export const BASE_CARD = {
 };
 
 const cleanupFns = [];
+const PRIV_KEY_PATH = new URL('../../../fixtures/keys/priv.pem', import.meta.url);
+const PUB_KEY_PATH = new URL('../../../fixtures/keys/pub.pem', import.meta.url);
 
 export async function createRegistryTestContext(overrides = {}) {
   const {
@@ -37,20 +40,23 @@ export async function createRegistryTestContext(overrides = {}) {
   const capIndexPath = join(workDir, 'index.cap.json');
   const policyPath = join(workDir, 'signature-policy.json');
 
-  const { publicKey, privateKey } = generateKeyPairSync('ed25519');
-  const publicKeyPem = publicKey.export({ type: 'spki', format: 'pem' }).toString();
-  const privateKeyPem = privateKey.export({ type: 'pkcs8', format: 'pem' }).toString();
+  const [publicKeyPem, privateKeyPem] = await Promise.all([
+    readFile(PUB_KEY_PATH, 'utf8'),
+    readFile(PRIV_KEY_PATH, 'utf8'),
+  ]);
+
+  const issuerEntry = {
+    keyId: KEY_ID,
+    algorithm: 'EdDSA',
+    publicKey: publicKeyPem,
+  };
 
   const policy = signaturePolicy ?? {
-    version: 1,
+    version: 2,
+    mode: 'enforce',
     requireSignature: true,
-    keys: [
-      {
-        keyId: KEY_ID,
-        algorithm: 'EdDSA',
-        publicKey: publicKeyPem,
-      },
-    ],
+    allowedIssuers: [issuerEntry],
+    keys: [issuerEntry],
   };
   await writeFile(policyPath, `${JSON.stringify(policy, null, 2)}\n`, 'utf8');
 
@@ -88,6 +94,31 @@ export async function createRegistryTestContext(overrides = {}) {
     await rm(workDir, { recursive: true, force: true });
   });
 
+  const createProvenance = ({
+    builderId = 'registry.test.builder',
+    commit = `commit-${Date.now()}`,
+    materials = [],
+    buildTool = 'registry-test-suite',
+    timestamp = new Date().toISOString(),
+    inputs = [],
+    outputs = [],
+  } = {}) => {
+    const payload = createProvenancePayload({
+      builderId,
+      commit,
+      materials,
+      buildTool,
+      timestamp,
+      inputs,
+      outputs,
+    });
+    return createEnvelope('application/vnd.in-toto+json', payload, {
+      key: privateKeyPem,
+      alg: 'Ed25519',
+      keyid: KEY_ID,
+    });
+  };
+
   return {
     ...serverContext,
     storePath,
@@ -98,6 +129,7 @@ export async function createRegistryTestContext(overrides = {}) {
     privateKeyPem,
     signCard: (card) =>
       signJws(card, { privateKey: privateKeyPem, keyId: KEY_ID, algorithm: 'EdDSA' }),
+    createProvenance,
   };
 }
 

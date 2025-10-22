@@ -8,7 +8,7 @@ const POLICY_PATH = process.env.DELEGATION_POLICY_PATH
 
 const AUDIT_LOG_PATH = process.env.DELEGATION_AUDIT_LOG
   ? path.resolve(process.cwd(), process.env.DELEGATION_AUDIT_LOG)
-  : path.resolve(process.cwd(), 'app/artifacts/security/delegation-decisions.jsonl');
+  : path.resolve(process.cwd(), 'artifacts/security/denials.jsonl');
 
 let cachedPolicy = null;
 let cachedMtimeMs = 0;
@@ -28,10 +28,29 @@ async function loadPolicy() {
   }
 }
 
+function patternToRegex(pattern) {
+  return String(pattern)
+    .replace(/\*\*/g, '__DOUBLESTAR__')
+    .replace(/\*/g, '__STAR__')
+    .replace(/[-/\\^$+?.()|[\]{}]/g, '\\$&')
+    .replace(/__DOUBLESTAR__/g, '.*')
+    .replace(/__STAR__/g, '.*');
+}
+
 function matchResource(patterns = [], resource = '') {
   if (!patterns.length) return true; // if no patterns, allow any resource filter
   return patterns.some(p => {
-    const re = new RegExp('^' + String(p).replace(/[-/\\^$+?.()|[\]{}]/g, '\\$&').replace(/\\\*/g, '.*') + '$');
+    const regexPattern = patternToRegex(p);
+    const re = new RegExp('^' + regexPattern + '$');
+    return re.test(resource);
+  });
+}
+
+function isExempt(exemptions = [], resource = '') {
+  if (!exemptions.length) return false;
+  return exemptions.some(pattern => {
+    const regexPattern = patternToRegex(pattern);
+    const re = new RegExp('^' + regexPattern + '$');
     return re.test(resource);
   });
 }
@@ -55,10 +74,30 @@ export async function authorize(agentId, capability, resource) {
   const policy = await loadPolicy();
   const mode = policy.mode === 'enforce' ? 'enforce' : 'permissive';
 
+  if (resource && isExempt(policy.exemptions || [], resource)) {
+    const decision = { allowed: true, reason: 'exempted', mode };
+    await writeAudit({
+      ts,
+      agent: agentId,
+      capability,
+      resource,
+      mode,
+      policy: 'delegation',
+      allowed: true,
+      effective: true,
+      result: 'allowed',
+      reason: decision.reason
+    });
+    return decision;
+  }
+
   const agent = policy.agents?.[agentId] || { allow: [] };
   const allowCaps = Array.isArray(agent.allow) ? agent.allow : [];
   const capAllowed = allowCaps.includes(capability);
-  const resourceOk = matchResource(policy.resources || [], resource || '');
+  
+  // Check agent-specific resources first, fall back to policy-level resources
+  const resourcePatterns = agent.resources || policy.resources || [];
+  const resourceOk = matchResource(resourcePatterns, resource || '');
 
   const allowed = capAllowed && resourceOk;
   const reason = allowed
@@ -67,28 +106,26 @@ export async function authorize(agentId, capability, resource) {
       ? 'resource_not_matched'
       : 'capability_not_allowed';
 
-  const decision = { allowed: mode === 'enforce' ? allowed : true, mode, reason };
-
-  await writeAudit({
+  const effectiveAllowed = allowed || mode !== 'enforce';
+  const decision = { allowed: effectiveAllowed, mode, reason };
+  const auditEntry = {
     ts,
     agent: agentId,
     capability,
     resource,
     allowed,
-    effective: decision.allowed,
+    effective: effectiveAllowed,
     mode,
+    policy: 'delegation',
+    result: allowed ? 'allowed' : 'denied',
     reason
-  });
+  };
+
+  await writeAudit(auditEntry);
 
   if (!allowed && mode === 'permissive') {
-    // WARN but do not block
     console.warn(`[IAM WARN] ${agentId} lacks '${capability}' for ${resource} (permissive)`);
-  }
-
-  if (!allowed && mode === 'enforce') {
-    throw new Error(`[IAM DENY] ${agentId} not allowed: ${capability} -> ${resource} (${reason})`);
   }
 
   return decision;
 }
-

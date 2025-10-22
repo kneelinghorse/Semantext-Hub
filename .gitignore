@@ -3,5 +3,8 @@ cmos/
 .DS_Store
 node_modules/
 coverage/
+var/
+artifacts/security/*.jsonl
+tests/security/_tmp/
 cli/commands/dist/
 app/cli/dist/

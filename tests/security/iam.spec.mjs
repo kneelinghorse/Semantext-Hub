@@ -4,11 +4,29 @@ import fs from 'fs';
 
 let authorize;
 
-const POLICY_PATH = path.resolve(process.cwd(), 'app/config/security/delegation-policy.json');
-const AUDIT_PATH = path.resolve(process.cwd(), 'app/artifacts/security/delegation-decisions.test.jsonl');
+const TMP_DIR = path.resolve(process.cwd(), 'tests/security/_tmp');
+const POLICY_PATH = path.join(TMP_DIR, 'delegation-policy.permissive.json');
+const AUDIT_PATH = path.join(TMP_DIR, 'delegation-audit.permissive.jsonl');
 
 describe('IAM authorize()', () => {
   beforeAll(() => {
+    fs.mkdirSync(TMP_DIR, { recursive: true });
+    const policy = {
+      version: 2,
+      mode: 'permissive',
+      agents: {
+        'mcp:codex': {
+          allow: ['registry:read', 'resolve:read'],
+          resources: ['urn:protocol:api:*']
+        },
+        'cli:local': {
+          allow: ['registry:read'],
+          resources: ['urn:protocol:api:*']
+        }
+      },
+      resources: ['urn:protocol:api:*']
+    };
+    fs.writeFileSync(POLICY_PATH, JSON.stringify(policy, null, 2));
     process.env.DELEGATION_POLICY_PATH = POLICY_PATH;
     process.env.DELEGATION_AUDIT_LOG = AUDIT_PATH;
     try { fs.rmSync(AUDIT_PATH, { force: true }); } catch {}
@@ -24,12 +42,14 @@ describe('IAM authorize()', () => {
     expect(decision).toBeDefined();
     expect(decision.mode).toBe('permissive');
     expect(decision.allowed).toBe(true);
+    expect(decision.reason).toBe('allowed_by_policy');
   });
 
   it('permits (warn) when capability not allowed in permissive mode', async () => {
     const decision = await authorize('cli:local', 'registry:write', 'urn:protocol:api:update-user');
     expect(decision.mode).toBe('permissive');
     expect(decision.allowed).toBe(true); // effective decision in permissive mode
+    expect(decision.reason).toBe('capability_not_allowed');
   });
 
   it('writes audit entries for decisions', async () => {

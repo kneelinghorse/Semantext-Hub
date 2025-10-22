@@ -33,3 +33,22 @@ CREATE TABLE IF NOT EXISTS schema_history (
 
 INSERT OR IGNORE INTO schema_history(version) VALUES (1);
 
+-- Provenance table for DSSE attestations
+CREATE TABLE IF NOT EXISTS provenance (
+  urn TEXT NOT NULL,
+  envelope TEXT NOT NULL,         -- DSSE JSON envelope
+  payload_type TEXT NOT NULL,     -- e.g., 'application/vnd.in-toto+json'
+  digest TEXT NOT NULL,           -- SHA256 of manifest content
+  issuer TEXT NOT NULL,           -- Builder/signer identifier
+  committed_at TEXT NOT NULL,     -- Git commit timestamp
+  build_tool TEXT,                -- Tool that created the build
+  inputs TEXT,                    -- JSON array of input artifacts
+  outputs TEXT,                   -- JSON array of output artifacts
+  created_at TEXT DEFAULT (datetime('now')),
+  PRIMARY KEY (urn, digest)
+);
+
+CREATE INDEX IF NOT EXISTS idx_prov_urn ON provenance(urn);
+CREATE INDEX IF NOT EXISTS idx_prov_issuer ON provenance(issuer);
+CREATE INDEX IF NOT EXISTS idx_prov_committed_at ON provenance(committed_at);
+

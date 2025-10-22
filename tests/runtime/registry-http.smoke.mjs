@@ -22,8 +22,20 @@
  *   --help                 Show this help
  */
 
+import fs from 'node:fs';
 import { writeFile, mkdir } from 'node:fs/promises';
-import { dirname } from 'node:path';
+import { dirname, resolve as resolvePath } from 'node:path';
+import { createEnvelope } from '../../packages/runtime/security/dsse.mjs';
+import { createProvenancePayload } from '../../packages/runtime/security/provenance.mjs';
+
+const DSSE_PRIVATE_KEY_PATH = resolvePath(process.cwd(), 'fixtures/keys/priv.pem');
+const DSSE_PRIVATE_KEY = fs.existsSync(DSSE_PRIVATE_KEY_PATH)
+  ? fs.readFileSync(DSSE_PRIVATE_KEY_PATH, 'utf8')
+  : null;
+
+if (!DSSE_PRIVATE_KEY) {
+  throw new Error('DSSE private key not found at fixtures/keys/priv.pem. Cannot run registry smoke tests without provenance attestation key.');
+}
 
 /**
  * Parse command line arguments
@@ -179,7 +191,7 @@ async function testOpenAPI(baseUrl, verbose) {
 /**
  * Test PUT /v1/registry/:urn
  */
-async function testRegistryPut(baseUrl, apiKey, urn, card, sig, verbose) {
+async function testRegistryPut(baseUrl, apiKey, urn, card, sig, provenance, verbose) {
   const url = `${baseUrl}/v1/registry/${encodeURIComponent(urn)}`;
   if (verbose) console.log(`Testing PUT /v1/registry/${urn}...`);
 
@@ -189,7 +201,7 @@ async function testRegistryPut(baseUrl, apiKey, urn, card, sig, verbose) {
       'Content-Type': 'application/json',
       'X-API-Key': apiKey,
     },
-    body: JSON.stringify({ urn, card, sig }),
+    body: JSON.stringify({ urn, card, sig, provenance }),
   });
 
   if (!result.ok && result.status !== 200 && result.status !== 201) {
@@ -290,7 +302,18 @@ function generateTestCard(index) {
     },
   };
 
-  return { urn, card, sig };
+  const provenance = createEnvelope(
+    'application/vnd.in-toto+json',
+    createProvenancePayload({
+      builderId: 'registry-smoke-suite',
+      commit: `smoke-${index}-${Date.now()}`,
+      materials: [{ uri: urn }],
+      buildTool: 'registry-http-smoke',
+    }),
+    { key: DSSE_PRIVATE_KEY, alg: 'Ed25519', keyid: 'registry-smoke-key' },
+  );
+
+  return { urn, card, sig, provenance };
 }
 
 /**
@@ -345,9 +368,9 @@ async function runSmokeTests(options) {
   console.log(`\n3. Testing PUT /v1/registry/:urn (${samples} samples)...`);
   let putSuccess = 0;
   for (let i = 0; i < samples; i++) {
-    const { urn, card, sig } = generateTestCard(i);
+    const { urn, card, sig, provenance } = generateTestCard(i);
     try {
-      const result = await testRegistryPut(baseUrl, apiKey, urn, card, sig, false);
+      const result = await testRegistryPut(baseUrl, apiKey, urn, card, sig, provenance, false);
       metrics.push({
         ts: new Date().toISOString(),
         sessionId,
@@ -493,4 +516,3 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 }
 
 export { runSmokeTests, makeRequest };
-

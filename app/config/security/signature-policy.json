@@ -1,5 +1,29 @@
 {
-  "version": 1,
-  "requireSignature": false,
-  "keys": []
+  "version": 2,
+  "mode": "enforce",
+  "requireSignature": true,
+  "exemptions": [
+    "seeds/**"
+  ],
+  "allowedIssuers": [
+    {
+      "keyId": "ossp-agi-main-v1",
+      "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA...\n-----END PUBLIC KEY-----",
+      "comment": "Primary signing key for OSSP-AGI system"
+    },
+    {
+      "keyId": "ci-builder-v1",
+      "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA...\n-----END PUBLIC KEY-----",
+      "comment": "CI/CD pipeline signing key"
+    }
+  ],
+  "algorithms": [
+    "EdDSA",
+    "ES256"
+  ],
+  "validation": {
+    "checkExpiration": true,
+    "maxAgeDays": 90,
+    "requireCanonical": true
+  }
 }

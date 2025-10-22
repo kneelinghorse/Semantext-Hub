@@ -25,6 +25,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
@@ -35,6 +37,23 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Verify DSSE Provenance Attestations
+        id: attest_verify
+        env:
+          PROVENANCE_BASE_SHA: ${{ github.event.pull_request.base.sha || '' }}
+          PROVENANCE_BASE_REF: ${{ github.event.pull_request.base.ref || '' }}
+        run: |
+          set -euo pipefail
+          SINCE="${PROVENANCE_BASE_SHA:-}"
+          if [ -n "${PROVENANCE_BASE_REF:-}" ]; then
+            git fetch origin "${PROVENANCE_BASE_REF}"
+          fi
+          if [ -z "$SINCE" ]; then
+            SINCE="HEAD~1"
+          fi
+          echo "Verifying provenance attestations since $SINCE"
+          node packages/runtime/cli/commands/attest-verify.js --since "$SINCE"
 
       - name: Start Registry Service
         run: |
@@ -81,6 +100,13 @@ jobs:
             artifacts/perf/release-preflight.jsonl
             artifacts/perf/preflight-summary.json
 
+      - name: Upload Provenance Report
+        uses: actions/upload-artifact@v4
+        if: ${{ steps.attest_verify.outcome == 'success' }}
+        with:
+          name: provenance-report
+          path: artifacts/security/provenance-report.json
+
       - name: Stop Registry Service
         if: always()
         run: |
@@ -98,6 +124,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4

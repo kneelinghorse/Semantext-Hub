@@ -1,0 +1,72 @@
+name: Provenance Gate
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'approved/**/*.json'
+      - 'drafts/**/*.json'
+      - 'manifests/**/*.json'
+  push:
+    branches: [main]
+
+jobs:
+  verify-provenance:
+    runs-on: ubuntu-latest
+    name: Verify DSSE Attestations
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Need full history for git diff
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run database migration
+        run: node scripts/db/migrate.mjs
+      
+      - name: Verify provenance attestations
+        id: verify
+        run: |
+          # Determine comparison ref
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            COMPARE_REF="${{ github.event.pull_request.base.sha }}"
+          else
+            COMPARE_REF="HEAD~1"
+          fi
+          
+          echo "Comparing against: $COMPARE_REF"
+          node packages/runtime/cli/commands/attest-verify.js --since "$COMPARE_REF"
+        continue-on-error: true
+      
+      - name: Upload provenance report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: provenance-report
+          path: artifacts/security/provenance-report.json
+          retention-days: 30
+      
+      - name: Check verification result
+        if: steps.verify.outcome == 'failure'
+        run: |
+          echo "❌ Provenance verification failed!"
+          echo "One or more changed manifests are missing valid DSSE attestations."
+          echo ""
+          echo "See artifact 'provenance-report' for details."
+          exit 1
+      
+      - name: Success summary
+        if: steps.verify.outcome == 'success'
+        run: |
+          echo "✅ All changed manifests have valid provenance attestations"
+          cat artifacts/security/provenance-report.json | jq '.validCount,.invalidCount'
+

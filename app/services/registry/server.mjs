@@ -4,6 +4,8 @@ import { appendFile, mkdir, open, readFile, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { verifyJws } from '../../libs/signing/jws.mjs';
+import { verifySignature as verifySignatureEnforcement } from '../../../packages/runtime/security/signature.mjs';
+import { validateProvenance } from '../../../packages/runtime/security/provenance.mjs';
 import { MetricsIngestWriter } from '../obs/ingest.mjs';
 
 const DEFAULT_STORE_PATH = fileURLToPath(new URL('./store.jsonl', import.meta.url));
@@ -184,7 +186,7 @@ function validateAgentPayload(payload) {
     return { valid: false, errors };
   }
 
-  const { urn, card, sig } = payload;
+  const { urn, card, sig, provenance } = payload;
   if (!urn || typeof urn !== 'string') {
     errors.push('`urn` is required and must be a string.');
   }
@@ -238,8 +240,25 @@ function validateAgentPayload(payload) {
       }
     }
   }
+  
+  // Provenance validation (structure only - crypto validation done separately)
+  if (provenance) {
+    if (typeof provenance !== 'object' || Array.isArray(provenance)) {
+      errors.push('`provenance` must be an object (DSSE envelope).');
+    } else {
+      if (!provenance.payload || typeof provenance.payload !== 'string') {
+        errors.push('`provenance.payload` is required and must be a base64 string.');
+      }
+      if (!provenance.signatures || !Array.isArray(provenance.signatures) || provenance.signatures.length === 0) {
+        errors.push('`provenance.signatures` is required and must be a non-empty array.');
+      }
+      if (!provenance.payloadType || typeof provenance.payloadType !== 'string') {
+        errors.push('`provenance.payloadType` is required and must be a string.');
+      }
+    }
+  }
 
-  return { valid: errors.length === 0, errors };
+  return { valid: errors.length === 0, errors, hasProvenance: !!provenance };
 }
 
 function decodeEnvelopeHeader(envelope) {
@@ -269,8 +288,23 @@ async function loadSignaturePolicy(policyPath) {
   try {
     const raw = await readFile(targetPath, 'utf8');
     const parsed = JSON.parse(raw);
-    const requireSignature = parsed.requireSignature !== false;
-    const keys = Array.isArray(parsed.keys) ? parsed.keys : [];
+    
+    // Support both old (keys) and new (allowedIssuers) formats
+    let requireSignature = parsed.requireSignature !== false;
+    let keys = [];
+    
+    if (Array.isArray(parsed.allowedIssuers)) {
+      // New format (v2)
+      requireSignature = parsed.mode === 'enforce' ? true : parsed.requireSignature !== false;
+      keys = parsed.allowedIssuers.map(issuer => ({
+        keyId: issuer.keyId,
+        publicKey: issuer.publicKey,
+        algorithm: 'EdDSA' // Default from policy algorithms
+      }));
+    } else if (Array.isArray(parsed.keys)) {
+      // Old format (v1)
+      keys = parsed.keys;
+    }
 
     const normalizedKeys = keys.map((entry) => {
       if (!entry || typeof entry !== 'object') {
@@ -290,7 +324,7 @@ async function loadSignaturePolicy(policyPath) {
       };
     });
 
-    return { requireSignature, keys: normalizedKeys, path: targetPath };
+    return { requireSignature, keys: normalizedKeys, path: targetPath, mode: parsed.mode, exemptions: parsed.exemptions };
   } catch (error) {
     if (error?.code === 'ENOENT') {
       throw new Error(`Signature policy not found at ${targetPath}`);
@@ -306,11 +340,90 @@ class SignatureVerifier {
   constructor(policy) {
     this.requireSignature = policy.requireSignature !== false;
     this.keys = new Map(policy.keys.map((entry) => [entry.keyId, entry]));
+    this.mode = policy.mode || 'permissive';
+    this.exemptions = policy.exemptions || [];
+    this.policySource = policy;
   }
 
-  verify({ card, sig }) {
-    const enforced = this.requireSignature !== false;
+  async verify({ card, sig, resourcePath = '' }) {
+    const enforced = this.requireSignature !== false && this.mode === 'enforce';
     const timestamp = nowIso();
+    const issuers = Array.from(this.keys.values()).map((entry) => ({
+      keyId: entry.keyId,
+      algorithm: entry.algorithm,
+      publicKey: entry.publicKey,
+    }));
+    const algorithms = Array.from(
+      new Set(
+        issuers.map((issuer) => (issuer.algorithm === 'EdDSA' ? 'EdDSA' : issuer.algorithm || 'EdDSA')),
+      ),
+    );
+    const verificationPolicy = {
+      version: this.policySource.version ?? 2,
+      mode: this.mode,
+      requireSignature: this.requireSignature !== false,
+      exemptions: this.exemptions,
+      allowedIssuers: issuers,
+      algorithms: algorithms.length > 0 ? algorithms : ['EdDSA'],
+    };
+    
+    // Use the new signature.mjs module for enforcement
+    if (this.mode === 'enforce') {
+      const header = decodeEnvelopeHeader(sig);
+      if (!header) {
+        return {
+          valid: false,
+          errors: ['invalid_protected_header'],
+          keyId: null,
+          algorithm: null,
+          digestValid: false,
+          signatureValid: false,
+          verifiedAt: timestamp,
+          header: null,
+          enforced: true,
+          shouldReject: true,
+        };
+      }
+
+      const envelope = { ...sig, header };
+
+      const result = await verifySignatureEnforcement(envelope, {
+        resourcePath,
+        operation: 'write',
+        expectedPayload: card,
+        policy: verificationPolicy,
+      });
+      
+      if (!result.ok) {
+        return {
+          valid: false,
+          errors: [result.errorReason || 'Signature verification failed'],
+          keyId: sig?.header?.kid || null,
+          algorithm: sig?.header?.alg || null,
+          digestValid: false,
+          signatureValid: false,
+          verifiedAt: timestamp,
+          header: sig?.header || null,
+          enforced: true,
+          shouldReject: true,
+        };
+      }
+      
+      return {
+        valid: true,
+        errors: [],
+        keyId: result.details?.keyId || null,
+        algorithm: result.details?.algorithm || null,
+        digestValid: true,
+        signatureValid: true,
+        verifiedAt: timestamp,
+        header,
+        enforced: true,
+        shouldReject: false,
+      };
+    }
+
+    // Fallback to old verification logic for permissive mode
     const baseResult = {
       valid: false,
       errors: [],
@@ -958,6 +1071,7 @@ export async function createRegistryServer(options = {}) {
   app.disable('x-powered-by');
   app.set('registryStore', store);
   app.set('signatureVerifier', signatureVerifier);
+  app.set('signaturePolicy', signaturePolicy);
 
   app.use(express.json({ limit: jsonLimit }));
   // Localhost-only CORS
@@ -1212,7 +1326,7 @@ export async function createRegistryServer(options = {}) {
 
       const { urn, card, sig } = request.body;
       const signatureVerifier = app.get('signatureVerifier');
-      const verification = signatureVerifier.verify({ card, sig });
+      const verification = await signatureVerifier.verify({ card, sig });
 
       if (verification.shouldReject) {
         return response.status(422).json({
@@ -1303,6 +1417,7 @@ export async function createRegistryServer(options = {}) {
           urn: request.body?.urn ?? urn,
           card: request.body?.card,
           sig: request.body?.sig,
+          provenance: request.body?.provenance,
         };
         if (payload.urn !== urn) {
           return response.status(400).json({
@@ -1321,11 +1436,66 @@ export async function createRegistryServer(options = {}) {
             details: validation.errors,
           });
         }
+        
+        // Check for required provenance (enforce mode)
+        const signaturePolicy = app.get('signaturePolicy');
+        if (!signaturePolicy) {
+          throw new Error('Signature policy is not loaded');
+        }
+        const enforceProvenance = signaturePolicy.mode === 'enforce';
+        
+        if (enforceProvenance && !validation.hasProvenance) {
+          return response.status(422).json({
+            error: 'missing_provenance',
+            message: 'DSSE provenance attestation is required in enforce mode.',
+            urn,
+            mode: 'enforce',
+          });
+        }
+        
+        // Validate provenance if provided
+        let provenanceValidation = null;
+        if (validation.hasProvenance) {
+          try {
+            // Load verification keys from signature policy
+            const verifyConfigs = (signaturePolicy.keys || []).map((entry) => ({
+              pubkey: entry.publicKey,
+              alg: entry.algorithm === 'EdDSA' ? 'Ed25519' : entry.algorithm,
+              keyid: entry.keyId || entry.keyid || null,
+            }));
+            
+            if (verifyConfigs.length === 0) {
+              console.warn('[registry] No public key available for provenance verification');
+            } else {
+              provenanceValidation = validateProvenance(payload.provenance, verifyConfigs);
+              
+              if (!provenanceValidation.ok && enforceProvenance) {
+                return response.status(422).json({
+                  error: 'invalid_provenance',
+                  message: 'Provenance validation failed.',
+                  urn,
+                  reason: provenanceValidation.reason,
+                  mode: 'enforce',
+                });
+              }
+            }
+          } catch (err) {
+            if (enforceProvenance) {
+              return response.status(422).json({
+                error: 'provenance_validation_error',
+                message: 'Error validating provenance.',
+                urn,
+                details: err.message,
+              });
+            }
+          }
+        }
 
         const signatureVerifier = app.get('signatureVerifier');
-        const verification = signatureVerifier.verify({
+        const verification = await signatureVerifier.verify({
           card: payload.card,
           sig: payload.sig,
+          resourcePath: urn,
         });
 
         if (verification.shouldReject) {
@@ -1351,6 +1521,7 @@ export async function createRegistryServer(options = {}) {
             urn,
             card: payload.card,
             sig: payload.sig,
+            provenance: payload.provenance,
             verification: verificationRecord,
           },
           { overwrite: true },
@@ -1358,13 +1529,26 @@ export async function createRegistryServer(options = {}) {
 
         const statusCode = result.inserted ? 201 : 200;
         const status = result.updated ? 'updated' : 'registered';
-
-        return response.status(statusCode).json({
+        
+        const responsePayload = {
           status,
           urn: result.record.urn,
           ts: result.record.ts,
           verification: result.record.verification ?? verificationRecord,
-        });
+        };
+        
+        if (provenanceValidation) {
+          responsePayload.provenance = {
+            valid: provenanceValidation.ok,
+            builder: provenanceValidation.payload?.builder?.id,
+            commit: provenanceValidation.payload?.metadata?.commit,
+            timestamp: provenanceValidation.payload?.metadata?.timestamp,
+            buildTool: provenanceValidation.payload?.metadata?.buildTool,
+            signature: provenanceValidation.signature ?? null,
+          };
+        }
+
+        return response.status(statusCode).json(responsePayload);
       } catch (error) {
         return next(error);
       }

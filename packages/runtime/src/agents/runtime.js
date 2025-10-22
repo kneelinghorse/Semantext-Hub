@@ -210,7 +210,16 @@ async function execAgent(call) {
       // IAM: authorize agent execution (permissive by default)
       const agentId = process.env.AGENT_ID || 'mcp:codex';
       const resourceUrn = agentUrn || call.endpoint || 'urn:unknown:resource';
-      await authorize(agentId, 'execute', resourceUrn);
+      const authDecision = await authorize(agentId, 'execute', resourceUrn);
+      if (!authDecision.allowed) {
+        const err = new Error(`[IAM DENY] ${agentId} not allowed: execute -> ${resourceUrn} (${authDecision.reason})`);
+        err.statusCode = 403;
+        err.reason = authDecision.reason;
+        err.agentId = agentId;
+        err.capability = 'execute';
+        err.resource = resourceUrn;
+        throw err;
+      }
 
       // Make A2A request
       const response = await client.request(agentUrn, `/skills/${call.skill}`, {

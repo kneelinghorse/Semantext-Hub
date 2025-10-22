@@ -1,53 +1,24 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import { fork } from 'node:child_process';
-import { once } from 'node:events';
-import { setTimeout as sleep } from 'node:timers/promises';
+import { pathToFileURL } from 'node:url';
 import { openDb } from '../../packages/runtime/registry/db.mjs';
+import { createEnvelope } from '../../packages/runtime/security/dsse.mjs';
+import { createProvenancePayload } from '../../packages/runtime/security/provenance.mjs';
 
 const API_KEY = 'test-key';
 
+const DSSE_PRIVATE_KEY_PATH = path.resolve(process.cwd(), 'fixtures/keys/priv.pem');
+if (!fs.existsSync(DSSE_PRIVATE_KEY_PATH)) {
+  throw new Error('Missing DSSE private key at fixtures/keys/priv.pem for registry SQLite tests.');
+}
+const DSSE_PRIVATE_KEY = fs.readFileSync(DSSE_PRIVATE_KEY_PATH, 'utf8');
+
 let registryConfigPath;
 
-const SERVER_SCRIPT = path.resolve(process.cwd(), 'tests/runtime/helpers/registry-test-server.mjs');
-
-const startRegistryProcess = async ({ configPath, apiKey, port }) => {
-  const child = fork(
-    SERVER_SCRIPT,
-    [configPath, apiKey, String(port)],
-    { stdio: ['ignore', 'pipe', 'pipe', 'ipc'] },
-  );
-
-  const onExit = (code, signal) => {
-    throw new Error(`registry server exited prematurely (${code ?? 'null'}:${signal ?? 'null'})`);
-  };
-
-  child.once('exit', onExit);
-
-  const message = await once(child, 'message');
-  child.off('exit', onExit);
-
-  const [payload] = message;
-  if (!payload || payload.type !== 'ready') {
-    child.kill('SIGKILL');
-    throw new Error('registry server failed to start');
-  }
-
-  return { child, port: payload.port };
-};
-
-const stopRegistryProcess = async (child) => {
-  if (!child || child.killed) return;
-  const exitPromise = once(child, 'exit').catch(() => {});
-  child.send({ type: 'shutdown' });
-  await Promise.race([
-    exitPromise,
-    sleep(1_000).then(() => {
-      if (!child.killed) child.kill('SIGKILL');
-    }),
-  ]);
-};
+const serverModuleUrl = pathToFileURL(path.resolve('packages/runtime/registry/server.mjs')).href;
+let startServer;
+let activeServer;
 
 const ensureSchema = async (dbPath) => {
   const schema = fs.readFileSync(path.resolve(process.cwd(), 'scripts/db/schema.sql'), 'utf8');
@@ -59,8 +30,32 @@ const ensureSchema = async (dbPath) => {
   }
 };
 
+const createAttestedRequest = (urn, manifest, { commit } = {}) => {
+  const payload = createProvenancePayload({
+    builderId: 'registry-sqlite-tests',
+    commit: commit ?? `sqlite-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+    materials: [{ uri: urn }],
+    buildTool: 'registry-sqlite-spec',
+  });
+
+  const envelope = createEnvelope('application/vnd.in-toto+json', payload, {
+    key: DSSE_PRIVATE_KEY,
+    alg: 'Ed25519',
+    keyid: 'registry-sqlite-test-key',
+  });
+
+  return {
+    manifest,
+    provenance: envelope,
+  };
+};
+
 describe('SQLite Registry', () => {
   let testDbPath;
+
+  beforeAll(async () => {
+    ({ startServer } = await import(serverModuleUrl));
+  });
 
   beforeEach(async () => {
     const suffix = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -90,6 +85,11 @@ describe('SQLite Registry', () => {
         fs.unlinkSync(`${testDbPath}-shm`);
       }
     } catch {}
+
+    if (activeServer) {
+      await activeServer.close();
+      activeServer = null;
+    }
   });
 
   const requestJson = async (url, options = {}) => {
@@ -107,38 +107,49 @@ describe('SQLite Registry', () => {
     return { response, json };
   };
 
-  test('concurrency: 50 parallel PUTs succeed and last write wins', async () => {
-    const { child, port } = await startRegistryProcess({
-      configPath: registryConfigPath,
-      apiKey: API_KEY,
-      port: 4241,
+const startRegistry = async ({ port }) => {
+  activeServer = await startServer({
+    registryConfigPath,
+    apiKey: API_KEY,
+    port,
     });
+    return activeServer;
+};
 
-    const baseUrl = `http://127.0.0.1:${port}`;
+const uniquePort = () => 4800 + Math.floor(Math.random() * 200);
+
+  test('concurrency: 50 parallel PUTs succeed and last write wins', async () => {
+    const server = await startRegistry({ port: uniquePort() });
+    expect(server.port).toBeDefined();
+    const baseUrl = `http://127.0.0.1:${server.port}`;
     const urn = 'urn:protocol:api:concurrency-demo:1.0.0';
-    const bodies = Array.from({ length: 50 }, (_, i) => ({
+    const manifests = Array.from({ length: 50 }, (_, i) => ({
       v: i,
       capabilities: ['concurrency'],
     }));
 
     const results = await Promise.allSettled(
-      bodies.map(async (body) => {
+      manifests.map(async (body, idx) => {
+        const attested = createAttestedRequest(urn, body, { commit: `commit-${idx}` });
         const res = await fetch(`${baseUrl}/v1/registry/${encodeURIComponent(urn)}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
             'X-API-Key': API_KEY,
           },
-          body: JSON.stringify(body),
+          body: JSON.stringify(attested),
         });
         if (!res.ok) {
-          throw new Error(`Unexpected status ${res.status}`);
+          const errorBody = await res.text();
+          throw new Error(`Unexpected status ${res.status}: ${errorBody}`);
         }
       }),
     );
 
     const failures = results.filter((r) => r.status === 'rejected');
-    expect(failures.length).toBe(0);
+    if (failures.length > 0) {
+      throw failures[0].reason;
+    }
 
     const finalBody = {
       v: 999,
@@ -156,7 +167,7 @@ describe('SQLite Registry', () => {
         'Content-Type': 'application/json',
         'X-API-Key': API_KEY,
       },
-      body: JSON.stringify(finalBody),
+      body: JSON.stringify(createAttestedRequest(urn, finalBody, { commit: 'commit-final' })),
     });
     expect(finalPut.ok).toBe(true);
 
@@ -167,6 +178,10 @@ describe('SQLite Registry', () => {
       },
     );
 
+    const dbCheck = await openDb({ dbPath: testDbPath });
+    const dbRow = await dbCheck.get('SELECT body FROM manifests WHERE urn=?', [urn]);
+    await dbCheck.close();
+    expect(JSON.parse(dbRow.body)).toEqual(finalBody);
     expect(manifest).toEqual(
       expect.objectContaining({
         urn,
@@ -174,19 +189,14 @@ describe('SQLite Registry', () => {
         body: finalBody,
       }),
     );
-
-    await stopRegistryProcess(child);
+    expect(JSON.stringify(manifest.body)).not.toContain('"provenance"');
   }, 30000);
 
   test('crash/restart: DB persists and GET/resolve remain consistent', async () => {
     const urn = 'urn:protocol:api:crash:1.0.0';
     const manifest = { x: 1, capabilities: ['x'] };
 
-    const initial = await startRegistryProcess({
-      configPath: registryConfigPath,
-      apiKey: API_KEY,
-      port: 4242,
-    });
+    const initial = await startRegistry({ port: uniquePort() });
 
     const baseUrl = `http://127.0.0.1:${initial.port}`;
 
@@ -196,19 +206,14 @@ describe('SQLite Registry', () => {
         'Content-Type': 'application/json',
         'X-API-Key': API_KEY,
       },
-      body: JSON.stringify(manifest),
+      body: JSON.stringify(createAttestedRequest(urn, manifest, { commit: 'commit-initial' })),
     });
     expect(putResponse.ok).toBe(true);
 
-    // Simulate crash (hard kill)
-    initial.child.kill('SIGKILL');
-    await once(initial.child, 'exit').catch(() => {});
+    await initial.close();
+    activeServer = null;
 
-    const restarted = await startRegistryProcess({
-      configPath: registryConfigPath,
-      apiKey: API_KEY,
-      port: 4243,
-    });
+    const restarted = await startRegistry({ port: uniquePort() });
 
     const restartBaseUrl = `http://127.0.0.1:${restarted.port}`;
 
@@ -218,6 +223,8 @@ describe('SQLite Registry', () => {
     );
 
     expect(manifestAfter.body).toEqual(manifest);
+    expect(manifestAfter.provenance).toBeDefined();
+    expect(manifestAfter.provenance.commit).toBe('commit-initial');
 
     const { json: resolved } = await requestJson(
       `${restartBaseUrl}/v1/resolve?urn=${encodeURIComponent(urn)}`,
@@ -231,7 +238,7 @@ describe('SQLite Registry', () => {
         capabilities: ['x'],
       }),
     );
-
-    await stopRegistryProcess(restarted.child);
+    await restarted.close();
+    activeServer = null;
   });
 });

@@ -163,7 +163,7 @@ describe('Registry Service Negative Paths', () => {
       .expect(422);
 
     expect(response.body.error).toBe('signature_invalid');
-    expect(JSON.stringify(response.body.details ?? [])).toContain('No signature policy entry');
+    expect(JSON.stringify(response.body.details ?? [])).toContain('unknown_issuer');
   });
 
   test('GET /v1/registry/:urn without API key → 401', async () => {
@@ -526,30 +526,34 @@ describe('Registry Service Negative Paths', () => {
   });
 
   test('PUT /v1/registry creates new record then updates existing', async () => {
-    const { app, signCard } = await createRegistryTestContext();
+    const { app, signCard, createProvenance } = await createRegistryTestContext();
     const urn = 'urn:agent:put';
     const card = cloneCard();
     const sig = signCard(card);
+    const provenanceInitial = createProvenance({ commit: 'commit-initial' });
 
     const first = await request(app)
       .put(`/v1/registry/${encodeURIComponent(urn)}`)
       .set('X-API-Key', API_KEY)
-      .send({ urn, card, sig })
+      .send({ urn, card, sig, provenance: provenanceInitial })
       .expect(201);
-
     expect(first.body.status).toBe('registered');
+
+    const provenanceUpdated = createProvenance({ commit: 'commit-update' });
 
     const second = await request(app)
       .put(`/v1/registry/${encodeURIComponent(urn)}`)
       .set('X-API-Key', API_KEY)
-      .send({ urn, card, sig })
+      .send({ urn, card, sig, provenance: provenanceUpdated })
       .expect(200);
 
     expect(second.body.status).toBe('updated');
+    expect(second.body.provenance).toBeDefined();
+    expect(second.body.provenance.signature?.keyid).toBe('test-key');
   });
 
   test('PUT /v1/registry rejects tampered signature with 422', async () => {
-    const { app, signCard } = await createRegistryTestContext();
+    const { app, signCard, createProvenance } = await createRegistryTestContext();
     const urn = 'urn:agent:tamper';
     const card = cloneCard();
     const sig = signCard(card);
@@ -559,11 +563,26 @@ describe('Registry Service Negative Paths', () => {
     const response = await request(app)
       .put(`/v1/registry/${encodeURIComponent(urn)}`)
       .set('X-API-Key', API_KEY)
-      .send({ urn, card: tamperedCard, sig })
+      .send({ urn, card: tamperedCard, sig, provenance: createProvenance({ commit: 'commit-tamper' }) })
       .expect(422);
 
     expect(response.body.error).toBe('signature_invalid');
     expect(response.body.verification).toBeDefined();
+  });
+
+  test('PUT /v1/registry rejects missing provenance in enforce mode', async () => {
+    const { app, signCard } = await createRegistryTestContext();
+    const urn = 'urn:agent:missing-prov';
+    const card = cloneCard();
+    const sig = signCard(card);
+
+    const response = await request(app)
+      .put(`/v1/registry/${encodeURIComponent(urn)}`)
+      .set('X-API-Key', API_KEY)
+      .send({ urn, card, sig })
+      .expect(422);
+
+    expect(response.body.error).toBe('missing_provenance');
   });
 
   test('GET /v1/registry and /v1/resolve return registered record', async () => {
@@ -852,7 +871,7 @@ describe('Registry Service Negative Paths', () => {
       })
       .expect(422);
 
-    expect(JSON.stringify(response.body.details)).toContain('Signature protected header is missing or invalid.');
+    expect(JSON.stringify(response.body.details)).toContain('invalid_protected_header');
   });
 
   test('POST /registry with malformed protected header JSON → 422', async () => {
@@ -876,7 +895,7 @@ describe('Registry Service Negative Paths', () => {
       })
       .expect(422);
 
-    expect(JSON.stringify(response.body.details)).toContain('Signature protected header is missing or invalid.');
+    expect(JSON.stringify(response.body.details)).toContain('invalid_protected_header');
   });
 
   test('POST /registry with header missing kid still rejects with error detail', async () => {
@@ -901,8 +920,7 @@ describe('Registry Service Negative Paths', () => {
       .expect(422);
 
     const details = JSON.stringify(response.body.details);
-    expect(details).toContain('Signature header is missing `kid`.');
-    expect(details).toContain('No signature policy entry for key');
+    expect(details).toContain('missing_key_id');
   });
 
   test('POST /registry with algorithm mismatch reports verification error', async () => {
@@ -922,7 +940,7 @@ describe('Registry Service Negative Paths', () => {
       .send({ urn: 'urn:agent:algo-mismatch', card, sig: mismatchedSig })
       .expect(422);
 
-    expect(JSON.stringify(response.body.details)).toContain('Signature algorithm mismatch');
+    expect(JSON.stringify(response.body.details)).toContain('unsupported_algorithm');
   });
 
   test('Signature enforcement disabled allows registration with unverifiable signature', async () => {
@@ -953,8 +971,8 @@ describe('Registry Service Negative Paths', () => {
 
   test('SignatureVerifier handles missing signature envelope', async () => {
     const context = await createRegistryTestContext();
-    const verification = context.signatureVerifier.verify({ card: cloneCard(), sig: null });
-    expect(verification.errors).toContain('Signature envelope is required.');
+    const verification = await context.signatureVerifier.verify({ card: cloneCard(), sig: null });
+    expect(verification.errors).toContain('invalid_protected_header');
     expect(verification.shouldReject).toBe(true);
   });
 

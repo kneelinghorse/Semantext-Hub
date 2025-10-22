@@ -4,6 +4,7 @@ import { openDb, getHealth } from './db.mjs';
 import { upsertManifest, getManifest, queryByCapability, resolve, listManifests } from './repository.mjs';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
+import { validateProvenance, summarizeProvenance } from '../security/provenance.mjs';
 
 const DEFAULT_API_KEY = process.env.REGISTRY_API_KEY || 'local-dev-key';
 const DEFAULT_RATE_LIMIT_CONFIG = fileURLToPath(
@@ -11,6 +12,9 @@ const DEFAULT_RATE_LIMIT_CONFIG = fileURLToPath(
 );
 const DEFAULT_REGISTRY_CONFIG = fileURLToPath(
   new URL('../../../app/config/registry.config.json', import.meta.url),
+);
+const DEFAULT_PROVENANCE_KEY = fileURLToPath(
+  new URL('../../../fixtures/keys/pub.pem', import.meta.url),
 );
 
 const WELL_KNOWN_PAYLOAD = {
@@ -74,12 +78,60 @@ function buildRateLimiter(config = {}) {
   return { limiter, config: { windowMs, max, standardHeaders, legacyHeaders } };
 }
 
+function normalizeProvenanceKeyConfig(entry) {
+  if (!entry || typeof entry !== 'object') {
+    throw new Error('Provenance verifier entries must be objects.');
+  }
+  if (!entry.pubkey) {
+    throw new Error('Provenance verifier entry requires a `pubkey`.');
+  }
+  return {
+    pubkey: entry.pubkey,
+    alg: entry.alg || entry.algorithm || 'Ed25519',
+    keyid: entry.keyid || entry.keyId || entry.kid || null,
+  };
+}
+
+async function loadProvenanceVerifier(options = {}) {
+  if (Array.isArray(options.keys) && options.keys.length > 0) {
+    return options.keys.map(normalizeProvenanceKeyConfig);
+  }
+
+  const keyPath =
+    options.keyPath ??
+    process.env.PROVENANCE_PUBKEY_PATH ??
+    DEFAULT_PROVENANCE_KEY;
+
+  try {
+    const pubkey = await readFile(keyPath, 'utf8');
+    return [
+      normalizeProvenanceKeyConfig({
+        pubkey,
+        alg: options.algorithm || 'Ed25519',
+        keyid: options.keyid || options.keyId || null,
+      }),
+    ];
+  } catch (error) {
+    if (options.optional) {
+      return [];
+    }
+    throw new Error(
+      `Failed to load provenance verification key from ${keyPath}: ${error.message}`,
+    );
+  }
+}
+
 export async function createServer(options = {}) {
   const {
     registryConfigPath,
     rateLimitConfigPath,
     apiKey = DEFAULT_API_KEY,
     jsonLimit = '512kb',
+    provenanceKeyPath,
+    provenanceKeys,
+    provenanceAlgorithm = 'Ed25519',
+    provenanceKeyId = null,
+    requireProvenance = true,
   } = options;
 
   if (!apiKey) {
@@ -92,9 +144,24 @@ export async function createServer(options = {}) {
   const rateLimitConfig = await loadRateLimitConfig(rateLimitConfigPath);
   const { limiter, config: limiterConfig } = buildRateLimiter(rateLimitConfig);
 
+  const provenanceVerifier = await loadProvenanceVerifier({
+    keyPath: provenanceKeyPath,
+    keys: provenanceKeys,
+    algorithm: provenanceAlgorithm,
+    keyid: provenanceKeyId,
+    optional: requireProvenance === false,
+  });
+  if (requireProvenance !== false && provenanceVerifier.length === 0) {
+    throw new Error(
+      'Provenance enforcement enabled but no verification keys were loaded.',
+    );
+  }
+
   const app = express();
   app.disable('x-powered-by');
   app.set('db', db);
+  app.set('provenanceVerifier', provenanceVerifier);
+  app.set('provenanceRequired', requireProvenance !== false);
 
   app.use(express.json({ limit: jsonLimit }));
   
@@ -184,6 +251,7 @@ export async function createServer(options = {}) {
           issuer: manifest.issuer,
           signature: manifest.signature,
           updated_at: manifest.updated_at,
+          provenance: manifest.provenance ?? null,
         });
       } catch (error) {
         return next(error);
@@ -198,24 +266,94 @@ export async function createServer(options = {}) {
     async (request, response, next) => {
       try {
         const urn = decodeURIComponent(request.params.urn);
-        const body = request.body;
-        
-        if (!body || typeof body !== 'object') {
+        const payload = request.body;
+
+        if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
           return response.status(400).json({
             error: 'invalid_request',
             message: 'Body must be a JSON object.',
           });
         }
 
-        const result = await upsertManifest(db, urn, body, {
-          issuer: request.body?.issuer,
-          signature: request.body?.signature,
+        let manifest = payload.manifest ?? payload.body ?? null;
+        if (typeof manifest === 'string') {
+          try {
+            manifest = JSON.parse(manifest);
+          } catch {
+            manifest = null;
+          }
+        }
+        if (!manifest || typeof manifest !== 'object' || Array.isArray(manifest)) {
+          return response.status(400).json({
+            error: 'invalid_manifest',
+            message: 'Request must include a `manifest` object.',
+          });
+        }
+
+        if (
+          manifest &&
+          typeof manifest === 'object' &&
+          !Array.isArray(manifest) &&
+          manifest.manifest &&
+          manifest.provenance &&
+          typeof manifest.manifest === 'object' &&
+          !Array.isArray(manifest.manifest) &&
+          (Array.isArray(manifest.manifest.capabilities) || manifest.manifest.id)
+        ) {
+          manifest = manifest.manifest;
+        }
+
+        const provenance = payload.provenance;
+        const requireAttestation = app.get('provenanceRequired') !== false;
+        if (requireAttestation && !provenance) {
+          return response.status(422).json({
+            error: 'missing-provenance',
+            message: 'DSSE provenance attestation is required.',
+            urn,
+          });
+        }
+
+        let provenanceSummary = null;
+        if (provenance) {
+          const verifierConfigs = app.get('provenanceVerifier') || [];
+          const validation = validateProvenance(provenance, verifierConfigs);
+          if (!validation.ok) {
+            const status =
+              validation.reason === 'no-verification-keys' ||
+              validation.reason === 'no-matching-key'
+                ? 500
+                : 422;
+            return response.status(status).json({
+              error: 'invalid-provenance',
+              message: 'Provenance attestation failed validation.',
+              urn,
+              reason: validation.reason,
+            });
+          }
+          provenanceSummary = summarizeProvenance(provenance);
+          provenanceSummary = {
+            ...provenanceSummary,
+            signature: validation.signature,
+          };
+        } else if (requireAttestation) {
+          return response.status(422).json({
+            error: 'missing-provenance',
+            message: 'DSSE provenance attestation is required.',
+            urn,
+          });
+        }
+
+        const result = await upsertManifest(db, urn, manifest, {
+          issuer: payload?.issuer,
+          signature: payload?.signature,
+          provenance: provenance || null,
         });
 
         return response.status(200).json({
           status: 'ok',
           urn: result.urn,
           digest: result.digest,
+          provenance: provenanceSummary,
         });
       } catch (error) {
         return next(error);
@@ -326,4 +464,3 @@ export async function startServer(options = {}) {
       .on('error', reject);
   });
 }
-

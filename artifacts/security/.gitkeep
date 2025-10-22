@@ -1,0 +1,5 @@
+# This directory stores security audit logs
+# denials.jsonl - Signature verification denials
+# delegation-decisions.jsonl - IAM authorization decisions
+
+

@@ -528,9 +528,9 @@ describe('CLI Registry/Resolver Commands', () => {
 
     it('rejects missing signature envelope during verification', async () => {
       const { signatureVerifier } = await createRegistryTestContext();
-      const result = signatureVerifier.verify({ card: JSON.parse(JSON.stringify(BASE_CARD)), sig: null });
+      const result = await signatureVerifier.verify({ card: JSON.parse(JSON.stringify(BASE_CARD)), sig: null });
       expect(result.shouldReject).toBe(true);
-      expect(result.errors).toContain('Signature envelope is required.');
+      expect(result.errors).toContain('unsigned');
     });
 
     it('rejects unexpected signature specification identifiers', async () => {
@@ -539,9 +539,9 @@ describe('CLI Registry/Resolver Commands', () => {
       const sig = signCard(card);
       sig.spec = 'bad-spec.v2';
 
-      const verification = signatureVerifier.verify({ card, sig });
+      const verification = await signatureVerifier.verify({ card, sig });
       expect(verification.shouldReject).toBe(true);
-      expect(verification.errors).toContain('Unexpected signature spec identifier.');
+      expect(verification.errors).toContain('Invalid or missing spec identifier');
     });
 
     it('rejects signatures when key is not in the policy', async () => {
