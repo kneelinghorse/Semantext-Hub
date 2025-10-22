@@ -31,7 +31,64 @@ global.console = {
 
 // Performance monitoring for tests
 const nativePerformanceNow = performance.now.bind(performance);
+const originalPerformance = global.performance;
 let testStartTime;
+let performancePatched = false;
+
+function assignPerformanceNow(fn) {
+  try {
+    performance.now = fn;
+    performancePatched = true;
+    return;
+  } catch {
+    // Ignore and fall through to defineProperty.
+  }
+
+  try {
+    Object.defineProperty(performance, 'now', {
+      value: fn,
+      configurable: true,
+      writable: true,
+    });
+    performancePatched = true;
+    return;
+  } catch {
+    // Ignore and fall through to object replacement.
+  }
+
+  const replacement = Object.assign(
+    Object.create(Object.getPrototypeOf(originalPerformance)),
+    originalPerformance,
+    { now: fn },
+  );
+
+  global.performance = replacement;
+  performancePatched = true;
+}
+
+function resetPerformanceNow() {
+  if (!performancePatched) {
+    return;
+  }
+
+  global.performance = originalPerformance;
+
+  try {
+    Object.defineProperty(originalPerformance, 'now', {
+      value: nativePerformanceNow,
+      configurable: true,
+      writable: true,
+    });
+  } catch {
+    try {
+      originalPerformance.now = nativePerformanceNow;
+    } catch {
+      // If restoring fails, rely on the original binding we captured.
+    }
+  }
+
+  performancePatched = false;
+}
 
 beforeEach(() => {
   testStartTime = nativePerformanceNow();
@@ -50,14 +107,14 @@ afterEach(() => {
 global.testUtils = {
   mockPerformanceNow: (mockTime = 0) => {
     let currentTime = mockTime;
-    performance.now = jestGlobals.fn(() => {
+    assignPerformanceNow(jestGlobals.fn(() => {
       currentTime += 1;
       return currentTime;
-    });
+    }));
   },
 
   restorePerformanceNow: () => {
-    performance.now = nativePerformanceNow;
+    resetPerformanceNow();
   },
 
   createMockMetrics: () => ({
@@ -70,5 +127,5 @@ global.testUtils = {
 };
 
 afterAll(() => {
-  performance.now = nativePerformanceNow;
+  resetPerformanceNow();
 });

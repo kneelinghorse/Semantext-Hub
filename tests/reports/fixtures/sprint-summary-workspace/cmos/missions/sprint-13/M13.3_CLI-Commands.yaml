@@ -1,0 +1,11 @@
+missionId: "M13.3-20251013"
+name: "CLI Experience Fit"
+objective: >
+  Polish CLI ergonomics, add interactive help, and provide workflow scaffolding commands aligned with mission outcomes.
+deliverables:
+  - "/app/cli/commands/workbench-run.ts # workbench execution entrypoint"
+  - "/app/cli/commands/workbench-bench.ts # performance benchmarking command"
+  - "/app/cli/help/commands.md # updated CLI help reference"
+outcome:
+  status: "Completed"
+  summary: "CLI experience refined with help output and scaffolding utilities."

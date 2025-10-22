@@ -1,0 +1,11 @@
+missionId: "M13.2-20251013"
+name: "Catalog Graph Builder"
+objective: >
+  Produce the canonical catalog graph JSON representation and ensure adapters emit consistent topology metadata.
+deliverables:
+  - "/app/src/catalog/graph/builder.ts # canonical graph builder"
+  - "/app/tests/catalog/graph/builder.test.ts # builder test coverage"
+  - "/app/docs/catalog/graph-overview.md # graph schema reference"
+outcome:
+  status: "Completed"
+  summary: "Generated canonical graph builder, fixtures, and documentation."

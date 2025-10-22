@@ -17,12 +17,12 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Need full history for git diff
       
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
           cache: 'npm'
@@ -49,7 +49,7 @@ jobs:
       
       - name: Upload provenance report
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: provenance-report
           path: artifacts/security/provenance-report.json
@@ -69,4 +69,3 @@ jobs:
         run: |
           echo "✅ All changed manifests have valid provenance attestations"
           cat artifacts/security/provenance-report.json | jq '.validCount,.invalidCount'
-

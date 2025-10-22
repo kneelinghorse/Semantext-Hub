@@ -126,7 +126,22 @@ export async function verifyAttestations(options = {}) {
   const changedFiles = getChangedFiles(since);
   if (changedFiles.length === 0) {
     console.log(`No manifest files changed since ${since}`);
-    return { ok: true, results: [] };
+
+    const emptyReport = {
+      sinceRef: since,
+      checkedAt: new Date().toISOString(),
+      totalUrns: 0,
+      validCount: 0,
+      invalidCount: 0,
+      allValid: true,
+      results: [],
+    };
+
+    const outputDir = path.dirname(outputPath);
+    fs.mkdirSync(outputDir, { recursive: true });
+    fs.writeFileSync(outputPath, JSON.stringify(emptyReport, null, 2), 'utf8');
+
+    return emptyReport;
   }
   
   const urns = Array.from(new Set(changedFiles.map(extractUrnFromPath)));

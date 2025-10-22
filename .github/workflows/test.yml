@@ -35,15 +35,15 @@ jobs:
         cache-dependency-path: 'package-lock.json'
         
     - name: Install dependencies
-      run: |
-        cd .
-        npm ci
+      run: npm ci
+      
+    - name: Install Playwright browsers
+      run: npx playwright install chromium
         
     - name: Generate test fixtures
       run: |
-        cd .
         node -e "
-        import('./test-infrastructure/test-fixtures.js').then(async (module) => {
+        import('./packages/runtime/test-infrastructure/test-fixtures.js').then(async (module) => {
           await module.generateTestFixtures({ verbose: true });
           console.log('Test fixtures generated successfully');
         });
@@ -51,14 +51,12 @@ jobs:
         
     - name: Run unit tests
       run: |
-        cd .
         npm test -- --coverage --verbose
         
     - name: Run contract tests
       run: |
-        cd .
         node -e "
-        import('./test-infrastructure/contract-tester.js').then(async (module) => {
+        import('./packages/runtime/test-infrastructure/contract-tester.js').then(async (module) => {
           const results = await module.runContractTests({ verbose: true });
           console.log('Contract test results:', results);
           if (results.failed > 0) {
@@ -70,7 +68,6 @@ jobs:
         
     - name: Run property-based tests
       run: |
-        cd .
         npm test -- tests/property --verbose
         
     - name: Upload coverage reports
@@ -98,18 +95,13 @@ jobs:
         cache-dependency-path: 'package-lock.json'
         
     - name: Install dependencies
-      run: |
-        cd .
-        npm ci
+      run: npm ci
         
     - name: Run performance benchmarks
-      run: |
-        cd .
-        npm test -- tests/performance --verbose
+      run: npm run test:performance
         
     - name: Check performance targets
       run: |
-        cd .
         node -e "
         // Performance targets from mission B7.6.0
         const targets = {
@@ -140,19 +132,13 @@ jobs:
         cache-dependency-path: 'package-lock.json'
         
     - name: Install dependencies
-      run: |
-        cd .
-        npm ci
+      run: npm ci
         
     - name: Run security audit
-      run: |
-        cd .
-        npm audit --audit-level=moderate
+      run: npm audit --audit-level=moderate
         
     - name: Run security tests
-      run: |
-        cd .
-        npm test -- tests/security --verbose
+      run: npm test -- tests/security --verbose
 
   # End-to-End Tests
   e2e:
@@ -185,9 +171,10 @@ jobs:
         cache-dependency-path: 'package-lock.json'
         
     - name: Install dependencies
-      run: |
-        cd .
-        npm ci
+      run: npm ci
+      
+    - name: Install Playwright browsers
+      run: npx playwright install chromium
         
     - name: Wait for PostgreSQL
       run: |
@@ -197,13 +184,10 @@ jobs:
         done
         
     - name: Run E2E tests
-      run: |
-        cd .
-        npm test -- tests/e2e --verbose
+      run: npm test -- tests/e2e --verbose
         
     - name: Test CLI commands
       run: |
-        cd .
         npm run cli -- --help
         npm run cli scaffold -- --help
 
@@ -225,13 +209,10 @@ jobs:
         cache-dependency-path: 'package-lock.json'
         
     - name: Install dependencies
-      run: |
-        cd .
-        npm ci
+      run: npm ci
         
     - name: Check test coverage
       run: |
-        cd .
         npm test -- --coverage --coverageThreshold='{
           "global": {
             "branches": 80,
@@ -243,7 +224,6 @@ jobs:
         
     - name: Validate protocol schemas
       run: |
-        cd .
         node -e "
         import fs from 'fs/promises';
         import path from 'path';
@@ -271,7 +251,6 @@ jobs:
         
     - name: Check code quality
       run: |
-        cd .
         echo "Code quality checks completed"
         echo "✅ All tests passed"
         echo "✅ Performance benchmarks met"
@@ -297,19 +276,15 @@ jobs:
         cache-dependency-path: 'package-lock.json'
         
     - name: Install dependencies
-      run: |
-        cd .
-        npm ci
+      run: npm ci
         
     - name: Build project
       run: |
-        cd .
         echo "Building OSSP-AGI Protocol Suite..."
         echo "✅ Build completed successfully"
         
     - name: Create release artifacts
       run: |
-        cd .
         mkdir -p dist
         cp -r . dist/
         tar -czf ../ossp-agi-protocols.tar.gz -C dist .

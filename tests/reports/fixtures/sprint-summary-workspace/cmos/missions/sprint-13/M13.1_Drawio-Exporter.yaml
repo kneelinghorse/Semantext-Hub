@@ -1,0 +1,13 @@
+missionId: "M13.1-20251013"
+name: "Draw.io Exporter"
+objective: >
+  Implement an automated Draw.io exporter that converts the canonical catalog graph into mxGraphModel XML
+  and expose it through a CLI wrapper.
+deliverables:
+  - "/app/src/visualization/drawio/exporter.ts # JSON to XML serializer"
+  - "/app/tests/visualization/drawio/exporter.test.ts # unit tests"
+  - "/app/tests/visualization/drawio/smoke.test.ts # smoke test coverage"
+  - "/app/docs/dev/drawio-visualization.md # developer guide"
+outcome:
+  status: "Completed"
+  summary: "Exporter, CLI wrapper, documentation, and tests were delivered."

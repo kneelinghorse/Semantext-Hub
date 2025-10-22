@@ -6,7 +6,7 @@ import { generateSprintSummary } from '../../scripts/reports/sprint-summary-gene
 
 describe('sprint-summary-generator', () => {
   const testDir = path.dirname(fileURLToPath(import.meta.url));
-  const workspace = path.resolve(testDir, '../../..');
+  const workspace = path.resolve(testDir, 'fixtures', 'sprint-summary-workspace');
 
   it('generates markdown with required sections for Sprint 13', async () => {
     const result = await generateSprintSummary({

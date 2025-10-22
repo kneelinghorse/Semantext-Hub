@@ -1,4 +1,5 @@
 cmos/
+!tests/reports/fixtures/sprint-summary-workspace/cmos/
 
 .DS_Store
 node_modules/

@@ -1,0 +1,24 @@
+domainFields:
+  sprints:
+    - sprintId: "Sprint 13"
+      title: "Sprint 13 Delivery"
+      status: "Completed"
+      missions:
+        - id: "M13.1"
+          name: "Draw.io Exporter"
+          status: "Completed"
+          completed_at: "2025-10-13T10:00:00Z"
+          path: cmos/missions/sprint-13/M13.1_Drawio-Exporter.yaml
+          notes: "Delivered automated Draw.io exporter and CLI wrapper."
+        - id: "M13.2"
+          name: "Catalog Graph Builder"
+          status: "Completed"
+          completed_at: "2025-10-14T11:30:00Z"
+          path: cmos/missions/sprint-13/M13.2_Catalog-Graph-Builder.yaml
+          notes: "Shipped canonical catalog graph generator with fixtures."
+        - id: "M13.3"
+          name: "CLI Experience Fit"
+          status: "Completed"
+          completed_at: "2025-10-15T09:15:00Z"
+          path: cmos/missions/sprint-13/M13.3_CLI-Commands.yaml
+          notes: "Unified CLI commands with interactive help and scaffolding."
