@@ -1,3 +1,10 @@
 {
-  "type": "commonjs"
+  "name": "protocol-viewer",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "start": "node start.mjs",
+    "dev": "node start.mjs"
+  }
 }
+

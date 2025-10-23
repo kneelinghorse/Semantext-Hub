@@ -16,6 +16,7 @@ const DEFAULT_REGISTRY_CONFIG = fileURLToPath(
 const DEFAULT_PROVENANCE_KEY = fileURLToPath(
   new URL('../../../fixtures/keys/pub.pem', import.meta.url),
 );
+const OPENAPI_SPEC_PATH = fileURLToPath(new URL('./openapi.json', import.meta.url));
 
 const WELL_KNOWN_PAYLOAD = {
   service: 'OSSP-AGI Registry Service (SQLite)',
@@ -29,6 +30,15 @@ const WELL_KNOWN_PAYLOAD = {
   },
   auth: { type: 'api-key', header: 'X-API-Key' },
 };
+
+export async function readOpenApiSpec() {
+  return readFile(OPENAPI_SPEC_PATH, 'utf8');
+}
+
+export async function loadOpenApiSpec() {
+  const raw = await readOpenApiSpec();
+  return JSON.parse(raw);
+}
 
 async function loadRateLimitConfig(path) {
   if (path === null) return {};
@@ -160,6 +170,9 @@ export async function createServer(options = {}) {
   const app = express();
   app.disable('x-powered-by');
   app.set('db', db);
+  app.set('registryConfig', registryConfig);
+  app.set('rateLimiter', limiter);
+  app.set('rateLimitConfig', limiterConfig);
   app.set('provenanceVerifier', provenanceVerifier);
   app.set('provenanceRequired', requireProvenance !== false);
 
@@ -222,6 +235,16 @@ export async function createServer(options = {}) {
         },
         rateLimit: limiterConfig,
       });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.get('/openapi.json', async (request, response, next) => {
+    try {
+      const spec = await readOpenApiSpec();
+      response.setHeader('Content-Type', 'application/json');
+      response.send(spec);
     } catch (error) {
       next(error);
     }

@@ -1,0 +1,8 @@
+
+> protocol-viewer@0.1.0 start
+> node start.mjs
+
+Starting Protocol Viewer...
+Artifacts directory: /Users/d/portfolio/OSSP-AGI/artifacts
+Protocol Viewer running on http://localhost:3000
+Serving manifests from: /Users/d/portfolio/OSSP-AGI/artifacts

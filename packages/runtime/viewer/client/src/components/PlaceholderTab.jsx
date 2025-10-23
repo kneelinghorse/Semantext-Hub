@@ -203,10 +203,63 @@ export function GraphTab({ data }) {
           </div>
         )}
 
-        {data.nodes && (
+        {data.metadata?.partition && (
+          <div
+            className="partition-summary"
+            data-semantic-urn="urn:proto:graph:partition"
+            data-semantic-type="graph-partition-summary"
+          >
+            <h3>Partition Summary</h3>
+            <div className="summary-stats">
+              <div className="stat">
+                <span className="stat-label">Parts:</span>
+                <span className="stat-value">{data.metadata.partition.totalParts}</span>
+              </div>
+              <div className="stat">
+                <span className="stat-label">Max Size:</span>
+                <span className="stat-value">{data.metadata.partition.maxSize}</span>
+              </div>
+              <div className="stat">
+                <span className="stat-label">Avg Size:</span>
+                <span className="stat-value">
+                  {Math.round(data.metadata.partition.avgSize ?? 0)}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {Array.isArray(data.parts) && data.parts.length > 0 && (
+          <div
+            className="partition-list"
+            data-semantic-urn="urn:proto:graph:partition:list"
+            data-semantic-type="graph-partition-list"
+          >
+            <h3>Partition Samples</h3>
+            {data.parts.slice(0, 3).map((part) => (
+              <div
+                key={part.id}
+                className="partition-item"
+                data-semantic-type="graph-partition"
+                data-semantic-part-id={part.id}
+              >
+                <strong>{part.id}</strong>
+                <span className="partition-nodes">{part.nodes} nodes</span>
+                <span className="partition-edges">{part.edges} edges</span>
+              </div>
+            ))}
+            {data.parts.length > 3 && (
+              <p className="partition-footnote">
+                Showing {Math.min(3, data.parts.length)} of {data.parts.length} partitions
+              </p>
+            )}
+          </div>
+        )}
+
+        {Array.isArray(data.nodes) && data.nodes.length > 0 && (
           <div className="graph-nodes">
             <h3>Protocol Nodes</h3>
-            {data.nodes.map((node) => (
+            {data.nodes.slice(0, 12).map((node) => (
               <div
                 key={node.id}
                 className="graph-node-item"
@@ -218,6 +271,11 @@ export function GraphTab({ data }) {
                 <span className="node-format">{node.format}</span>
               </div>
             ))}
+            {data.nodes.length > 12 && (
+              <p className="partition-footnote">
+                Showing 12 of {data.nodes.length} nodes
+              </p>
+            )}
           </div>
         )}
 

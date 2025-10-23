@@ -1,3 +1,5 @@
+import { getGraph as loadPartitionedGraph } from './graph.js';
+
 /**
  * API Client for Protocol Viewer
  * Handles all backend communication with error normalization
@@ -167,45 +169,41 @@ export const api = {
    * Get graph data (placeholder with semantic stubs)
    * @returns {Promise<object>} Graph data
    */
-  async getGraph(manifests = []) {
-    const manifestFiles = await this._resolveManifestFiles(manifests);
+  async getGraph(manifests = [], options = {}) {
+    const { seed = null, useWorker, maxConcurrent, onPartLoaded } = options;
 
-    if (manifestFiles.length === 0) {
-      throw new ApiError('No manifests available for graph generation', 404, null);
+    let manifestFiles = [];
+    if (!seed) {
+      manifestFiles = await this._resolveManifestFiles(manifests);
+
+      if (manifestFiles.length === 0) {
+        throw new ApiError('No manifests available for graph generation', 404, null);
+      }
     }
 
-    const response = await fetchApi('/graph', {
-      method: 'POST',
-      body: JSON.stringify({ manifests: manifestFiles })
+    if (typeof window !== 'undefined') {
+      const debugPayload = {
+        seed,
+        manifests: manifestFiles.length,
+        useWorker: typeof window !== 'undefined' ? useWorker !== false : false
+      };
+      console.log('[graph] api.getGraph request', debugPayload);
+    }
+
+    const graph = await loadPartitionedGraph(manifestFiles, {
+      seed,
+      useWorker: typeof window !== 'undefined' ? useWorker !== false : false,
+      maxConcurrent,
+      onPartLoaded
     });
 
-    const result = {
-      ...response,
-      source: 'live',
-      nodes: [],
-      edges: [],
-      metadata: {
-        nodeCount: response.index?.node_count || 0,
-        edgeCount: response.index?.edge_count || 0,
-        depth: response.index?.depth || 0
-      }
+    const primaryChunk = graph.chunks?.[0]?.chunk ?? null;
+
+    return {
+      ...graph,
+      manifests: manifestFiles,
+      primary: primaryChunk
     };
-
-    if (Array.isArray(response.parts) && response.parts.length > 0) {
-      const firstPart = response.parts[0];
-      const chunk = await fetchApi(`/graph/part/${encodeURIComponent(firstPart.id)}`);
-
-      result.primary = chunk;
-      result.nodes = chunk.nodes || [];
-      result.edges = chunk.edges || [];
-      result.metadata = {
-        nodeCount: response.index?.node_count ?? chunk.summary?.nodes ?? result.nodes.length ?? 0,
-        edgeCount: response.index?.edge_count ?? chunk.summary?.edges ?? result.edges.length ?? 0,
-        depth: response.index?.depth ?? chunk.summary?.depth ?? 0
-      };
-    }
-
-    return result;
   },
 
   /**

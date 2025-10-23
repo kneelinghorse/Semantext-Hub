@@ -1,0 +1,321 @@
+{
+  "seed": "graph10k",
+  "index": {
+    "generated_at": "2025-10-22T23:38:04.767Z",
+    "parts": 20,
+    "node_count": 10000,
+    "edge_count": 25000,
+    "depth": 2,
+    "partition": {
+      "totalNodes": 10000,
+      "totalEdges": 25000,
+      "totalParts": 20,
+      "maxSize": 500,
+      "minSize": 500,
+      "avgSize": 500
+    },
+    "expires_in_ms": 300000
+  },
+  "parts": [
+    {
+      "id": "part-001",
+      "url": "/graph/seeds/graph10k/parts/part-001.json",
+      "size": 21234,
+      "nodes": 500,
+      "edges": 216,
+      "depth": 2,
+      "partition": {
+        "id": "part-001",
+        "size": 500,
+        "edgeCount": 216,
+        "start": 0,
+        "end": 500
+      }
+    },
+    {
+      "id": "part-002",
+      "url": "/graph/seeds/graph10k/parts/part-002.json",
+      "size": 16566,
+      "nodes": 500,
+      "edges": 0,
+      "depth": 2,
+      "partition": {
+        "id": "part-002",
+        "size": 500,
+        "edgeCount": 0,
+        "start": 500,
+        "end": 1000
+      }
+    },
+    {
+      "id": "part-003",
+      "url": "/graph/seeds/graph10k/parts/part-003.json",
+      "size": 17566,
+      "nodes": 500,
+      "edges": 0,
+      "depth": 2,
+      "partition": {
+        "id": "part-003",
+        "size": 500,
+        "edgeCount": 0,
+        "start": 1000,
+        "end": 1500
+      }
+    },
+    {
+      "id": "part-004",
+      "url": "/graph/seeds/graph10k/parts/part-004.json",
+      "size": 23183,
+      "nodes": 500,
+      "edges": 216,
+      "depth": 2,
+      "partition": {
+        "id": "part-004",
+        "size": 500,
+        "edgeCount": 216,
+        "start": 1500,
+        "end": 2000
+      }
+    },
+    {
+      "id": "part-005",
+      "url": "/graph/seeds/graph10k/parts/part-005.json",
+      "size": 17566,
+      "nodes": 500,
+      "edges": 0,
+      "depth": 2,
+      "partition": {
+        "id": "part-005",
+        "size": 500,
+        "edgeCount": 0,
+        "start": 2000,
+        "end": 2500
+      }
+    },
+    {
+      "id": "part-006",
+      "url": "/graph/seeds/graph10k/parts/part-006.json",
+      "size": 17566,
+      "nodes": 500,
+      "edges": 0,
+      "depth": 2,
+      "partition": {
+        "id": "part-006",
+        "size": 500,
+        "edgeCount": 0,
+        "start": 2500,
+        "end": 3000
+      }
+    },
+    {
+      "id": "part-007",
+      "url": "/graph/seeds/graph10k/parts/part-007.json",
+      "size": 23183,
+      "nodes": 500,
+      "edges": 216,
+      "depth": 2,
+      "partition": {
+        "id": "part-007",
+        "size": 500,
+        "edgeCount": 216,
+        "start": 3000,
+        "end": 3500
+      }
+    },
+    {
+      "id": "part-008",
+      "url": "/graph/seeds/graph10k/parts/part-008.json",
+      "size": 17566,
+      "nodes": 500,
+      "edges": 0,
+      "depth": 2,
+      "partition": {
+        "id": "part-008",
+        "size": 500,
+        "edgeCount": 0,
+        "start": 3500,
+        "end": 4000
+      }
+    },
+    {
+      "id": "part-009",
+      "url": "/graph/seeds/graph10k/parts/part-009.json",
+      "size": 17566,
+      "nodes": 500,
+      "edges": 0,
+      "depth": 2,
+      "partition": {
+        "id": "part-009",
+        "size": 500,
+        "edgeCount": 0,
+        "start": 4000,
+        "end": 4500
+      }
+    },
+    {
+      "id": "part-010",
+      "url": "/graph/seeds/graph10k/parts/part-010.json",
+      "size": 23105,
+      "nodes": 500,
+      "edges": 213,
+      "depth": 2,
+      "partition": {
+        "id": "part-010",
+        "size": 500,
+        "edgeCount": 213,
+        "start": 4500,
+        "end": 5000
+      }
+    },
+    {
+      "id": "part-011",
+      "url": "/graph/seeds/graph10k/parts/part-011.json",
+      "size": 21311,
+      "nodes": 500,
+      "edges": 144,
+      "depth": 2,
+      "partition": {
+        "id": "part-011",
+        "size": 500,
+        "edgeCount": 144,
+        "start": 5000,
+        "end": 5500
+      }
+    },
+    {
+      "id": "part-012",
+      "url": "/graph/seeds/graph10k/parts/part-012.json",
+      "size": 17566,
+      "nodes": 500,
+      "edges": 0,
+      "depth": 2,
+      "partition": {
+        "id": "part-012",
+        "size": 500,
+        "edgeCount": 0,
+        "start": 5500,
+        "end": 6000
+      }
+    },
+    {
+      "id": "part-013",
+      "url": "/graph/seeds/graph10k/parts/part-013.json",
+      "size": 17566,
+      "nodes": 500,
+      "edges": 0,
+      "depth": 2,
+      "partition": {
+        "id": "part-013",
+        "size": 500,
+        "edgeCount": 0,
+        "start": 6000,
+        "end": 6500
+      }
+    },
+    {
+      "id": "part-014",
+      "url": "/graph/seeds/graph10k/parts/part-014.json",
+      "size": 21311,
+      "nodes": 500,
+      "edges": 144,
+      "depth": 2,
+      "partition": {
+        "id": "part-014",
+        "size": 500,
+        "edgeCount": 144,
+        "start": 6500,
+        "end": 7000
+      }
+    },
+    {
+      "id": "part-015",
+      "url": "/graph/seeds/graph10k/parts/part-015.json",
+      "size": 17566,
+      "nodes": 500,
+      "edges": 0,
+      "depth": 2,
+      "partition": {
+        "id": "part-015",
+        "size": 500,
+        "edgeCount": 0,
+        "start": 7000,
+        "end": 7500
+      }
+    },
+    {
+      "id": "part-016",
+      "url": "/graph/seeds/graph10k/parts/part-016.json",
+      "size": 17566,
+      "nodes": 500,
+      "edges": 0,
+      "depth": 2,
+      "partition": {
+        "id": "part-016",
+        "size": 500,
+        "edgeCount": 0,
+        "start": 7500,
+        "end": 8000
+      }
+    },
+    {
+      "id": "part-017",
+      "url": "/graph/seeds/graph10k/parts/part-017.json",
+      "size": 21311,
+      "nodes": 500,
+      "edges": 144,
+      "depth": 2,
+      "partition": {
+        "id": "part-017",
+        "size": 500,
+        "edgeCount": 144,
+        "start": 8000,
+        "end": 8500
+      }
+    },
+    {
+      "id": "part-018",
+      "url": "/graph/seeds/graph10k/parts/part-018.json",
+      "size": 17566,
+      "nodes": 500,
+      "edges": 0,
+      "depth": 2,
+      "partition": {
+        "id": "part-018",
+        "size": 500,
+        "edgeCount": 0,
+        "start": 8500,
+        "end": 9000
+      }
+    },
+    {
+      "id": "part-019",
+      "url": "/graph/seeds/graph10k/parts/part-019.json",
+      "size": 17566,
+      "nodes": 500,
+      "edges": 0,
+      "depth": 2,
+      "partition": {
+        "id": "part-019",
+        "size": 500,
+        "edgeCount": 0,
+        "start": 9000,
+        "end": 9500
+      }
+    },
+    {
+      "id": "part-020",
+      "url": "/graph/seeds/graph10k/parts/part-020.json",
+      "size": 21259,
+      "nodes": 500,
+      "edges": 142,
+      "depth": 2,
+      "partition": {
+        "id": "part-020",
+        "size": 500,
+        "edgeCount": 142,
+        "start": 9500,
+        "end": 10000
+      }
+    }
+  ]
+}

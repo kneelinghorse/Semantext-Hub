@@ -1,0 +1,2 @@
+{"url":"http://localhost:3000/viewer?seed=graph10k","tti":19530,"timestamp":"2025-10-22T22:25:25.636Z","parts":20,"nodeCount":10000,"partition":null}
+{"url":"http://localhost:3000/viewer?seed=graph10k","tti":18,"timestamp":"2025-10-22T23:39:35.494Z","parts":20,"nodeCount":10000,"partition":{"totalNodes":10000,"totalEdges":25000,"totalParts":20,"maxSize":500,"minSize":500,"avgSize":500}}

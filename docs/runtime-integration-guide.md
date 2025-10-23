@@ -4,6 +4,7 @@ This guide explains how to integrate the OSSP-AGI runtime components into your a
 
 ## Table of Contents
 
+- [Registry Service](#registry-service)
 - [Integration Patterns](#integration-patterns)
 - [Application Architecture](#application-architecture)
 - [Service Integration](#service-integration)
@@ -14,6 +15,70 @@ This guide explains how to integrate the OSSP-AGI runtime components into your a
 - [Cloud Integration](#cloud-integration)
 - [Monitoring Integration](#monitoring-integration)
 - [Deployment Strategies](#deployment-strategies)
+
+## Registry Service
+
+### Starting the Registry Server
+
+The canonical Registry HTTP server is exported from `packages/runtime/registry/server.mjs`:
+
+```javascript
+import { createServer } from 'packages/runtime/registry/server.mjs';
+
+// Create the Express app instance
+const app = await createServer({
+  apiKey: process.env.REGISTRY_API_KEY || 'local-dev-key',
+  registryConfigPath: './config/registry.config.json',
+  rateLimitConfigPath: './config/security/rate-limit.config.json',
+  requireProvenance: true,
+});
+
+// Start listening
+const port = process.env.PORT || 3000;
+app.listen(port, () => {
+  console.log(`Registry server listening on port ${port}`);
+});
+```
+
+### Available Endpoints
+
+The registry server exposes the following endpoints:
+
+- `GET /health` - Health check with registry statistics
+- `GET /openapi.json` - OpenAPI specification
+- `GET /.well-known/ossp-agi.json` - Well-known service discovery
+- `GET /v1/registry/:urn` - Fetch manifest by URN
+- `PUT /v1/registry/:urn` - Register or update manifest
+- `GET /v1/resolve?urn=...` - Resolve agent by URN
+- `POST /v1/query` - Query agents by capability
+
+### Environment Variables
+
+- `REGISTRY_API_KEY` - API key for authentication (default: 'local-dev-key')
+- `PORT` - Server port (default: 3000)
+- `PROVENANCE_PUBKEY_PATH` - Path to public key for provenance verification
+
+### Configuration
+
+Create a `registry.config.json` file:
+
+```json
+{
+  "dbPath": "./var/registry.sqlite",
+  "pragmas": {
+    "journal_mode": "WAL",
+    "synchronous": "NORMAL"
+  }
+}
+```
+
+### Testing
+
+Run the parity test to verify all endpoints:
+
+```bash
+npm test -- tests/runtime/registry.http.parity.spec.mjs
+```
 
 ## Integration Patterns
 

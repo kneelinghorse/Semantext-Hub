@@ -45,6 +45,47 @@ describe('API Client', () => {
 
       await expect(api.getHealth()).rejects.toThrow(ApiError);
     });
+
+    it('falls back to API when static seed missing', async () => {
+      fetchMock
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 404,
+          headers: new Headers({ 'content-type': 'text/html' }),
+          text: async () => '<!DOCTYPE html>',
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({
+            index: { node_count: 1, edge_count: 0, depth: 1, parts: 1 },
+            parts: [{ id: 'chunk-1', url: '/api/graph/part/chunk-1', size: 64 }]
+          }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => ({
+            nodes: [{ id: 'fallback-node' }],
+            edges: [],
+            summary: { nodes: 1, edges: 0, depth: 1 }
+          }),
+        });
+
+      const result = await api.getGraph(undefined, { seed: 'graph10k', useWorker: false });
+
+      expect(fetchMock).toHaveBeenNthCalledWith(
+        1,
+        '/graph/seeds/graph10k/index.json',
+        expect.objectContaining({ cache: 'force-cache' })
+      );
+      expect(fetchMock).toHaveBeenNthCalledWith(
+        2,
+        '/api/graph/seed/graph10k',
+        expect.any(Object)
+      );
+      expect(result.nodes[0].id).toBe('fallback-node');
+    });
   });
 
   describe('getManifests', () => {
@@ -206,6 +247,8 @@ describe('API Client', () => {
       expect(result.nodes.length).toBe(1);
       expect(result.metadata.nodeCount).toBe(2);
       expect(result.source).toBe('live');
+      expect(result.chunks[0].chunk).toEqual(chunkResponse);
+      expect(result.primary).toEqual(chunkResponse);
     });
 
     it('pulls manifest list when not provided', async () => {
@@ -249,6 +292,42 @@ describe('API Client', () => {
         })
       );
       expect(result.nodes.length).toBe(1);
+      expect(result.chunks.length).toBe(1);
+      expect(result.metadata.nodeCount).toBe(1);
+    });
+
+    it('loads seed graph when seed option provided', async () => {
+      const graphResponse = {
+        index: { node_count: 5, edge_count: 2, depth: 2, parts: 1 },
+        parts: [{ id: 'chunk-seed', url: '/api/graph/part/chunk-seed', size: 256 }]
+      };
+      const chunkResponse = {
+        nodes: [{ id: 'seed-node', urn: 'urn:seed:node', type: 'seed', format: 'seed' }],
+        edges: [],
+        summary: { nodes: 1, edges: 0, depth: 1 }
+      };
+
+      fetchMock
+        .mockResolvedValueOnce({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => graphResponse,
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: async () => chunkResponse,
+        });
+
+      const result = await api.getGraph(undefined, { seed: 'graph10k', useWorker: false });
+
+      expect(fetchMock).toHaveBeenNthCalledWith(
+        1,
+        '/graph/seeds/graph10k/index.json',
+        expect.objectContaining({ cache: 'force-cache' })
+      );
+      expect(result.source).toBe('seed');
+      expect(result.metadata.nodeCount).toBe(5);
     });
   });
 

@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { randomBytes } from 'node:crypto';
 import { validatePath } from '../middleware/validate-path.mjs';
+import { partitionGraph } from '../graph/partition.mjs';
 
 // In-memory storage for graph chunks (permissive TTL)
 const graphChunkStore = new Map();
@@ -148,10 +149,37 @@ function estimateDepth(edges) {
   return Math.min(maxDepth, 6);
 }
 
+function normalizeEdgeForChunk(edge) {
+  if (!edge || typeof edge !== 'object') {
+    return { source: null, target: null };
+  }
+  const source = edge.source ?? edge.s ?? edge.from ?? null;
+  const target = edge.target ?? edge.t ?? edge.to ?? null;
+  return {
+    source: source != null ? String(source) : null,
+    target: target != null ? String(target) : null
+  };
+}
+
+function normalizeNodeIdForChunk(node, index) {
+  if (!node || typeof node !== 'object') return `node-${index}`;
+  if (typeof node.id === 'string' || typeof node.id === 'number') {
+    return String(node.id);
+  }
+  if (typeof node.key === 'string' || typeof node.key === 'number') {
+    return String(node.key);
+  }
+  return `node-${index}`;
+}
+
 function chunkGraphData(nodes, edges, chunkSize = 50) {
-  if (nodes.length === 0) {
+  if (!Array.isArray(nodes) || nodes.length === 0) {
     const emptyId = createChunkId();
-    const chunkData = { nodes: [], edges: [], summary: { nodes: 0, edges: 0, depth: 0 } };
+    const chunkData = {
+      nodes: [],
+      edges: [],
+      summary: { nodes: 0, edges: 0, depth: 0 }
+    };
     return {
       parts: [
         {
@@ -161,17 +189,47 @@ function chunkGraphData(nodes, edges, chunkSize = 50) {
         }
       ],
       totalNodes: 0,
-      totalEdges: 0,
-      depth: 0
+      totalEdges: Array.isArray(edges) ? edges.length : 0,
+      depth: 0,
+      partitionIndex: {
+        parts: [],
+        stats: {
+          totalNodes: 0,
+          totalEdges: Array.isArray(edges) ? edges.length : 0,
+          totalParts: 0,
+          maxSize: 0,
+          minSize: 0,
+          avgSize: 0
+        }
+      }
     };
   }
 
   const depthEstimate = estimateDepth(edges);
-  const parts = [];
-  for (let i = 0; i < nodes.length; i += chunkSize) {
-    const chunkNodes = nodes.slice(i, i + chunkSize);
-    const nodeIds = new Set(chunkNodes.map((n) => n.id));
-    const chunkEdges = edges.filter((edge) => nodeIds.has(edge.source) || nodeIds.has(edge.target));
+  const targetChunkSize = nodes.length > 1000 ? 500 : chunkSize;
+  const partitionIndex = partitionGraph(nodes, edges, { maxNodesPerPart: targetChunkSize });
+
+  const normalizedEdges = Array.isArray(edges)
+    ? edges.map((edge, index) => ({
+        ...normalizeEdgeForChunk(edge),
+        original: edge,
+        index
+      }))
+    : [];
+
+  const buildChunkByRange = (start, end) => {
+    const chunkNodes = nodes.slice(start, end);
+    const nodeIds = chunkNodes.map((node, offset) =>
+      normalizeNodeIdForChunk(node, start + offset)
+    );
+    const nodeLookup = new Set(nodeIds);
+
+    const chunkEdges = normalizedEdges
+      .filter(({ source, target }) => {
+        if (!source || !target) return false;
+        return nodeLookup.has(source) && nodeLookup.has(target);
+      })
+      .map(({ original }) => original);
 
     const chunkData = {
       nodes: chunkNodes,
@@ -183,11 +241,30 @@ function chunkGraphData(nodes, edges, chunkSize = 50) {
       }
     };
 
+    return {
+      data: chunkData,
+      size: Buffer.byteLength(JSON.stringify(chunkData))
+    };
+  };
+
+  const parts = [];
+
+  for (const partitionPart of partitionIndex.parts) {
+    const { data, size } = buildChunkByRange(partitionPart.start, partitionPart.end);
+    const partitionMeta = {
+      id: partitionPart.id,
+      size: partitionPart.size,
+      edgeCount: partitionPart.edgeCount,
+      start: partitionPart.start,
+      end: partitionPart.end
+    };
+    data.partition = partitionMeta;
     const id = createChunkId();
     parts.push({
       id,
-      data: chunkData,
-      size: Buffer.byteLength(JSON.stringify(chunkData))
+      data,
+      size,
+      partition: partitionMeta
     });
   }
 
@@ -195,7 +272,8 @@ function chunkGraphData(nodes, edges, chunkSize = 50) {
     parts,
     totalNodes: nodes.length,
     totalEdges: edges.length,
-    depth: depthEstimate
+    depth: depthEstimate,
+    partitionIndex
   };
 }
 
@@ -497,7 +575,7 @@ export function setupApiRoutes(app, artifactsDir) {
       }
 
       const { nodes, edges } = buildGraph(manifestPayloads);
-      const graphChunks = chunkGraphData(nodes, edges, 50);
+      const graphChunks = chunkGraphData(nodes, edges, nodes.length > 1000 ? 500 : 50);
 
       const responseParts = graphChunks.parts.map((part) => {
         graphChunkStore.set(part.id, {
@@ -510,7 +588,8 @@ export function setupApiRoutes(app, artifactsDir) {
           size: part.size,
           nodes: part.data.summary.nodes,
           edges: part.data.summary.edges,
-          depth: part.data.summary.depth
+          depth: part.data.summary.depth,
+          partition: part.partition
         };
       });
 
@@ -520,6 +599,7 @@ export function setupApiRoutes(app, artifactsDir) {
         node_count: graphChunks.totalNodes,
         edge_count: graphChunks.totalEdges,
         depth: graphChunks.depth,
+        partition: graphChunks.partitionIndex?.stats || null,
         expires_in_ms: CHUNK_TTL_MS
       };
 
@@ -548,5 +628,86 @@ export function setupApiRoutes(app, artifactsDir) {
       ...chunk.data,
       served_at: new Date().toISOString()
     });
+  });
+
+  /**
+   * GET /api/graph/seed/:seedName
+   * Load graph from seed file for performance testing
+   */
+  app.get('/api/graph/seed/:seedName', async (req, res) => {
+    try {
+      const { seedName } = req.params;
+      const seedPath = path.join(artifactsDir, seedName, 'graph.json');
+      const routeStart = process.hrtime.bigint();
+      const wallStart = Date.now();
+
+      res.once('finish', () => {
+        const duration = Date.now() - wallStart;
+        console.log(`[seedRoute] finished seed=${seedName} status=${res.statusCode} durationMs=${duration}`);
+      });
+      
+      try {
+        await fs.access(seedPath);
+      } catch {
+        return res.status(404).json({ error: `Seed not found: ${seedName}` });
+      }
+
+      const content = await fs.readFile(seedPath, 'utf-8');
+      const afterRead = process.hrtime.bigint();
+      const { nodes, edges } = JSON.parse(content);
+      const afterParse = process.hrtime.bigint();
+      
+      const graphChunks = chunkGraphData(nodes, edges, 500);
+      const afterChunk = process.hrtime.bigint();
+      
+      const responseParts = graphChunks.parts.map((part) => {
+        graphChunkStore.set(part.id, {
+          data: part.data,
+          expiresAt: Date.now() + CHUNK_TTL_MS
+        });
+        return {
+          id: part.id,
+          url: `/api/graph/part/${part.id}`,
+          size: part.size,
+          nodes: part.data.summary.nodes,
+          edges: part.data.summary.edges,
+          depth: part.data.summary.depth,
+          partition: part.partition
+        };
+      });
+
+      const index = {
+        generated_at: new Date().toISOString(),
+        parts: responseParts.length,
+        node_count: graphChunks.totalNodes,
+        edge_count: graphChunks.totalEdges,
+        depth: graphChunks.depth,
+        partition: graphChunks.partitionIndex?.stats || null,
+        expires_in_ms: CHUNK_TTL_MS
+      };
+
+      res.json({ index, parts: responseParts });
+      const afterResponse = process.hrtime.bigint();
+      const nsToMs = (ns) => Number(ns) / 1e6;
+      const perfEntry = {
+        seed: seedName,
+        readMs: nsToMs(afterRead - routeStart),
+        parseMs: nsToMs(afterParse - afterRead),
+        chunkMs: nsToMs(afterChunk - afterParse),
+        responseWriteMs: nsToMs(afterResponse - afterChunk),
+        totalMs: nsToMs(afterResponse - routeStart)
+      };
+      console.log('[seedRoute]', perfEntry);
+      try {
+        const perfDir = path.join(artifactsDir, '..', 'perf');
+        await fs.mkdir(perfDir, { recursive: true });
+        appendFileSync(path.join(perfDir, 'seed-route.log'), JSON.stringify(perfEntry) + '\n');
+      } catch (logErr) {
+        console.error('Failed to write seed route perf entry', logErr);
+      }
+    } catch (err) {
+      console.error('Graph seed route failed:', err);
+      res.status(500).json({ error: 'Graph seed loading failed' });
+    }
   });
 }

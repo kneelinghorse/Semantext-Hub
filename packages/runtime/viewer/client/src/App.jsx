@@ -17,7 +17,15 @@ import './App.css';
  * Orchestrates tab navigation and data fetching
  */
 function AppInner() {
-  const [activeTab, setActiveTab] = useState('health');
+  const [activeTab, setActiveTab] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('seed')) {
+        return 'graph';
+      }
+    }
+    return 'health';
+  });
   const { setActiveTab: setRegistryTab } = useSemanticRegistry();
   const [healthData, setHealthData] = useState(null);
   const [manifestsData, setManifestsData] = useState(null);
@@ -104,8 +112,68 @@ function AppInner() {
     try {
       setLoading((prev) => ({ ...prev, graph: true }));
       setErrors((prev) => ({ ...prev, graph: null }));
-      const data = await api.getGraph();
-      setGraphData(data);
+
+      const t0 = performance.now();
+      window.__GRAPH_READY__ = false;
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const seed = urlParams.get('seed');
+      let ttiLogged = false;
+      if (typeof window !== 'undefined') {
+        window.__FETCH_GRAPH_CALLS__ = (window.__FETCH_GRAPH_CALLS__ || 0) + 1;
+        console.log(`[graph] fetchGraph call #${window.__FETCH_GRAPH_CALLS__}`, { seed });
+      }
+
+      const graph = await api.getGraph(undefined, {
+        seed,
+        useWorker: true,
+        maxConcurrent: 4,
+        onIndex: (graphIndex) => {
+          setGraphData((prev) => {
+            if (prev) return prev;
+            const index = graphIndex.index ?? null;
+            return {
+              index,
+              parts: graphIndex.parts ?? [],
+              nodes: [],
+              edges: [],
+              metadata: {
+                nodeCount: index?.node_count ?? 0,
+                edgeCount: index?.edge_count ?? 0,
+                depth: index?.depth ?? 0,
+                partition: index?.partition ?? null
+              },
+              source: seed ? 'seed' : 'live'
+            };
+          });
+        },
+        onPartLoaded: ({ index }) => {
+          if (!ttiLogged && index === 0) {
+            ttiLogged = true;
+            const tti = Math.round(performance.now() - t0);
+            window.__GRAPH_READY__ = true;
+            window.__GRAPH_READY_MS = tti;
+            console.log(`[graphReady]=${tti}`);
+          }
+        }
+      });
+
+      if (!ttiLogged) {
+        ttiLogged = true;
+        const tti = Math.round(performance.now() - t0);
+        window.__GRAPH_READY__ = true;
+        window.__GRAPH_READY_MS = tti;
+        console.log(`[graphReady]=${tti}`);
+      }
+
+      setGraphData(graph);
+      if (typeof window !== 'undefined') {
+        window.__GRAPH_METADATA__ = {
+          index: graph.index,
+          parts: graph.parts,
+          metadata: graph.metadata
+        };
+      }
     } catch (error) {
       setErrors((prev) => ({ ...prev, graph: error }));
       console.error('Failed to fetch graph:', error);
