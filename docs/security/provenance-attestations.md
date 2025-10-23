@@ -68,7 +68,7 @@ CREATE TABLE provenance (
 );
 ```
 
-### 4. Registry Enforcement (`app/services/registry/server.mjs`)
+### 4. Registry Enforcement (`packages/runtime/registry/server.mjs`)
 
 Registry PUT endpoints enforce provenance in `enforce` mode:
 
@@ -267,4 +267,3 @@ Potential improvements tracked for future sprints:
 - [DSSE Specification](https://github.com/secure-systems-lab/dsse)
 - [in-toto Attestation Framework](https://in-toto.io/)
 - [SLSA Provenance](https://slsa.dev/provenance/)
-

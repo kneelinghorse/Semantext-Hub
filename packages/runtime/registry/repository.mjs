@@ -2,6 +2,49 @@ import crypto from 'node:crypto';
 import { parsePayload as parseEnvelopePayload } from '../security/dsse.mjs';
 import { summarizeProvenance } from '../security/provenance.mjs';
 
+function extractCapabilityStrings(manifest) {
+  const values = new Set();
+  if (!manifest || typeof manifest !== 'object') {
+    return [];
+  }
+
+  const pushEntry = (entry) => {
+    if (!entry) return;
+    if (typeof entry === 'string') {
+      const trimmed = entry.trim();
+      if (trimmed) values.add(trimmed);
+      return;
+    }
+    if (typeof entry !== 'object') return;
+    if (typeof entry.capability === 'string' && entry.capability.trim()) {
+      values.add(entry.capability.trim());
+    }
+    if (typeof entry.urn === 'string' && entry.urn.trim()) {
+      values.add(entry.urn.trim());
+    }
+  };
+
+  const rootCaps = manifest.capabilities;
+  if (Array.isArray(rootCaps)) {
+    for (const entry of rootCaps) {
+      pushEntry(entry);
+    }
+  } else if (rootCaps && typeof rootCaps === 'object') {
+    if (Array.isArray(rootCaps.tools)) {
+      for (const entry of rootCaps.tools) {
+        pushEntry(entry);
+      }
+    }
+    if (Array.isArray(rootCaps.resources)) {
+      for (const entry of rootCaps.resources) {
+        pushEntry(entry);
+      }
+    }
+  }
+
+  return Array.from(values);
+}
+
 const sha256 = (s) => crypto.createHash('sha256').update(s).digest('hex');
 
 export async function upsertManifest(db, urn, body, { issuer, signature, provenance } = {}) {
@@ -59,7 +102,7 @@ export async function upsertManifest(db, urn, body, { issuer, signature, provena
   let caps = [];
   try {
     const json = JSON.parse(payload);
-    caps = Array.isArray(json?.capabilities) ? json.capabilities : [];
+    caps = extractCapabilityStrings(json);
   } catch {}
   
   await db.run("DELETE FROM capabilities WHERE urn=?", [urn]);

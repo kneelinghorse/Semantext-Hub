@@ -135,6 +135,10 @@ export async function createServer(options = {}) {
   const {
     registryConfigPath,
     rateLimitConfigPath,
+    registryConfigOverrides,
+    dbPath = null,
+    pragmas = null,
+    rateLimit: rateLimitOverrides,
     apiKey = DEFAULT_API_KEY,
     jsonLimit = '512kb',
     provenanceKeyPath,
@@ -148,10 +152,27 @@ export async function createServer(options = {}) {
     throw new Error('Registry API key must be provided via options.apiKey or REGISTRY_API_KEY.');
   }
 
-  const registryConfig = await loadRegistryConfig(registryConfigPath);
+  const registryConfigFromFile = await loadRegistryConfig(registryConfigPath);
+  const registryConfig = {
+    ...(registryConfigFromFile || {}),
+    ...(registryConfigOverrides || {}),
+  };
+  if (dbPath) {
+    registryConfig.dbPath = dbPath;
+  }
+  if (pragmas && typeof pragmas === 'object') {
+    registryConfig.pragmas = {
+      ...(registryConfig.pragmas || {}),
+      ...pragmas,
+    };
+  }
   const db = await openDb(registryConfig);
 
-  const rateLimitConfig = await loadRateLimitConfig(rateLimitConfigPath);
+  const rateLimitConfigFromFile = await loadRateLimitConfig(rateLimitConfigPath);
+  const rateLimitConfig = {
+    ...(rateLimitConfigFromFile || {}),
+    ...(rateLimitOverrides || {}),
+  };
   const { limiter, config: limiterConfig } = buildRateLimiter(rateLimitConfig);
 
   const provenanceVerifier = await loadProvenanceVerifier({
@@ -171,8 +192,10 @@ export async function createServer(options = {}) {
   app.disable('x-powered-by');
   app.set('db', db);
   app.set('registryConfig', registryConfig);
+  app.set('registryConfigRaw', registryConfigFromFile || {});
   app.set('rateLimiter', limiter);
   app.set('rateLimitConfig', limiterConfig);
+  app.set('rateLimitConfigRaw', rateLimitConfigFromFile || {});
   app.set('provenanceVerifier', provenanceVerifier);
   app.set('provenanceRequired', requireProvenance !== false);
 
@@ -468,15 +491,28 @@ export async function createServer(options = {}) {
 
 export async function startServer(options = {}) {
   const app = await createServer(options);
-  const port = options.port || 3000;
+  const requestedPort = options.port ?? 3000;
+  const host = options.host;
 
   return new Promise((resolve, reject) => {
     const server = app
-      .listen(port, () => {
-        console.log(`[registry] Server listening on port ${port}`);
+      .listen(requestedPort, host, () => {
+        const address = server.address();
+        const resolvedPort =
+          typeof address === 'object' && address !== null ? address.port : requestedPort;
+        if (resolvedPort === undefined) {
+          console.log('[registry] Server listening');
+        } else {
+          console.log(`[registry] Server listening on port ${resolvedPort}`);
+        }
         resolve({
           app,
-          port,
+          port: resolvedPort,
+          host:
+            typeof address === 'object' && address !== null
+              ? address.address ?? host ?? '0.0.0.0'
+              : host ?? '0.0.0.0',
+          address,
           server,
           close: () =>
             new Promise((closeResolve) => {

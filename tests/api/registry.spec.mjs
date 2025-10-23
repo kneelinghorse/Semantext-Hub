@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from '@jest/globals';
 import request from 'supertest';
-import { readFile } from 'node:fs/promises';
+import { randomUUID } from 'node:crypto';
 
 import {
   API_KEY,
@@ -8,22 +8,29 @@ import {
   KEY_ID,
   createRegistryTestContext,
   cleanupRegistryTestContexts,
+  registerManifest,
 } from './helpers/registry-context.mjs';
+import { openDb } from '../../packages/runtime/registry/db.mjs';
+
+const cloneCard = () => JSON.parse(JSON.stringify(BASE_CARD));
 
 afterEach(async () => {
   await cleanupRegistryTestContexts();
 });
 
-describe('Registry Service API', () => {
-  it('exposes well-known discovery metadata', async () => {
+describe('Runtime Registry Service API', () => {
+  it('exposes discovery metadata for /v1 routes', async () => {
     const { app } = await createRegistryTestContext();
-    const response = await request(app).get('/.well-known/ossp-agi.json');
+    const response = await request(app)
+      .get('/.well-known/ossp-agi.json')
+      .set('X-API-Key', API_KEY);
 
     expect(response.status).toBe(200);
     expect(response.body.links).toEqual(
       expect.objectContaining({
-        register: '/registry',
-        resolve: '/resolve/{urn}',
+        register_v1: '/v1/registry/{urn}',
+        resolve_v1: '/v1/resolve?urn={urn}',
+        query_v1: '/v1/query',
         health: '/health',
       }),
     );
@@ -32,142 +39,164 @@ describe('Registry Service API', () => {
     );
   });
 
-  it('registers a new agent card and persists to the JSONL store', async () => {
-    const { app, storePath, signCard } = await createRegistryTestContext();
-    const urn = 'urn:agent:registry:test:1';
-    const card = JSON.parse(JSON.stringify(BASE_CARD));
-    const sig = signCard(card);
-    const response = await request(app)
-      .post('/registry')
-      .set('X-API-Key', API_KEY)
-      .send({ urn, card, sig });
+  it('registers a manifest via PUT /v1/registry/:urn and persists to SQLite', async () => {
+    const { app, dbPath } = await createRegistryTestContext();
+    const urn = `urn:agent:registry:test:${randomUUID()}`;
+    const manifest = cloneCard();
+    manifest.id = 'agent.registry.test';
 
-    expect(response.status).toBe(201);
+    const response = await registerManifest(app, { urn, manifest });
+
+    expect(response.status).toBe(200);
     expect(response.body).toEqual(
       expect.objectContaining({
-        status: 'registered',
+        status: 'ok',
         urn,
-        verification: expect.objectContaining({
-          status: 'verified',
-          keyId: KEY_ID,
-        }),
+        digest: expect.any(String),
       }),
     );
 
-    const contents = (await readFile(storePath, 'utf8')).trim().split('\n');
-    expect(contents).toHaveLength(1);
-    const record = JSON.parse(contents[0]);
-    expect(record.urn).toBe(urn);
-    expect(record.card.id).toBe(BASE_CARD.id);
-    expect(record.sig).toBeDefined();
-    expect(record.verification).toEqual(
-      expect.objectContaining({
-        status: 'verified',
-        keyId: KEY_ID,
-        signatureValid: true,
-        digestValid: true,
-      }),
-    );
+    const db = await openDb({ dbPath });
+    try {
+      const row = await db.get('SELECT urn, digest FROM manifests WHERE urn = ?', urn);
+      expect(row).toBeDefined();
+      expect(row.urn).toBe(urn);
+    } finally {
+      await db.close();
+    }
   });
 
-  it('prevents duplicate registrations with a 409 response', async () => {
-    const { app, signCard } = await createRegistryTestContext();
-    const urn = 'urn:agent:registry:test:duplicate';
-    const buildPayload = () => {
-      const card = JSON.parse(JSON.stringify(BASE_CARD));
-      return { urn, card, sig: signCard(card) };
-    };
+  it('allows manifest updates without conflicts', async () => {
+    const { app } = await createRegistryTestContext();
+    const urn = `urn:agent:registry:update:${randomUUID()}`;
+    const manifest = cloneCard();
+    manifest.id = 'agent.registry.update';
 
-    const first = await request(app)
-      .post('/registry')
-      .set('X-API-Key', API_KEY)
-      .send(buildPayload());
-    expect(first.status).toBe(201);
+    const first = await registerManifest(app, { urn, manifest });
+    expect(first.status).toBe(200);
 
-    const second = await request(app)
-      .post('/registry')
+    const updatedManifest = { ...manifest, version: '2.0.0' };
+    const second = await registerManifest(app, { urn, manifest: updatedManifest });
+    expect(second.status).toBe(200);
+    expect(second.body.digest).not.toBe(first.body.digest);
+
+    const detail = await request(app)
+      .get(`/v1/registry/${encodeURIComponent(urn)}`)
       .set('X-API-Key', API_KEY)
-      .send(buildPayload());
-    expect(second.status).toBe(409);
-    expect(second.body.error).toBe('conflict');
+      .expect(200);
+
+    expect(detail.body.body.version).toBe('2.0.0');
   });
 
   it('requires a valid API key for protected endpoints', async () => {
-    const { app, signCard } = await createRegistryTestContext();
-    const urn = 'urn:agent:registry:test:auth';
-    const card = JSON.parse(JSON.stringify(BASE_CARD));
-    const sig = signCard(card);
+    const { app } = await createRegistryTestContext();
+    const urn = `urn:agent:registry:auth:${randomUUID()}`;
+    const manifest = cloneCard();
 
     const registerResponse = await request(app)
-      .post('/registry')
-      .send({ urn, card, sig });
+      .put(`/v1/registry/${encodeURIComponent(urn)}`)
+      .set('Content-Type', 'application/json')
+      .send({ manifest, issuer: KEY_ID });
     expect(registerResponse.status).toBe(401);
 
-    const resolveResponse = await request(app).get(`/resolve/${encodeURIComponent(urn)}`);
-    expect(resolveResponse.status).toBe(401);
+    const resolveResponse = await request(app)
+      .get('/v1/resolve')
+      .query({ urn })
+      .expect(401);
+    expect(resolveResponse.body.error).toBe('unauthorized');
   });
 
-  it('resolves a previously registered agent card', async () => {
-    const { app, signCard } = await createRegistryTestContext();
-    const urn = 'urn:agent:registry:test:resolve';
-    const card = JSON.parse(JSON.stringify(BASE_CARD));
-    const sig = signCard(card);
+  it('resolves a previously registered manifest', async () => {
+    const { app } = await createRegistryTestContext();
+    const urn = `urn:agent:registry:resolve:${randomUUID()}`;
+    const manifest = cloneCard();
+    manifest.communication.endpoints.default = 'https://agents.example.com/resolve';
 
-    await request(app)
-      .post('/registry')
-      .set('X-API-Key', API_KEY)
-      .send({ urn, card, sig });
+    await registerManifest(app, { urn, manifest });
 
     const response = await request(app)
-      .get(`/resolve/${encodeURIComponent(urn)}`)
-      .set('X-API-Key', API_KEY);
+      .get('/v1/resolve')
+      .query({ urn })
+      .set('X-API-Key', API_KEY)
+      .expect(200);
 
-    expect(response.status).toBe(200);
-    expect(response.body.card).toEqual(expect.objectContaining({ id: BASE_CARD.id }));
-    expect(response.body.sig).toEqual(expect.objectContaining({ signature: expect.any(String) }));
-    expect(response.body.verification).toEqual(
-      expect.objectContaining({ status: 'verified', keyId: KEY_ID }),
+    expect(response.body).toEqual(
+      expect.objectContaining({
+        urn,
+        capabilities: expect.any(Array),
+        digest: expect.any(String),
+      }),
+    );
+    expect(response.body.manifest.id).toBe(manifest.id);
+  });
+
+  it('queries capabilities through POST /v1/query', async () => {
+    const { app } = await createRegistryTestContext();
+    const urn = `urn:agent:registry:query:${randomUUID()}`;
+    const manifest = cloneCard();
+    manifest.id = 'agent.registry.query';
+    manifest.capabilities.tools = [
+      { name: 'analytics', capability: 'analytics.report', urn: 'analytics.report' },
+    ];
+
+    await registerManifest(app, { urn, manifest });
+
+    const response = await request(app)
+      .post('/v1/query')
+      .set('X-API-Key', API_KEY)
+      .set('Content-Type', 'application/json')
+      .send({ capability: 'analytics.report' })
+      .expect(200);
+
+    expect(response.body.status).toBe('ok');
+    expect(response.body.results).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          urn,
+          digest: expect.any(String),
+        }),
+      ]),
     );
   });
 
-  it('returns 404 when resolving an unknown URN', async () => {
-    const { app } = await createRegistryTestContext();
-    const response = await request(app)
-      .get('/resolve/urn%3Aagent%3Aunknown')
+  it('applies configured rate limits', async () => {
+    const { app } = await createRegistryTestContext({
+      rateLimit: { windowMs: 1000, max: 1 },
+    });
+
+    const target = '/v1/resolve';
+    const params = { urn: 'urn:agent:registry:limit' };
+
+    const first = await request(app)
+      .get(target)
+      .query(params)
+      .set('X-API-Key', API_KEY);
+    expect([200, 404]).toContain(first.status);
+
+    const second = await request(app)
+      .get(target)
+      .query(params)
       .set('X-API-Key', API_KEY);
 
-    expect(response.status).toBe(404);
-    expect(response.body.error).toBe('not_found');
-  });
-
-  it('applies rate limiting to protected routes', async () => {
-    const { app } = await createRegistryTestContext({ rateLimit: { windowMs: 1000, max: 1 } });
-    const target = '/resolve/urn%3Aagent%3Alimit';
-
-    const first = await request(app).get(target).set('X-API-Key', API_KEY);
-    expect(first.status === 200 || first.status === 404).toBe(true);
-
-    const second = await request(app).get(target).set('X-API-Key', API_KEY);
     expect(second.status).toBe(429);
     expect(second.body.error).toBe('rate_limited');
   });
 
-  it('reports registry health with record counts', async () => {
+  it('reports registry health with record counts and rate limit metadata', async () => {
     const { app, signCard } = await createRegistryTestContext();
-    const urn = 'urn:agent:registry:test:health';
-    const card = JSON.parse(JSON.stringify(BASE_CARD));
-    const sig = signCard(card);
+    const urn = `urn:agent:registry:health:${randomUUID()}`;
+    const manifest = cloneCard();
+    const signature = signCard(manifest);
 
-    await request(app)
-      .post('/registry')
+    await registerManifest(app, { urn, manifest, signature });
+
+    const response = await request(app)
+      .get('/health')
       .set('X-API-Key', API_KEY)
-      .send({ urn, card, sig });
+      .expect(200);
 
-    const response = await request(app).get('/health');
-    expect(response.status).toBe(200);
     expect(response.body.status).toBe('ok');
-    expect(response.body.registry.records).toBe(1);
-    expect(response.body.registry.indexRecords).toBe(1);
-    expect(response.body.registry.indexLastUpdated).toEqual(expect.any(String));
+    expect(response.body.registry.records).toBeGreaterThanOrEqual(1);
+    expect(response.body.rateLimit.windowMs).toBeGreaterThan(0);
   });
 });

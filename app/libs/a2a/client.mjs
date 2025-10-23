@@ -170,8 +170,11 @@ async function resolveByUrn(target, { fetchImpl, registryUrl, apiKey, timeout, c
     return cached;
   }
 
-  const resolveUrl = joinUrl(registryUrl, `/resolve/${encodeURIComponent(target)}`);
-  const response = await fetchWithTimeout(fetchImpl, resolveUrl, {
+  // Runtime v1 endpoint: GET /v1/resolve?urn={urn}
+  const resolveUrl = new URL('/v1/resolve', registryUrl);
+  resolveUrl.searchParams.append('urn', target);
+  
+  const response = await fetchWithTimeout(fetchImpl, resolveUrl.toString(), {
     method: 'GET',
     headers: {
       'X-API-Key': apiKey,
@@ -184,10 +187,12 @@ async function resolveByUrn(target, { fetchImpl, registryUrl, apiKey, timeout, c
     throw new Error(`Registry resolve failed (${response.status})`);
   }
   const payload = await safeParseJson(response);
-  if (!payload?.card) {
-    throw new Error('Registry response missing agent card');
+  
+  // Runtime response shape: { urn, manifest, capabilities, digest }
+  if (!payload?.manifest) {
+    throw new Error('Registry response missing agent manifest');
   }
-  const endpoint = pickEndpoint(payload.card);
+  const endpoint = pickEndpoint(payload.manifest);
   if (!endpoint) {
     throw new Error(`Agent ${target} does not expose a default endpoint`);
   }
@@ -195,8 +200,9 @@ async function resolveByUrn(target, { fetchImpl, registryUrl, apiKey, timeout, c
   const result = {
     urn: payload.urn ?? target,
     endpoint,
-    card: payload.card,
-    verification: payload.verification ?? null,
+    card: payload.manifest,
+    capabilities: payload.capabilities ?? [],
+    digest: payload.digest ?? null,
   };
   cacheResolution(target, result, cacheTtl);
   return result;
@@ -209,9 +215,35 @@ async function resolveByCapability(target, options) {
   }
 
   const { fetchImpl, registryUrl, apiKey, timeout, cacheTtl } = options;
-  const queryUrl = new URL('/registry', registryUrl);
-  queryUrl.searchParams.append('cap', target);
-  const response = await fetchWithTimeout(fetchImpl, queryUrl.toString(), {
+  
+  // Runtime v1 endpoint: POST /v1/query with { capability: "..." }
+  const queryUrl = joinUrl(registryUrl, '/v1/query');
+  const response = await fetchWithTimeout(fetchImpl, queryUrl, {
+    method: 'POST',
+    headers: {
+      'X-API-Key': apiKey,
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+    body: JSON.stringify({ capability: target }),
+    timeout,
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Capability query failed (${response.status})`);
+  }
+  const payload = await safeParseJson(response);
+  
+  // Runtime response shape: { status: 'ok', capability, results: [{ urn, digest }] }
+  if (!payload?.results || !Array.isArray(payload.results) || payload.results.length === 0) {
+    throw new Error(`No agents found for capability '${target}'`);
+  }
+  
+  const first = payload.results[0];
+  
+  // Now fetch the full manifest for the first result
+  const manifestUrl = joinUrl(registryUrl, `/v1/registry/${encodeURIComponent(first.urn)}`);
+  const manifestResponse = await fetchWithTimeout(fetchImpl, manifestUrl, {
     method: 'GET',
     headers: {
       'X-API-Key': apiKey,
@@ -219,24 +251,29 @@ async function resolveByCapability(target, options) {
     },
     timeout,
   });
-  if (!response.ok) {
-    throw new Error(`Capability query failed (${response.status})`);
+  
+  if (!manifestResponse.ok) {
+    throw new Error(`Failed to fetch manifest for ${first.urn} (${manifestResponse.status})`);
   }
-  const payload = await safeParseJson(response);
-  const first = payload?.results?.find((entry) => entry?.verified);
-  if (!first) {
-    throw new Error(`No verified agents found for capability '${target}'`);
+  
+  const manifestPayload = await safeParseJson(manifestResponse);
+  const manifest = manifestPayload?.body;
+  
+  if (!manifest) {
+    throw new Error(`Agent ${first.urn} for capability '${target}' has no manifest`);
   }
-  const endpoint = pickEndpoint(first.card);
+  
+  const endpoint = pickEndpoint(manifest);
   if (!endpoint) {
     throw new Error(`Agent ${first.urn} for capability '${target}' lacks endpoint`);
   }
+  
   const result = {
     urn: first.urn,
     endpoint,
     capability: target,
-    card: first.card,
-    verification: first.verification ?? null,
+    card: manifest,
+    digest: first.digest,
   };
   cacheResolution(target, result, cacheTtl);
   cacheResolution(first.urn, result, cacheTtl);

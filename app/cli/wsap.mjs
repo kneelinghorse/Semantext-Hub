@@ -20,9 +20,12 @@ import { evaluateGraphSafety, writeChunkedGraph } from '../../src/catalog/graph/
 import { generateCatalogDiagram } from '../../src/visualization/drawio/catalog.js';
 import { writeCytoscape } from '../../src/visualization/cytoscape/exporter.js';
 import { launch as launchWithGuardian } from '../../src/cli/utils/open-guardian.js';
-import { createRegistryServer } from '../services/registry/server.mjs';
+import { startServer } from '../../packages/runtime/registry/server.mjs';
+import { openDb } from '../../packages/runtime/registry/db.mjs';
 import { signJws, verifyJws } from '../libs/signing/jws.mjs';
 import { callAgent, resetA2aState } from '../libs/a2a/client.mjs';
+import { createEnvelope } from '../../packages/runtime/security/dsse.mjs';
+import { createProvenancePayload } from '../../packages/runtime/security/provenance.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const APP_ROOT = path.resolve(__dirname, '..');
@@ -301,15 +304,11 @@ async function writeSummaryDoc(summaryPath, context) {
     lines.push('', '## Multi-Agent Registry', '');
     lines.push(`- Registry URL: ${context.multiAgent.registry.url}`);
     lines.push(`- Signing Key: ${context.multiAgent.registry.keyId ?? 'unknown'}`);
-    if (context.multiAgent.registry.policyPath) {
-      lines.push(
-        `- Signature policy: ${formatRelative(context.runDir, context.multiAgent.registry.policyPath)}`,
-      );
-    }
     lines.push('', 'Registered Agents:');
     for (const agent of context.multiAgent.registry.agents) {
       const capabilities = (agent.capabilities ?? []).join(', ') || 'n/a';
-      lines.push(`- ${agent.urn} ⇒ ${capabilities}`);
+      const digest = agent.digest ? ` [${agent.digest.substring(0, 8)}...]` : '';
+      lines.push(`- ${agent.urn}${digest} ⇒ ${capabilities}`);
     }
   }
 
@@ -562,65 +561,51 @@ export async function runWsap(options = {}) {
       const registryRoot = path.join(runDir, 'registry');
       await fs.ensureDir(registryRoot);
 
-      const storePath = path.join(registryRoot, 'store.jsonl');
-      const indexPath = path.join(registryRoot, 'index.json');
-      const capIndexPath = path.join(registryRoot, 'cap-index.json');
-      signaturePolicyPath = path.join(registryRoot, 'signature-policy.json');
+      const dbPath = path.join(registryRoot, 'registry.sqlite');
+      const schemaPath = path.join(REPO_ROOT, 'scripts', 'db', 'schema.sql');
+      const schemaSql = await fs.readFile(schemaPath, 'utf8');
+
+      // Initialize SQLite database with schema
+      const db = await openDb({ dbPath });
+      await db.exec(schemaSql);
+      await db.close();
 
       const { publicKey, privateKey } = generateKeyPairSync('ed25519');
       privateKeyPem = privateKey.export({ type: 'pkcs8', format: 'pem' }).toString();
       publicKeyPem = publicKey.export({ type: 'spki', format: 'pem' }).toString();
       signatureKeyId = `urn:proto:wsap:signing:${sessionId}`;
 
-      await fs.writeJson(
-        signaturePolicyPath,
-        {
-          version: 1,
-          requireSignature: true,
-          keys: [
-            {
-              keyId: signatureKeyId,
-              algorithm: 'EdDSA',
-              publicKey: publicKeyPem,
-            },
-          ],
-        },
-        { spaces: 2 },
-      );
-
       const publicKeyPath = path.join(registryRoot, 'wsap-ed25519.pub.pem');
       await fs.writeFile(publicKeyPath, `${publicKeyPem}\n`, 'utf8');
       context.artifacts.signingPublicKey = publicKeyPath;
 
       registryApiKey = `wsap-${randomUUID()}`;
-      const { app: registryApp } = await createRegistryServer({
-        storePath,
-        indexPath,
-        capIndexPath,
+      const runtime = await startServer({
         apiKey: registryApiKey,
-        signaturePolicyPath,
-        performanceSessionId: sessionId,
-        performanceLogRoot: logRoot,
+        dbPath,
+        host: '127.0.0.1',
+        port: 0,
+        registryConfigPath: null,
+        provenanceKeys: [
+          {
+            pubkey: publicKeyPem,
+            alg: 'Ed25519',
+            keyid: signatureKeyId,
+          },
+        ],
+        requireProvenance: false,
+        rateLimitConfigPath: null,
+        rateLimit: { windowMs: 60000, max: 1000 },
       });
 
-      registryServer = registryApp.listen(0, '127.0.0.1');
-      await once(registryServer, 'listening');
-      const address = registryServer.address();
-      registryUrl =
-        typeof address === 'string'
-          ? address
-          : `http://127.0.0.1:${address?.port ?? 0}`;
+      registryServer = runtime.server;
+      const runtimeHost =
+        runtime.host && runtime.host !== '::' && runtime.host !== '0.0.0.0'
+          ? runtime.host
+          : '127.0.0.1';
+      registryUrl = `http://${runtimeHost}:${runtime.port ?? 0}`;
 
-      teardowns.push(
-        () =>
-          new Promise((resolve) => {
-            if (!registryServer) {
-              resolve();
-              return;
-            }
-            registryServer.close(() => resolve());
-          }),
-      );
+      teardowns.push(() => runtime.close());
 
       const agentEntries = [];
       const agentTeardownFns = [];
@@ -662,21 +647,35 @@ export async function runWsap(options = {}) {
               : `http://127.0.0.1:${agentAddress?.port ?? 0}`;
 
           const card = buildAgentCard(definition, endpointUrl);
-          const envelope = signJws(card, {
-            privateKey: privateKeyPem,
-            keyId: signatureKeyId,
+          
+          // Create DSSE provenance attestation
+          const provenancePayload = createProvenancePayload({
+            builderId: `urn:wsap:builder:${sessionId}`,
+            commit: `wsap-${sessionId}`,
+            materials: [],
+            buildTool: 'wsap-cli',
+            timestamp: new Date().toISOString(),
+            inputs: [],
+            outputs: [{ uri: definition.urn, digest: { sha256: createHash('sha256').update(JSON.stringify(card)).digest('hex') } }],
+          });
+          
+          const provenance = createEnvelope('application/vnd.in-toto+json', provenancePayload, {
+            key: privateKeyPem,
+            alg: 'Ed25519',
+            keyid: signatureKeyId,
           });
 
-          const response = await fetch(`${registryUrl}/registry`, {
-            method: 'POST',
+          // Runtime v1 endpoint: PUT /v1/registry/:urn
+          const response = await fetch(`${registryUrl}/v1/registry/${encodeURIComponent(definition.urn)}`, {
+            method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
               'X-API-Key': registryApiKey,
             },
             body: JSON.stringify({
-              urn: definition.urn,
-              card,
-              sig: envelope,
+              manifest: card,
+              issuer: signatureKeyId,
+              provenance,
             }),
           });
 
@@ -687,8 +686,8 @@ export async function runWsap(options = {}) {
             );
           }
           const payload = await response.json();
-          if (payload?.verification?.status !== 'verified') {
-            throw new Error(`Signature verification failed for ${definition.urn}`);
+          if (payload?.status !== 'ok') {
+            throw new Error(`Registration failed for ${definition.urn}: ${payload?.error || 'unknown error'}`);
           }
 
           const agentRecord = {
@@ -696,27 +695,26 @@ export async function runWsap(options = {}) {
             endpoint: endpointUrl,
             capabilities: definition.capabilities.map((capability) => capability.capability),
             card,
-            verification: payload.verification,
+            digest: payload.digest,
+            provenance: payload.provenance,
           };
           registeredAgents.push(agentRecord);
           agentEntries.push({
             urn: agentRecord.urn,
             endpoint: agentRecord.endpoint,
             capabilities: agentRecord.capabilities,
-            verification: agentRecord.verification,
+            digest: agentRecord.digest,
           });
         }
       } finally {
         teardowns.push(...agentTeardownFns.reverse());
       }
 
-      context.artifacts.registryStore = storePath;
-      context.artifacts.registryPolicy = signaturePolicyPath;
+      context.artifacts.registryDb = dbPath;
       context.multiAgent.registry = {
         url: registryUrl,
         apiKey: registryApiKey,
         keyId: signatureKeyId,
-        policyPath: signaturePolicyPath,
         publicKeyPath: context.artifacts.signingPublicKey,
         agents: agentEntries,
       };
@@ -814,12 +812,11 @@ export async function runWsap(options = {}) {
           url: registryUrl,
           keyId: signatureKeyId,
           apiKey: registryApiKey,
-          policy: signaturePolicyPath ? formatRelative(runDir, signaturePolicyPath) : null,
           agents: registeredAgents.map((agent) => ({
             urn: agent.urn,
             endpoint: agent.endpoint,
             capabilities: agent.capabilities,
-            verification: agent.verification,
+            digest: agent.digest,
           })),
         },
         a2a: a2aCalls,

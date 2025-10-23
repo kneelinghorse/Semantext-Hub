@@ -17,7 +17,7 @@ const BASE_IGNORE_PATTERNS = [
 const COVERAGE_TARGETS = [
   // Critical surfaces explicitly tested in this mission
   '<rootDir>/packages/runtime/viewer/routes/**/*.{js,mjs}',
-  '<rootDir>/app/services/registry/**/*.{js,mjs}',
+  '<rootDir>/packages/runtime/registry/**/*.{js,mjs}',
   '<rootDir>/app/ui/authoring/**/*.{js,mjs}',
   '<rootDir>/app/libs/signing/**/*.{js,mjs}',
   '<rootDir>/tests/api/helpers/**/*.{js,mjs}',
@@ -43,7 +43,7 @@ const COVERAGE_EXCLUDES = [
   '!**/seeds/**',
   '!**/dist/**',
   '!**/build/**',
-  '!<rootDir>/app/services/registry/start.mjs',
+  '!<rootDir>/packages/runtime/registry/start.mjs',
   '!<rootDir>/app/ui/authoring/web/**',
 ];
 
@@ -128,7 +128,7 @@ export default {
             branches: 75,
             statements: 85,
           },
-          './app/services/registry/server.mjs': {
+          './packages/runtime/registry/server.mjs': {
             lines: 85,
             functions: 80,
             branches: 75,

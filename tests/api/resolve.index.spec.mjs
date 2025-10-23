@@ -1,67 +1,84 @@
 import { afterEach, describe, expect, it } from '@jest/globals';
 import request from 'supertest';
-import { readFile } from 'node:fs/promises';
+import { randomUUID } from 'node:crypto';
 
 import {
   API_KEY,
   BASE_CARD,
-  KEY_ID,
   cleanupRegistryTestContexts,
   createRegistryTestContext,
+  registerManifest,
 } from './helpers/registry-context.mjs';
-import { createRegistryServer } from '../../app/services/registry/server.mjs';
+import { openDb } from '../../packages/runtime/registry/db.mjs';
+import { startServer } from '../../packages/runtime/registry/server.mjs';
 
-describe('Registry URN Index', () => {
-  afterEach(async () => {
-    await cleanupRegistryTestContexts();
+const cloneCard = () => JSON.parse(JSON.stringify(BASE_CARD));
+
+afterEach(async () => {
+  await cleanupRegistryTestContexts();
+});
+
+describe('Runtime registry persistence', () => {
+  it('stores manifest metadata with signer information in SQLite', async () => {
+    const { app, dbPath, signCard } = await createRegistryTestContext();
+    const urn = `urn:agent:registry:index:${randomUUID()}`;
+    const manifest = cloneCard();
+    manifest.id = 'registry.index.agent';
+    const signature = signCard(manifest);
+
+    const response = await registerManifest(app, { urn, manifest, signature });
+    expect(response.status).toBe(200);
+
+    const db = await openDb({ dbPath });
+    try {
+      const row = await db.get(
+        'SELECT urn, issuer, signature FROM manifests WHERE urn = ?',
+        urn,
+      );
+      expect(row).toBeDefined();
+      expect(row.urn).toBe(urn);
+      expect(row.issuer).toBeDefined();
+      expect(row.signature).toContain('"signature"');
+    } finally {
+      await db.close();
+    }
   });
 
-  it('persists URN index sidecar entries with signer metadata', async () => {
-    const { app, indexPath, signCard } = await createRegistryTestContext();
-    const urn = 'urn:agent:registry:test:index-sidecar';
-    const card = { ...BASE_CARD, name: 'Index Agent' };
-    const sig = signCard(card);
+  it('rehydrates registry state when startServer reuses the same database', async () => {
+    const { app, dbPath } = await createRegistryTestContext();
+    const urn = `urn:agent:registry:rehydrate:${randomUUID()}`;
+    const manifest = cloneCard();
+    manifest.communication.endpoints.default = 'https://agents.example.com/rehydrate';
 
-    await request(app)
-      .post('/registry')
-      .set('X-API-Key', API_KEY)
-      .send({ urn, card, sig });
+    await registerManifest(app, { urn, manifest });
 
-    const indexData = JSON.parse(await readFile(indexPath, 'utf8'));
-    expect(Array.isArray(indexData.entries)).toBe(true);
-    expect(indexData.entries).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ urn, keyId: KEY_ID, algorithm: expect.any(String) }),
-      ]),
-    );
-  });
+    const originalDb = app.get('db');
+    if (originalDb) {
+      await originalDb.close();
+    }
 
-  it('rebuilds index on startup and serves resolve requests via the index', async () => {
-    const { app, storePath, indexPath, policyPath, signCard } = await createRegistryTestContext();
-    const urn = 'urn:agent:registry:test:index-rehydrate';
-    const card = { ...BASE_CARD, name: 'Rehydrate Agent' };
-    const sig = signCard(card);
-
-    await request(app)
-      .post('/registry')
-      .set('X-API-Key', API_KEY)
-      .send({ urn, card, sig });
-
-    const restarted = await createRegistryServer({
+    const runtime = await startServer({
       apiKey: API_KEY,
-      storePath,
-      indexPath,
-      signaturePolicyPath: policyPath,
+      dbPath,
+      host: '127.0.0.1',
+      port: 0,
+      requireProvenance: false,
+      provenanceKeys: [],
     });
 
-    expect(restarted.store.index.size).toBeGreaterThanOrEqual(1);
+    try {
+      const resolveResponse = await request(runtime.app)
+        .get('/v1/resolve')
+        .query({ urn })
+        .set('X-API-Key', API_KEY)
+        .expect(200);
 
-    const response = await request(restarted.app)
-      .get(`/resolve/${encodeURIComponent(urn)}`)
-      .set('X-API-Key', API_KEY);
-
-    expect(response.status).toBe(200);
-    expect(response.body.verification.status).toBe('verified');
-    expect(response.body.verification.keyId).toBe(KEY_ID);
+      expect(resolveResponse.body.urn).toBe(urn);
+      expect(resolveResponse.body.manifest.communication.endpoints.default).toContain(
+        'rehydrate',
+      );
+    } finally {
+      await runtime.close();
+    }
   });
 });

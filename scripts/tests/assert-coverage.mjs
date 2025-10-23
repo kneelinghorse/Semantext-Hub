@@ -10,7 +10,7 @@ if (!fs.existsSync(summaryPath)) {
 const data = JSON.parse(fs.readFileSync(summaryPath, 'utf8'));
 const files = data || {};
 const want = [
-  'app/services/registry/server.mjs',
+  'packages/runtime/registry/server.mjs',
   'app/ui/authoring/server.mjs'
 ];
 
@@ -38,4 +38,3 @@ if (!result.ok) {
 } else {
   console.log('[assert-coverage] OK', result);
 }
-

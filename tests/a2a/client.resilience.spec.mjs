@@ -4,9 +4,12 @@ import { setTimeout as wait } from 'node:timers/promises';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { callAgent, resetA2aState, getCircuitBreakerSnapshot } from '../../app/libs/a2a/client.mjs';
-import { createRegistryServer } from '../../app/services/registry/server.mjs';
+import { startServer } from '../../packages/runtime/registry/server.mjs';
+import { openDb } from '../../packages/runtime/registry/db.mjs';
+import { registerManifest } from '../api/helpers/registry-context.mjs';
 
 jest.setTimeout(20000);
 
@@ -15,40 +18,40 @@ async function createTempDir(prefix) {
 }
 
 async function startRegistry(tempDir) {
-  const storePath = join(tempDir, 'store.jsonl');
-  const indexPath = join(tempDir, 'index.json');
-  const capIndexPath = join(tempDir, 'cap-index.json');
-  const policyPath = join(tempDir, 'policy.json');
-  await writeFile(
-    policyPath,
-    JSON.stringify({ version: 1, requireSignature: false, keys: [] }, null, 2),
-    'utf8',
-  );
+  const dbPath = join(tempDir, 'registry.sqlite');
+  const schemaPath = fileURLToPath(new URL('../../scripts/db/schema.sql', import.meta.url));
+  const schemaSql = await readFile(schemaPath, 'utf8');
+  
+  // Initialize SQLite database with schema
+  const db = await openDb({ dbPath });
+  await db.exec(schemaSql);
+  await db.close();
 
   const apiKey = 'test-registry-key';
-  const { app, store } = await createRegistryServer({
+  const runtime = await startServer({
     apiKey,
-    storePath,
-    indexPath,
-    capIndexPath,
-    signaturePolicyPath: policyPath,
+    dbPath,
+    host: '127.0.0.1',
+    port: 0,
+    registryConfigPath: null,
+    requireProvenance: false,
+    provenanceKeys: [],
+    rateLimitConfigPath: null,
     rateLimit: { windowMs: 60000, max: 1000 },
   });
 
-  const server = await new Promise((resolve) => {
-    const listener = app.listen(0, () => resolve(listener));
-  });
-  const address = server.address();
-  const url = `http://127.0.0.1:${address.port}`;
+  const runtimeHost =
+    runtime.host && runtime.host !== '::' && runtime.host !== '0.0.0.0'
+      ? runtime.host
+      : '127.0.0.1';
+  const url = `http://${runtimeHost}:${runtime.port}`;
 
   return {
     apiKey,
-    store,
+    dbPath,
     url,
-    close: () =>
-      new Promise((resolve) => {
-        server.close(() => resolve());
-      }),
+    app: runtime.app,
+    close: () => runtime.close(),
   };
 }
 
@@ -129,17 +132,12 @@ function buildAgentCard(endpoint, capability = 'protocol:echo@1') {
   };
 }
 
-async function registerAgent(store, { urn, card }) {
-  await store.register({
+async function registerAgent(registry, { urn, card }) {
+  await registerManifest(registry.app, {
     urn,
-    card,
-    sig: null,
-    verification: {
-      status: 'verified',
-      keyId: 'test-key',
-      algorithm: 'EdDSA',
-      verifiedAt: new Date().toISOString(),
-    },
+    manifest: card,
+    apiKey: registry.apiKey,
+    issuer: 'test-key',
   });
 }
 
@@ -172,7 +170,7 @@ describe('A2A client resilience', () => {
     agent = await startEchoAgent();
 
     const urn = 'urn:agent:test:echo';
-    await registerAgent(registry.store, {
+    await registerAgent(registry, {
       urn,
       card: buildAgentCard(agent.url),
     });
@@ -218,7 +216,7 @@ describe('A2A client resilience', () => {
     agent = await startEchoAgent({ failures: 1 });
 
     const urn = 'urn:agent:test:retry';
-    await registerAgent(registry.store, {
+    await registerAgent(registry, {
       urn,
       card: buildAgentCard(agent.url),
     });
@@ -257,7 +255,7 @@ describe('A2A client resilience', () => {
     });
 
     const urn = 'urn:agent:test:circuit';
-    await registerAgent(registry.store, {
+    await registerAgent(registry, {
       urn,
       card: buildAgentCard(agent.url),
     });
@@ -305,7 +303,7 @@ describe('A2A client resilience', () => {
 
     const capability = 'protocol:echo@2';
     const urn = 'urn:agent:test:capability';
-    await registerAgent(registry.store, {
+    await registerAgent(registry, {
       urn,
       card: buildAgentCard(agent.url, capability),
     });
