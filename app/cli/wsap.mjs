@@ -690,6 +690,20 @@ export async function runWsap(options = {}) {
             throw new Error(`Registration failed for ${definition.urn}: ${payload?.error || 'unknown error'}`);
           }
 
+          const verificationSummary = payload?.provenance?.signature
+            ? {
+                status: 'verified',
+                scheme: payload.provenance.signature.scheme ?? 'dsse+jws',
+                keyId: payload.provenance.signature.keyId ?? signatureKeyId,
+                algorithm: payload.provenance.signature.algorithm ?? 'Ed25519',
+              }
+            : {
+                status: 'unknown',
+                scheme: null,
+                keyId: null,
+                algorithm: null,
+              };
+
           const agentRecord = {
             urn: definition.urn,
             endpoint: endpointUrl,
@@ -697,6 +711,7 @@ export async function runWsap(options = {}) {
             card,
             digest: payload.digest,
             provenance: payload.provenance,
+            verification: verificationSummary,
           };
           registeredAgents.push(agentRecord);
           agentEntries.push({
@@ -704,6 +719,7 @@ export async function runWsap(options = {}) {
             endpoint: agentRecord.endpoint,
             capabilities: agentRecord.capabilities,
             digest: agentRecord.digest,
+            verification: verificationSummary,
           });
         }
       } finally {

@@ -28,9 +28,11 @@
     "docker:build": "docker build -t ossp-agi-mcp:latest .",
     "docker:run": "docker run -d --name ossp-agi-mcp -e PROTOCOL_ROOT=/app ossp-agi-mcp:latest",
     "docker:stop": "docker stop ossp-agi-mcp && docker rm ossp-agi-mcp",
-    "ci:full": "npm run check:cli-duplicates && npm run check:boundaries && npm run test:ci && npm run test:performance && npm run docker:build",
+    "ci:full": "npm run check:cli-duplicates && npm run check:boundaries && npm run ci:check-registry && npm run test:ci && npm run test:performance && npm run docker:build",
     "probe:pre12": "node scripts/probe/pre12.collect.js all",
-    "test:e2e:mcp": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --runTestsByPath tests/e2e/mcp.e2e.test.ts"
+    "test:e2e:mcp": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --runTestsByPath tests/e2e/mcp.e2e.test.ts",
+    "test:registry:parity": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --runTestsByPath tests/runtime/registry.http.parity.spec.mjs",
+    "ci:check-registry": "node scripts/ci/check-registry-single-entry.mjs"
   },
   "devDependencies": {
     "@apidevtools/swagger-parser": "^10.0.3",

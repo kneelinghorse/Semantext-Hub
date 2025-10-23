@@ -54,6 +54,32 @@ describe('Runtime Registry v1 API negative paths', () => {
     expect(response.body.error).toBe('invalid_manifest');
   });
 
+  test('PUT /v1/registry/:urn → 400 when payload is not an object', async () => {
+    const { app } = await createRegistryTestContext();
+    const urn = 'urn:agent:runtime:missing-body';
+    const response = await request(app)
+      .put(`/v1/registry/${encodeURIComponent(urn)}`)
+      .set('X-API-Key', API_KEY)
+      .set('Content-Type', 'application/json')
+      .send([]);
+
+    expect(response.status).toBe(400);
+    expect(response.body.error).toBe('invalid_request');
+  });
+
+  test('PUT /v1/registry/:urn → 400 when manifest string fails to parse', async () => {
+    const { app } = await createRegistryTestContext();
+    const urn = 'urn:agent:runtime:invalid-manifest-json';
+    const response = await request(app)
+      .put(`/v1/registry/${encodeURIComponent(urn)}`)
+      .set('X-API-Key', API_KEY)
+      .set('Content-Type', 'application/json')
+      .send({ manifest: '{"id": "broken"' });
+
+    expect(response.status).toBe(400);
+    expect(response.body.error).toBe('invalid_manifest');
+  });
+
   test('PUT /v1/registry/:urn → 422 when provenance enforcement enabled without attestation', async () => {
     const { app } = await createRegistryTestContext({ requireProvenance: true });
     const urn = 'urn:agent:runtime:missing-provenance';

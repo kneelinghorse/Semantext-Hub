@@ -41,7 +41,11 @@ describe('Runtime registry provenance enforcement', () => {
     expect(response.body.provenance).toEqual(
       expect.objectContaining({
         statementType: expect.stringContaining('in-toto'),
-        signature: expect.objectContaining({ scheme: expect.any(String) }),
+        signature: expect.objectContaining({
+          scheme: expect.any(String),
+          algorithm: expect.any(String),
+          keyId: expect.any(String),
+        }),
       }),
     );
 

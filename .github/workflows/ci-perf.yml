@@ -1,0 +1,30 @@
+name: CI Performance Gate
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * *'
+
+jobs:
+  performance-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Collect performance logs
+        run: node scripts/perf/collect.mjs
+
+      - name: Evaluate WSAP budgets
+        run: ./app/ci/perf-gate.sh --log artifacts/perf/latest.jsonl --tool wsap --budgets app/config/perf-budgets.json
+
+      - name: Evaluate Registry budgets
+        run: ./app/ci/perf-gate.sh --log artifacts/perf/latest.jsonl --tool registry --budgets app/config/perf-budgets.json

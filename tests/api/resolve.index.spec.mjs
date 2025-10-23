@@ -38,7 +38,9 @@ describe('Runtime registry persistence', () => {
       expect(row).toBeDefined();
       expect(row.urn).toBe(urn);
       expect(row.issuer).toBeDefined();
+      expect(typeof row.signature).toBe('string');
       expect(row.signature).toContain('"signature"');
+      expect(() => JSON.parse(row.signature)).not.toThrow();
     } finally {
       await db.close();
     }

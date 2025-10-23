@@ -88,6 +88,34 @@ describe('Runtime Registry Service API', () => {
     expect(detail.body.body.version).toBe('2.0.0');
   });
 
+  it('unwraps nested manifest payload structures before persistence', async () => {
+    const { app } = await createRegistryTestContext({ requireProvenance: false });
+    const urn = `urn:agent:registry:nested:${randomUUID()}`;
+    const manifest = cloneCard();
+    manifest.id = 'agent.registry.nested';
+
+    const response = await request(app)
+      .put(`/v1/registry/${encodeURIComponent(urn)}`)
+      .set('X-API-Key', API_KEY)
+      .set('Content-Type', 'application/json')
+      .send({
+        manifest: {
+          manifest,
+          provenance: null,
+        },
+      });
+
+    expect(response.status).toBe(200);
+    expect(response.body.status).toBe('ok');
+
+    const detail = await request(app)
+      .get(`/v1/registry/${encodeURIComponent(urn)}`)
+      .set('X-API-Key', API_KEY)
+      .expect(200);
+
+    expect(detail.body.body.id).toBe(manifest.id);
+  });
+
   it('requires a valid API key for protected endpoints', async () => {
     const { app } = await createRegistryTestContext();
     const urn = `urn:agent:registry:auth:${randomUUID()}`;

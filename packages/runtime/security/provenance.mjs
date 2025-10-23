@@ -94,6 +94,17 @@ export function validateProvenance(envelope, verifyConfig) {
 export function summarizeProvenance(envelope) {
   try {
     const payload = parsePayload(envelope);
+    const primarySignature =
+      Array.isArray(envelope?.signatures) && envelope.signatures.length > 0
+        ? envelope.signatures[0]
+        : null;
+    const signatureSummary = primarySignature
+      ? {
+          scheme: 'dsse+jws',
+          keyId: primarySignature.keyid ?? null,
+          algorithm: primarySignature.alg ?? null,
+        }
+      : null;
     return {
       builder: payload.builder?.id,
       commit: payload.metadata?.commit,
@@ -101,6 +112,9 @@ export function summarizeProvenance(envelope) {
       buildTool: payload.metadata?.buildTool,
       materialsCount: Array.isArray(payload.materials) ? payload.materials.length : 0,
       buildType: payload.buildType,
+      statementType: payload._type ?? DEFAULT_STATEMENT_TYPE,
+      statementMediaType: envelope?.payloadType ?? DEFAULT_PROVENANCE_TYPE,
+      signature: signatureSummary,
     };
   } catch (error) {
     return { error: 'invalid-provenance' };

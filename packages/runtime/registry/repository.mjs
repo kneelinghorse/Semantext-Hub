@@ -91,11 +91,20 @@ export async function upsertManifest(db, urn, body, { issuer, signature, provena
   }
 
   const digest = sha256(payload);
+  let signatureValue = signature || null;
+  if (signatureValue && typeof signatureValue === 'object') {
+    try {
+      signatureValue = JSON.stringify(signatureValue);
+    } catch {
+      signatureValue = null;
+    }
+  }
+
   await db.run(
     `INSERT INTO manifests (urn, body, digest, issuer, signature)
      VALUES (?, ?, ?, ?, ?)
      ON CONFLICT(urn) DO UPDATE SET body=excluded.body, digest=excluded.digest, issuer=excluded.issuer, signature=excluded.signature, updated_at=datetime('now')`,
-    [urn, payload, digest, issuer || null, signature || null]
+    [urn, payload, digest, issuer || null, signatureValue]
   );
   
   // Extract capabilities from manifest

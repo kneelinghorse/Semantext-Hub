@@ -593,7 +593,14 @@ describe('Runtime Registry HTTP Parity', () => {
         expect.objectContaining({
           builder: 'registry-parity-tests',
           commit: 'main-sha-commit',
-          signature: expect.objectContaining({ keyid: PROVENANCE_KEY_ID }),
+          buildTool: 'parity-suite',
+          materialsCount: expect.any(Number),
+          statementType: expect.stringContaining('in-toto'),
+          signature: expect.objectContaining({
+            keyId: PROVENANCE_KEY_ID,
+            scheme: expect.any(String),
+            algorithm: expect.any(String),
+          }),
         }),
       );
 
@@ -620,6 +627,11 @@ describe('Runtime Registry HTTP Parity', () => {
           digest: putResponse.body.digest,
           materialsCount: 1,
           buildTool: 'parity-suite',
+          signature: expect.objectContaining({
+            keyId: PROVENANCE_KEY_ID,
+            scheme: expect.any(String),
+            algorithm: expect.any(String),
+          }),
         }),
       );
       expect(fetched.body.provenance.committedAt).toEqual(expect.any(String));
