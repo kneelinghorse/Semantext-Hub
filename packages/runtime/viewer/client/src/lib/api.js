@@ -207,62 +207,23 @@ export const api = {
   },
 
   /**
-   * Get governance data (placeholder with semantic stubs)
-   * @returns {Promise<object>} Governance data
+   * Governance dashboard is not available in Sprint 21 builds.
+   * Calling this surface returns a structured 501 error so the UI can
+   * provide guidance without advertising placeholder data.
+   * @returns {Promise<never>}
    */
   async getGovernance() {
-    // TODO: Implement when backend endpoint is ready
-    // Return structured semantic sample data for dogfooding
-    return Promise.resolve({
-      urn: 'urn:proto:governance:summary',
-      message: 'Governance endpoint not yet implemented',
-      policies: [
-        {
-          id: 'breaking-changes',
-          urn: 'urn:proto:policy:breaking-changes',
-          name: 'Breaking Change Detection',
-          status: 'active',
-          violations: 0,
-          lastChecked: new Date().toISOString()
-        },
-        {
-          id: 'ownership-required',
-          urn: 'urn:proto:policy:ownership-required',
-          name: 'Ownership Metadata Required',
-          status: 'active',
-          violations: 1,
-          lastChecked: new Date().toISOString()
-        },
-        {
-          id: 'versioning-semver',
-          urn: 'urn:proto:policy:versioning-semver',
-          name: 'Semantic Versioning Compliance',
-          status: 'active',
-          violations: 0,
-          lastChecked: new Date().toISOString()
-        }
-      ],
-      compliance: {
-        totalPolicies: 3,
-        passing: 2,
-        violations: 1,
-        complianceRate: 0.67
-      },
-      recentActivity: [
-        {
-          timestamp: new Date(Date.now() - 3600000).toISOString(),
-          event: 'policy-violation',
-          policy: 'ownership-required',
-          manifest: 'openapi-sample'
-        },
-        {
-          timestamp: new Date(Date.now() - 7200000).toISOString(),
-          event: 'policy-check',
-          policy: 'breaking-changes',
-          manifest: 'api-test',
-          result: 'pass'
-        }
-      ]
-    });
+    throw new ApiError(
+      'Governance dashboard is disabled in Sprint 21 builds. See docs/SPRINT_21_SURFACE_CHANGES.md#viewer-changes for context.',
+      501,
+      {
+        documentation: 'docs/SPRINT_21_SURFACE_CHANGES.md#viewer-changes',
+        guidance: [
+          'The viewer focuses on health, manifests, validation, and graph exploration.',
+          'Use protocol_report_governance via the CLI to generate static governance reports.',
+          'Follow docs/runtime/runtime-usage-guide.md for supported runtime operations.'
+        ],
+      }
+    );
   }
 };

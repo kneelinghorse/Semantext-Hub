@@ -75,15 +75,13 @@
 
 /* Enhanced tab styles for semantic data display */
 .validation-tab,
-.graph-tab,
-.governance-tab {
+.graph-tab {
   padding: var(--spacing-xl);
   min-height: 400px;
 }
 
 .validation-tab .placeholder-content,
-.graph-tab .placeholder-content,
-.governance-tab .placeholder-content {
+.graph-tab .placeholder-content {
   max-width: 800px;
   margin: 0 auto;
   text-align: left;
@@ -144,22 +142,19 @@
 }
 
 .manifest-validations,
-.graph-nodes,
-.governance-policies {
+.graph-nodes {
   margin: var(--spacing-lg) 0;
 }
 
 .manifest-validations h3,
-.graph-nodes h3,
-.governance-policies h3 {
+.graph-nodes h3 {
   margin: 0 0 var(--spacing-md) 0;
   font-size: 1rem;
   color: var(--color-text-secondary);
 }
 
 .validation-item,
-.graph-node-item,
-.policy-item {
+.graph-node-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -172,15 +167,13 @@
 }
 
 .validation-item:hover,
-.graph-node-item:hover,
-.policy-item:hover {
+.graph-node-item:hover {
   border-color: var(--color-primary);
   background-color: rgba(99, 102, 241, 0.05);
 }
 
 .validation-item strong,
-.graph-node-item strong,
-.policy-item strong {
+.graph-node-item strong {
   color: var(--color-text);
   font-weight: 600;
   font-size: 0.9375rem;

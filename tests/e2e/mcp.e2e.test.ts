@@ -10,7 +10,7 @@ function parseMCPContent(result: any): any {
 }
 
 describe('MCP E2E smoke path', () => {
-  test('list_test_files → discover_local → docs_mermaid; agent_run + workflow_run stubbed', async () => {
+  test('list_test_files → discover_local → docs_mermaid; agent_run + workflow_run return 501 guidance', async () => {
     const { client, stop } = await spawnMCPWithA2AStub({ enableLogging: true });
     try {
       // 1) Ensure required tools exposed
@@ -45,18 +45,22 @@ describe('MCP E2E smoke path', () => {
       expect(mermaidObj.nodeCount).toBeGreaterThanOrEqual(1);
       expect(mermaidObj.edgeCount).toBeGreaterThanOrEqual(0);
 
-      // 5) agent_run should use in-test A2A stub and return deterministic payload
+      // 5) agent_run now returns explicit 501 guidance
       const agentRunRes = await client.executeTool('agent_run', {
         agent_urn: 'urn:agent:runtime:agent@latest',
         tool: 'echo',
         args: { message: 'hello' }
       });
       const agentRunObj = parseMCPContent(agentRunRes);
-      expect(agentRunObj.outputs).toBeDefined();
-      expect(agentRunObj.outputs.ok).toBe(true);
-      expect(agentRunObj.outputs.skill).toBe('echo');
+      expect(agentRunObj.status).toBe(501);
+      expect(agentRunObj.ok).toBe(false);
+      expect(agentRunObj.error).toBe('agent_run_unsupported');
+      expect(agentRunObj.requested.agentUrn).toBe('urn:agent:runtime:agent@latest');
+      expect(agentRunObj.requested.tool).toBe('echo');
+      expect(Array.isArray(agentRunObj.guidance)).toBe(true);
+      expect(agentRunObj.documentation).toContain('docs/SPRINT_21_SURFACE_CHANGES.md');
 
-      // 6) workflow_run using a tiny one-node workflow file
+      // 6) workflow_run also returns explicit 501 guidance
       const tmpDir = path.join(process.cwd(), 'tests', '_tmp');
       await fs.mkdir(tmpDir, { recursive: true });
       const wfPath = path.join(tmpDir, 'workflow.json');
@@ -81,11 +85,15 @@ describe('MCP E2E smoke path', () => {
       };
       await fs.writeFile(wfPath, JSON.stringify(wf));
 
-      const wfRes = await client.executeTool('workflow_run', { workflow_path: path.relative(process.cwd(), wfPath) });
+      const workflowRelativePath = path.relative(process.cwd(), wfPath);
+      const wfRes = await client.executeTool('workflow_run', { workflow_path: workflowRelativePath });
       const wfObj = parseMCPContent(wfRes);
-      expect(wfObj.outputs).toBeDefined();
-      expect(wfObj.outputs.n1).toBeDefined();
-      expect(wfObj.outputs.n1.outputs).toBeDefined();
+      expect(wfObj.status).toBe(501);
+      expect(wfObj.ok).toBe(false);
+      expect(wfObj.error).toBe('workflow_run_unsupported');
+      expect(wfObj.requested.workflowPath).toBe(workflowRelativePath);
+      expect(wfObj.requested.resolvedPath).toContain('tests/_tmp/workflow.json');
+      expect(Array.isArray(wfObj.guidance)).toBe(true);
 
     } finally {
       await stop();

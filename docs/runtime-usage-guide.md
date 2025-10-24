@@ -402,6 +402,11 @@ a2AWithCircuitBreaker().catch(console.error);
 
 ## MCP Tool Execution
 
+> **Sprint 21 Note:** The runtime MCP server only exposes discovery tooling.  
+> `agent_run` and `workflow_run` respond with `501` guidance payloads that direct
+> operators to the discovery workflow. See
+> `docs/SPRINT_21_SURFACE_CHANGES.md#runtime-surface-triage` for more detail.
+
 ### Step 1: Basic MCP Connection
 
 Connect to an MCP server and list tools:

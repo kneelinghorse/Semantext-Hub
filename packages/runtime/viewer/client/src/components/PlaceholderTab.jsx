@@ -70,7 +70,7 @@ export function ValidationTab({ data }) {
       <PlaceholderTab
         tabId="validation"
         title="Manifest Validation"
-        description="View validation results for protocol manifests, including schema compliance, breaking changes, and governance policy checks."
+        description="View validation results for protocol manifests, including schema compliance, breaking changes, and policy guardrails."
         icon="✓"
         data={null}
       />
@@ -282,101 +282,6 @@ export function GraphTab({ data }) {
         <div className="placeholder-status">
           <span className="status-badge">Live Data</span>
           <p className="status-text">Powered by POST /api/graph</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/**
- * Governance Tab - Enhanced with semantic rendering
- */
-export function GovernanceTab({ data }) {
-  const status = data ? 'loaded' : 'loading';
-  const policyCount = data?.compliance?.totalPolicies || data?.policies?.length || 0;
-  const semanticAttrs = useSemanticPanel('urn:proto:viewer:governance', {
-    type: 'governance-panel',
-    context: { status, policyCount }
-  });
-
-  const registryMetadata = useMemo(() => ({
-    urn: 'urn:proto:viewer:governance',
-    type: 'governance-panel',
-    context: {
-      status,
-      policyCount,
-    },
-  }), [status, policyCount]);
-
-  useRegisterPanel('governance', registryMetadata);
-
-  if (!data) {
-    return (
-      <PlaceholderTab
-        tabId="governance"
-        title="Governance Insights"
-        description="Track governance policies, compliance status, ownership information, and protocol evolution over time."
-        icon="📊"
-        data={null}
-      />
-    );
-  }
-
-  return (
-    <div className="governance-tab" {...semanticAttrs} data-semantic-state={status}>
-      <div className="placeholder-content">
-        <div className="placeholder-icon" aria-hidden="true">📊</div>
-        <h2 className="placeholder-title">Governance Insights</h2>
-        <p className="placeholder-description">
-          Preview of governance data with semantic instrumentation
-        </p>
-
-        {data.compliance && (
-          <div className="data-summary" data-semantic-urn="urn:proto:governance:compliance">
-            <h3>Compliance Overview</h3>
-            <div className="summary-stats">
-              <div className="stat" data-semantic-type="governance-stat">
-                <span className="stat-label">Policies:</span>
-                <span className="stat-value">{data.compliance.totalPolicies}</span>
-              </div>
-              <div className="stat" data-semantic-type="governance-stat">
-                <span className="stat-label">Passing:</span>
-                <span className="stat-value pass">{data.compliance.passing}</span>
-              </div>
-              <div className="stat" data-semantic-type="governance-stat">
-                <span className="stat-label">Violations:</span>
-                <span className="stat-value fail">{data.compliance.violations}</span>
-              </div>
-              <div className="stat" data-semantic-type="governance-stat">
-                <span className="stat-label">Rate:</span>
-                <span className="stat-value">{Math.round(data.compliance.complianceRate * 100)}%</span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {data.policies && (
-          <div className="governance-policies">
-            <h3>Active Policies</h3>
-            {data.policies.map((policy) => (
-              <div
-                key={policy.id}
-                className="policy-item"
-                data-semantic-urn={policy.urn}
-                data-semantic-type="governance-policy"
-              >
-                <strong>{policy.name}</strong>
-                <span className={`violations ${policy.violations > 0 ? 'has-violations' : 'clean'}`}>
-                  {policy.violations} violations
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-
-        <div className="placeholder-status">
-          <span className="status-badge">Preview Data</span>
-          <p className="status-text">Backend endpoint pending - showing semantic sample data</p>
         </div>
       </div>
     </div>

@@ -1,10 +1,10 @@
 # Protocol Viewer
 
-Web-based visualization interface for OSS Protocol manifests, validation results, and governance insights.
+Web-based visualization interface for OSS Protocol manifests, validation results, and graph insights.
 
 ## Overview
 
-The Protocol Viewer provides a rich, interactive UI for exploring protocol data structures and relationships. It is designed to support developer workflows, governance validation, and analytics integration.
+The Protocol Viewer provides a rich, interactive UI for exploring protocol data structures and relationships. It is designed to support developer workflows, validation review, and analytics integration.
 
 ## Features
 
@@ -13,7 +13,6 @@ The Protocol Viewer provides a rich, interactive UI for exploring protocol data 
 - **Manifest Browser**: Browse and inspect protocol manifests with syntax highlighting and download support
 - **Validation Panel**: View live validation results powered by `POST /api/validate`
 - **Graph Visualization**: Explore protocol relationships with chunked graph data from `POST /api/graph`
-- **Governance Panel**: View governance scores and recommendations (placeholder)
 
 ### Developer Tools (Week 3)
 
@@ -73,16 +72,19 @@ The Inspection Overlay provides real-time insight into semantic metadata attache
 ### Server (Express)
 - **Location**: `app/viewer/server.js`
 - **Framework**: Express
-- **Purpose**: Serves API endpoints for health, manifests, validation, graph, and governance data
+- **Purpose**: Serves API endpoints for health, manifests, validation, and graph data
 - **Middleware**: JSON parsing, CORS, static file serving
 
-### API Routes (Sprint 18)
+### API Routes (Sprint 21)
 - `GET /api/health` — Server health + artifact stats
 - `GET /api/manifests` — Manifest metadata (filterable via `?kind=`)
 - `GET /api/manifest/:filename` — Raw manifest JSON (path-safe)
 - `POST /api/validate` — Body `{ manifests: ["api-test.json"] }` → `{ valid, summary, manifests, errors }`
 - `POST /api/graph` — Body `{ manifests: [...] }` → graph index + chunk descriptors
 - `GET /api/graph/part/:id` — Retrieve graph chunk JSON (nodes, edges, summary)
+
+**Note**: Governance surfaces are intentionally disabled in Sprint 21 builds.  
+See `docs/SPRINT_21_SURFACE_CHANGES.md#viewer-changes` for the rationale and future roadmap.
 
 See `artifacts/viewer/api-smoke.json` for an example payload recorded from the smoke workflow.
 
@@ -235,7 +237,7 @@ const attrs = manifestSemanticAttrs(manifest, { view: 'list', role: 'card' });
 
 - **Validation Integration**: Connect Validation panel to real validation engine
 - **Graph Visualization**: Implement interactive protocol graph with D3.js or similar
-- **Governance Analytics**: Real-time governance scoring and recommendations
+- **Governance Analytics (Deferred)**: Real-time scoring once policy engine lands
 - **Export Functionality**: Export semantic annotations and registry snapshots
 - **Custom Overlays**: Plugin system for custom inspection overlays
 - **Performance Monitoring**: Track overlay performance impact

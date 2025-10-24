@@ -366,7 +366,7 @@ const tools = [
   
   {
     name: 'agent_run',
-    description: 'Execute a specific tool on an agent',
+    description: 'UNSUPPORTED (501) – agent execution surfaces are disabled in Sprint 21 builds.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -383,7 +383,7 @@ const tools = [
   
   {
     name: 'workflow_run',
-    description: 'Execute a workflow file with agent nodes',
+    description: 'UNSUPPORTED (501) – workflow execution is disabled in Sprint 21 builds.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -396,6 +396,7 @@ const tools = [
       return runWorkflow({
         workflowPath: safe(workflow_path),
         inputs: inputs || {},
+        originalWorkflowPath: workflow_path,
         root: ROOT
       });
     })

@@ -94,8 +94,6 @@ class PerformanceBenchmark {
     const testOperations = [
       { tool: 'protocol_discover_api', operation: 'discovery' },
       { tool: 'agent_resolve', operation: 'discovery' },
-      { tool: 'agent_run', operation: 'mcp' },
-      { tool: 'workflow_run', operation: 'mcp' },
       { tool: 'docs_mermaid', operation: 'mcp' }
     ];
 

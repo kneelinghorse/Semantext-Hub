@@ -1,0 +1,20 @@
+{
+  "type": "event",
+  "name": "Smoke_EVENT_1761321187619",
+  "version": "1.0.0",
+  "description": "Generated event protocol for Smoke_EVENT_1761321187619",
+  "protocol": {
+    "transport": "websocket",
+    "events": [
+      {
+        "name": "data.updated",
+        "schema": {},
+        "description": "Data update event"
+      }
+    ]
+  },
+  "metadata": {
+    "created": "2025-10-24T15:53:07.659Z",
+    "author": "protocol-discover"
+  }
+}

@@ -332,33 +332,18 @@ describe('API Client', () => {
   });
 
   describe('getGovernance', () => {
-    it('returns semantic governance stub data', async () => {
-      const result = await api.getGovernance();
-
-      expect(result.urn).toBe('urn:proto:governance:summary');
-      expect(result.policies).toBeDefined();
-      expect(result.compliance).toBeDefined();
-      expect(result.recentActivity).toBeDefined();
-    });
-
-    it('includes URNs for each policy', async () => {
-      const result = await api.getGovernance();
-
-      result.policies.forEach((policy) => {
-        expect(policy.urn).toMatch(/^urn:proto:policy:/);
-        expect(policy.status).toBeDefined();
-        expect(policy.violations).toBeGreaterThanOrEqual(0);
+    it('throws a 501 ApiError with documentation pointers', async () => {
+      await expect(api.getGovernance()).rejects.toMatchObject({
+        name: 'ApiError',
+        status: 501,
+        message: expect.stringContaining('disabled'),
+        data: expect.objectContaining({
+          documentation: expect.stringContaining('docs/SPRINT_21_SURFACE_CHANGES.md'),
+          guidance: expect.arrayContaining([
+            expect.stringContaining('viewer'),
+          ]),
+        }),
       });
-    });
-
-    it('provides compliance metrics', async () => {
-      const result = await api.getGovernance();
-
-      expect(result.compliance.totalPolicies).toBeGreaterThanOrEqual(0);
-      expect(result.compliance.passing).toBeGreaterThanOrEqual(0);
-      expect(result.compliance.violations).toBeGreaterThanOrEqual(0);
-      expect(result.compliance.complianceRate).toBeGreaterThanOrEqual(0);
-      expect(result.compliance.complianceRate).toBeLessThanOrEqual(1);
     });
   });
 
