@@ -25,7 +25,8 @@ const {
 const {
   compareAndSwap,
   createVersionedState,
-  DEFAULT_RETRY_CONFIG
+  DEFAULT_RETRY_CONFIG,
+  ALREADY_APPLIED
 } = require('./optimistic-lock');
 const {
   loadStateWithRecovery,
@@ -53,7 +54,20 @@ class RegistrationPipeline extends EventEmitter {
   constructor(options = {}) {
     super();
     this.baseDir = options.baseDir;
-    this.retryConfig = options.retryConfig || DEFAULT_RETRY_CONFIG;
+    this.retryConfig = {
+      ...DEFAULT_RETRY_CONFIG,
+      ...(options.retryConfig || {})
+    };
+    this.metrics = {
+      optimisticLock: {
+        retries: {
+          versionConflict: 0,
+          alreadyApplied: 0,
+          exhausted: 0
+        }
+      }
+    };
+    this._alreadyAppliedOperations = new Map();
   }
 
   /**
@@ -156,6 +170,11 @@ class RegistrationPipeline extends EventEmitter {
         // Check if transition is allowed
         const transitionCheck = canTransition(fromState, event);
         if (!transitionCheck.allowed) {
+          if (wasTransitionAlreadyApplied(currentState, event)) {
+            this._recordAlreadyApplied(manifestId, event, attempt);
+            return ALREADY_APPLIED;
+          }
+
           if (isTerminalState(fromState)) {
             throw new Error(`No transitions defined for state ${fromState}`);
           }
@@ -202,10 +221,15 @@ class RegistrationPipeline extends EventEmitter {
       },
 
       manifestId,
-      this.retryConfig
+      this._createRetryConfig(manifestId, event)
     );
 
     const transitionDuration = Date.now() - startTime;
+    const alreadyApplied = this._consumeAlreadyApplied(manifestId, event);
+
+    if (alreadyApplied) {
+      return newVersionedState;
+    }
 
     // Log state transition event
     const transitionEvent = createStateTransitionEvent(
@@ -340,5 +364,144 @@ class RegistrationPipeline extends EventEmitter {
     return await this.transitionState(manifestId, EVENTS.REVERT_TO_DRAFT);
   }
 }
+
+/**
+ * Determine whether the requested transition was already applied by a prior call.
+ *
+ * @param {Object} state - Current manifest state snapshot
+ * @param {string} event - Requested event name
+ * @returns {boolean}
+ */
+function wasTransitionAlreadyApplied(state, event) {
+  if (!state || !state.lastTransition) {
+    return false;
+  }
+
+  const { lastTransition, currentState } = state;
+  return (
+    lastTransition.event === event &&
+    lastTransition.to === currentState
+  );
+}
+
+RegistrationPipeline.prototype._createRetryConfig = function(manifestId, event) {
+  const baseConfig = this.retryConfig || {};
+  const pipeline = this;
+
+  return {
+    ...baseConfig,
+    resourceId: manifestId,
+    onRetry(info) {
+      if (typeof baseConfig.onRetry === 'function') {
+        baseConfig.onRetry(info);
+      }
+      pipeline._recordVersionConflict(manifestId, event, info);
+    },
+    onSuccess(info) {
+      if (typeof baseConfig.onSuccess === 'function') {
+        baseConfig.onSuccess(info);
+      }
+      pipeline._recordRetrySuccess(manifestId, event, info);
+    },
+    onExhausted(info) {
+      if (typeof baseConfig.onExhausted === 'function') {
+        baseConfig.onExhausted(info);
+      }
+      pipeline._recordRetryExhausted(manifestId, event, info);
+    }
+  };
+};
+
+RegistrationPipeline.prototype._recordVersionConflict = function(manifestId, event, info) {
+  this.metrics.optimisticLock.retries.versionConflict += 1;
+  const payload = {
+    manifestId,
+    event,
+    attempt: info.attempt + 1,
+    maxAttempts: info.maxAttempts,
+    backoffMs: info.delay,
+    error: info.error ? info.error.message : undefined
+  };
+  this._logOptimisticLock('retry', payload);
+  this.emit('optimisticLock.retry', payload);
+};
+
+RegistrationPipeline.prototype._recordRetrySuccess = function(manifestId, event, info) {
+  if (info.attempt === 0) {
+    return;
+  }
+  const payload = {
+    manifestId,
+    event,
+    attempts: info.totalAttempts
+  };
+  this._logOptimisticLock('retry_success', payload);
+  this.emit('optimisticLock.retrySuccess', payload);
+};
+
+RegistrationPipeline.prototype._recordRetryExhausted = function(manifestId, event, info) {
+  this.metrics.optimisticLock.retries.exhausted += 1;
+  const payload = {
+    manifestId,
+    event,
+    attempts: info.attempts,
+    error: info.error ? info.error.message : undefined
+  };
+  this._logOptimisticLock('retry_exhausted', payload);
+  this.emit('optimisticLock.retryExhausted', payload);
+};
+
+RegistrationPipeline.prototype._recordAlreadyApplied = function(manifestId, event, attempt) {
+  this.metrics.optimisticLock.retries.alreadyApplied += 1;
+  const payload = {
+    manifestId,
+    event,
+    attempt: attempt + 1
+  };
+  const key = this._operationKey(manifestId, event);
+  const current = this._alreadyAppliedOperations.get(key) || 0;
+  this._alreadyAppliedOperations.set(key, current + 1);
+
+  this._logOptimisticLock('already_applied', payload);
+  this.emit('optimisticLock.alreadyApplied', payload);
+};
+
+RegistrationPipeline.prototype._consumeAlreadyApplied = function(manifestId, event) {
+  const key = this._operationKey(manifestId, event);
+  const current = this._alreadyAppliedOperations.get(key) || 0;
+  if (current <= 0) {
+    return false;
+  }
+  if (current === 1) {
+    this._alreadyAppliedOperations.delete(key);
+  } else {
+    this._alreadyAppliedOperations.set(key, current - 1);
+  }
+  return true;
+};
+
+RegistrationPipeline.prototype._operationKey = function(manifestId, event) {
+  return `${manifestId}:${event}`;
+};
+
+RegistrationPipeline.prototype._logOptimisticLock = function(eventName, details) {
+  const logPayload = {
+    level: 'info',
+    category: 'registration.optimistic_lock',
+    event: eventName,
+    timestamp: new Date().toISOString(),
+    ...details
+  };
+
+  try {
+    console.log(JSON.stringify(logPayload));
+  } catch {
+    console.log('[Registration][OptimisticLock]', eventName, details);
+  }
+};
+
+RegistrationPipeline.prototype.getMetrics = function() {
+  return JSON.parse(JSON.stringify(this.metrics));
+};
 
 module.exports = RegistrationPipeline;

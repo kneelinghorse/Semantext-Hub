@@ -80,12 +80,33 @@ function sleep(ms) {
  * @throws {Error} If all retries fail
  */
 async function retryWithBackoff(fn, config = DEFAULT_RETRY_CONFIG) {
-  const { maxAttempts } = config;
+  const mergedConfig = {
+    ...DEFAULT_RETRY_CONFIG,
+    ...config
+  };
+  const {
+    maxAttempts,
+    onRetry,
+    onSuccess,
+    onExhausted,
+    resourceId
+  } = mergedConfig;
   let lastError;
 
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     try {
-      return await fn(attempt);
+      const result = await fn(attempt);
+
+      if (attempt > 0 && typeof onSuccess === 'function') {
+        onSuccess({
+          attempt,
+          totalAttempts: attempt + 1,
+          resourceId,
+          result
+        });
+      }
+
+      return result;
     } catch (error) {
       lastError = error;
 
@@ -96,10 +117,29 @@ async function retryWithBackoff(fn, config = DEFAULT_RETRY_CONFIG) {
 
       // Don't wait after final attempt
       if (attempt < maxAttempts - 1) {
-        const delay = calculateBackoff(attempt, config);
+        const delay = calculateBackoff(attempt, mergedConfig);
+
+        if (typeof onRetry === 'function') {
+          onRetry({
+            attempt,
+            resourceId,
+            delay,
+            maxAttempts,
+            error
+          });
+        }
+
         await sleep(delay);
       }
     }
+  }
+
+  if (typeof onExhausted === 'function') {
+    onExhausted({
+      attempts: maxAttempts,
+      resourceId,
+      error: lastError
+    });
   }
 
   // All attempts exhausted
@@ -136,6 +176,12 @@ function incrementVersion(versionedState) {
     updatedAt: new Date().toISOString()
   };
 }
+
+/**
+ * Sentinel used when a transition was already applied by a concurrent writer.
+ * compareAndSwap callers returning this value should short-circuit without writes.
+ */
+const ALREADY_APPLIED = Symbol('registration.optimistic_lock.already_applied');
 
 /**
  * Validate version match for optimistic locking
@@ -181,6 +227,10 @@ async function compareAndSwap(readFn, writeFn, computeNewState, resourceId, retr
     // Step 2: Compute new state
     const newState = await computeNewState(currentVersionedState.state, attempt);
 
+    if (newState === ALREADY_APPLIED) {
+      return currentVersionedState;
+    }
+
     // Step 3: Re-read to check version
     const recheckVersionedState = await readFn();
 
@@ -207,6 +257,7 @@ module.exports = {
   retryWithBackoff,
   createVersionedState,
   incrementVersion,
+  ALREADY_APPLIED,
   validateVersion,
   compareAndSwap
 };

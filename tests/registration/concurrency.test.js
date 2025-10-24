@@ -75,6 +75,11 @@ describe('Optimistic Locking Concurrency', () => {
         expect(result.state.currentState).toBe('REVIEWED');
       });
 
+      // All responses share the same version (idempotent behaviour)
+      results.forEach(result => {
+        expect(result.version).toBe(2);
+      });
+
       // Final version should be 2 (1 + 1 successful transition)
       const finalState = await pipeline.loadState(manifestId);
       expect(finalState.version).toBe(2);
@@ -131,6 +136,47 @@ describe('Optimistic Locking Concurrency', () => {
 
       // Should have retried at least once
       expect(retryCount).toBeGreaterThan(1);
+    });
+
+    test('should resolve duplicate submit_for_review calls without error', async () => {
+      const manifestId = 'retry-002';
+      const manifest = { urn: 'urn:proto:api:test/service@1.0.0' };
+
+      await pipeline.initialize(manifestId, manifest);
+
+      const firstResult = await pipeline.submitForReview(manifestId);
+      expect(firstResult.state.currentState).toBe('REVIEWED');
+      expect(firstResult.version).toBe(2);
+
+      const secondResult = await pipeline.submitForReview(manifestId);
+      expect(secondResult.state.currentState).toBe('REVIEWED');
+      expect(secondResult.version).toBe(firstResult.version);
+      expect(secondResult.state.lastTransition.event).toBe('submit_for_review');
+      expect(secondResult.state.lastTransition.attempt).toBeDefined();
+    });
+
+    test('should capture optimistic lock metrics under contention', async () => {
+      const manifestId = 'retry-003';
+      const manifest = { urn: 'urn:proto:api:test/service@1.0.0' };
+
+      await pipeline.initialize(manifestId, manifest);
+
+      await Promise.all([
+        pipeline.submitForReview(manifestId),
+        pipeline.submitForReview(manifestId),
+        pipeline.submitForReview(manifestId)
+      ]);
+
+      let metrics = pipeline.getMetrics();
+      expect(metrics.optimisticLock.retries.versionConflict).toBeGreaterThanOrEqual(0);
+      expect(metrics.optimisticLock.retries.alreadyApplied).toBeGreaterThanOrEqual(0);
+      expect(metrics.optimisticLock.retries.exhausted).toBe(0);
+
+      const initialAlreadyApplied = metrics.optimisticLock.retries.alreadyApplied;
+
+      await pipeline.submitForReview(manifestId);
+      metrics = pipeline.getMetrics();
+      expect(metrics.optimisticLock.retries.alreadyApplied).toBeGreaterThan(initialAlreadyApplied);
     });
   });
 
