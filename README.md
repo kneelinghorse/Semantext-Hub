@@ -1,53 +1,111 @@
-# OSS Protocols - Universal Protocol Suite
+# OSSP-AGI — Protocol Discovery Workbench
 
-A comprehensive, production-ready protocol suite for modern software systems. Covers APIs, data, events, workflows, agents, and 13+ other protocol types.
+OSSP-AGI is a secure-by-default, local-first workbench for discovering, validating, and documenting protocol manifests sourced from real contracts. Sprint 21 hardened the runtime so newcomers always start from trustworthy defaults: explicit registry API keys, fail-closed IAM policies, and viewer/runtime surfaces that only expose supported workflows.
 
-## 🚀 Overview
+## 🚀 What You Can Do
 
-OSS Protocols provides a unified framework for defining, validating, and managing protocol manifests across your entire stack. Each protocol includes:
+- **Discover protocols** from OpenAPI, AsyncAPI, and Postgres sources into URN-addressable manifests.
+- **Validate ecosystems** with detailed error reporting and audit traces for denied operations.
+- **Explore catalogs** through the local viewer’s catalog + validation tabs (governance UI surfaces stay disabled until real data ships).
+- **Document outcomes** using the governance generator library and curated artifacts inside `artifacts/` (no placeholder TODO scaffolds).
 
-- **Schema validation** with detailed error reporting
-- **Code generation** for clients, tests, and documentation
-- **Cross-protocol relationships** via URN references
-- **Governance & compliance** tracking
-- **Catalog & discovery** with dependency graphs
+## 🛡️ Sprint 21 Hardened Defaults
 
-## 📦 Supported Protocols (18 Total)
+- **Registry API key required** – services abort when `REGISTRY_API_KEY` is missing or empty.
+- **IAM delegation enforced** – `OSSP_IAM_POLICY` (or the default policy path) must resolve to an explicit policy; everything else fails closed with `403` and is logged.
+- **Trimmed runtime surfaces** – A2A communication remains production-ready, while MCP agent/workflow execution and viewer governance panes now return deterministic `501` responses with follow-up guidance.
+- **Startup checklist** – starting the registry via `node packages/runtime/registry/server.mjs` validates configuration so demos cannot proceed with permissive fallbacks.
 
-### Core Protocols
-- **API Protocol** (`api_protocol_v_1_1_1.js`) - REST/GraphQL API definitions
-- **Data Protocol** (`data_protocol_v_1_1_1.js`) - Database schemas and migrations
-- **Event Protocol** (`event_protocol_v_1_1_1.js`) - Event-driven messaging (Kafka, AMQP, MQTT)
-- **Workflow Protocol** (`workflow_protocol_v_1_1_1.js`) - Business process orchestration
-- **Agent Protocol** (`agent_protocol_v_1_1_1.js`) - AI agent capabilities and integrations
-- **UI Component Protocol** (`ui_component_protocol_v_1_1_1.js`) - Frontend component libraries
+## ⚡ Quick Start (Secure Defaults)
 
-### Extended Protocols
-- **Infrastructure Protocol** - Cloud resources and IaC
-- **Observability Protocol** - Metrics, logs, traces
-- **Identity & Access Protocol** - Auth, permissions, IAM
-- **Release/Deployment Protocol** - CI/CD pipelines
-- **Configuration Protocol** - App settings and feature flags
-- **Documentation Protocol** - Technical docs and guides
-- **Analytics & Metrics Protocol** - Business intelligence
-- **Testing/Quality Protocol** - Test suites and quality gates
-- **Integration Protocol** - Third-party integrations
-- **AI/ML Protocol** - ML models and training pipelines
-- **Hardware Device Protocol** - IoT and embedded systems
-- **Semantic Protocol** (`Semantic Protocol — v3.2.0.js`) - Ontologies and knowledge graphs
+A reproducible, no-surprises walkthrough lives in [`docs/Getting_Started.md`](docs/Getting_Started.md). The short version:
 
-## ⚡ Agent Protocol Integration
+```bash
+git clone https://github.com/your-org/oss-protocols.git
+cd oss-protocols
+npm install
 
-### What is the Agent Protocol?
+export REGISTRY_API_KEY=$(node -e "console.log(require('crypto').randomBytes(32).toString('hex'))")
+mkdir -p app/config/security
+cat > app/config/security/delegation-policy.json <<'EOF'
+{
+  "mode": "enforce",
+  "agents": {
+    "urn:agent:runtime:workflow-executor": {
+      "allow": ["execute_workflow", "read_manifest"],
+      "resources": ["approved/*", "drafts/*"]
+    }
+  },
+  "exemptions": ["public/*"]
+}
+EOF
 
-The Agent Protocol enables AI agents (like Claude, GPT, custom LLMs) to integrate with your systems through standardized manifests. Agents can:
+npm run cli -- discover api https://petstore3.swagger.io/api/v3/openapi.json
+npm run cli -- validate --ecosystem
+npm run cli -- ui
+```
 
-- **Declare capabilities** (tools, actions, knowledge domains)
-- **Reference workflows** to execute multi-step processes
-- **Call APIs** with proper authentication
-- **Subscribe to events** for reactive behaviors
-- **Access data sources** with governance controls
-- **Communicate** via MCP, Agent-to-Agent (A2A), or webhooks
+Open `http://localhost:3456` to inspect manifests, catalog graphs, and validation status. Agent/workflow orchestration surfaces intentionally respond with `501` to keep the story truthful until future missions re-enable them.
+
+## 📦 Supported Import Sources
+
+### Production-Ready Importers
+- **OpenAPI** - Import REST/GraphQL API specs (OpenAPI 3.x)
+- **AsyncAPI** - Import event schemas (AsyncAPI 2.x/3.x, Kafka/AMQP/MQTT)
+- **Postgres** - Import database schemas via connection strings
+
+### Generated Protocol Types
+- **API Protocol** - REST/GraphQL API definitions with endpoint metadata
+- **Data Protocol** - Database schemas, tables, columns, constraints
+- **Event Protocol** - Event-driven messaging with PII detection
+- **Workflow Protocol** - Multi-step orchestration (WSAP - Workbench Spec Analysis Pipeline)
+- **Agent Protocol** - Agent-to-Agent (A2A) communication capabilities
+- **Identity & Access Protocol** - IAM policies and delegation rules
+
+### Experimental/Limited Support
+- **Semantic Protocol** - Self-documentation and knowledge graphs
+- Other protocol types are planned but not yet implemented
+
+## ⚡ Core Workflow
+
+### Import → Validate → Visualize → Document
+
+The workbench supports a complete protocol lifecycle:
+
+1. **Import** - Discover protocols from external contracts
+   ```bash
+   npm run cli -- discover api https://api.stripe.com/v1/openapi.json
+   npm run cli -- discover postgres "postgresql://localhost/mydb"
+   npm run cli -- discover asyncapi ./kafka-events.yaml
+   ```
+
+2. **Validate** - Check for issues and cross-protocol relationships
+   ```bash
+   npm run cli -- validate --ecosystem
+   ```
+
+3. **Visualize** - Explore via web viewer or export diagrams
+   ```bash
+   npm run cli -- ui                    # Launch web viewer (catalog + validation)
+   npm run cli -- catalog list          # Inspect catalog index from the CLI
+   ```
+
+4. **Document** - Generate governance documentation
+   ```bash
+   node app/examples/generate-governance.js   # Example usage (see docs/governance-generator.md)
+   ```
+
+### Supported Communication: Agent-to-Agent (A2A)
+
+**Status**: Production-ready for local agent communication
+
+Agents can communicate via the Agent-to-Agent (A2A) HTTP protocol with:
+- **Bearer token authentication** with delegation support
+- **Retry logic** with exponential backoff
+- **Request/response logging** for debugging
+- **URN-based agent resolution** via registry
+
+**Note**: MCP (Model Context Protocol) and custom protocols are experimental and return `501 Not Implemented` for unsupported operations. See runtime surface documentation for details
 
 ### Quick Example
 
@@ -138,7 +196,7 @@ const dataAgents = catalog.get('urn:proto:agent:data-analyzer@1.0.0');
 ```bash
 # Clone repository
 git clone https://github.com/your-org/oss-protocols.git
-cd oss-protocols/app
+cd oss-protocols
 
 # Install dependencies
 npm install
@@ -169,7 +227,7 @@ export REGISTRY_API_KEY="your-secure-api-key-here"
 echo $REGISTRY_API_KEY
 
 # Start the registry service
-npm run registry:start
+node packages/runtime/registry/server.mjs
 ```
 
 **What happens without a key?**
@@ -192,7 +250,7 @@ The IAM system requires an explicit delegation policy. By default, all access is
 mkdir -p app/config/security
 
 # Create a delegation policy file
-cat > app/config/security/delegation-policy.json <<EOF
+cat > app/config/security/delegation-policy.json <<'EOF'
 {
   "mode": "enforce",
   "agents": {
@@ -223,23 +281,32 @@ export REGISTRY_API_KEY=$(node -e "console.log(require('crypto').randomBytes(32)
 
 # 2. Create minimal IAM policy
 mkdir -p app/config/security
-echo '{"mode":"enforce","agents":{},"exemptions":[]}' > app/config/security/delegation-policy.json
+cat > app/config/security/delegation-policy.json <<'EOF'
+{
+  "mode": "enforce",
+  "agents": {},
+  "exemptions": []
+}
+EOF
 
 # 3. Run tests (they include required keys)
 npm test
 
 # 4. Start services (startup checklist warns if any prerequisites are missing)
-npm run registry:start
+node packages/runtime/registry/server.mjs
 ```
 
 For detailed security policies and best practices, see [`docs/security/SECURITY_POLICIES.md`](docs/security/SECURITY_POLICIES.md).
 
 ## 📚 Documentation
 
-- **Protocol Examples**: See `docs/` directory for detailed examples
-- **Test Suite**: `tests/` contains 480+ comprehensive tests
-- **Integration Patterns**: `tests/integration/` shows cross-protocol usage
-- **Code Generation**: Each protocol includes generators for clients, tests, and docs
+- **Getting Started**: [`docs/Getting_Started.md`](docs/Getting_Started.md) – Secure setup + reproducible walkthrough
+- **Quickstart Cheatsheet**: [`docs/quickstart.md`](docs/quickstart.md) – Command-forward summary
+- **Security Policies**: [`docs/security/SECURITY_POLICIES.md`](docs/security/SECURITY_POLICIES.md) – Required configuration and audit notes
+- **Trimmed Surfaces (S21.2)**: [`docs/SPRINT_21_SURFACE_CHANGES.md`](docs/SPRINT_21_SURFACE_CHANGES.md) – Runtime/viewer changes and disabled surfaces
+- **Adapter Development**: [`docs/dev/`](docs/dev/) – Build custom importers
+- **Integration Examples**: [`examples/`](examples/) – Real-world usage patterns
+- **Roadmap**: [`cmos/docs/roadmap-sprint-21-25.md`](cmos/docs/roadmap-sprint-21-25.md) – Sprint context
 
 ## ✅ Test Coverage
 
@@ -250,17 +317,16 @@ Coverage: statements 39.73% · functions 41.55% · branches 31.53% · lines 49.1
 Thresholds met: false
 <!-- TEST-COUNTS:END -->
 
+**Test Suite Status**: 
+- **2000+ tests** covering importers, validators, runtime, and CLI
+- **Integration tests** for OpenAPI/AsyncAPI/Postgres discovery
+- **A2A client tests** with retry, auth, and delegation
+- **IAM policy enforcement** tests with audit logging
+- **Performance gates** in CI tracking discovery and registry latency
 
-
-
-- **480+ tests** across all protocols
-- **19 agent integration tests** covering:
-  - URN validation across all 18 protocols
-  - Agent → Workflow → API → IAM resolution chains
-  - Catalog discovery and querying
-  - Communication protocol support (MCP, A2A, webhooks)
-  - Fragment-based URN resolution
-  - Cross-protocol validation
+**Known Limitations**:
+- Some legacy test suites require triage (tracked in backlog)
+- Coverage thresholds are aspirational and not enforced in CI
 
 ## 🎯 Key Features
 
@@ -407,14 +473,15 @@ MIT License - See LICENSE file for details
 - **OpenAPI**: REST API specifications
 - **JSON Schema**: Data validation
 
-## 💡 Why Use OSS Protocols?
+## 💡 Why Use OSSP-AGI?
 
-- **Unified Framework**: One system for all protocol types
-- **Production Ready**: 480+ tests, comprehensive validation
-- **Agent Native**: First-class support for AI agents
-- **Extensible**: Easy to add new protocol types
-- **Type Safe**: URN-based references prevent errors
-- **Governance Built-in**: Compliance and security tracking
+- **Contract Discovery**: Automatically extract protocols from OpenAPI, AsyncAPI, Postgres
+- **Secure by Default**: Enforced API keys and IAM policies (no permissive fallbacks)
+- **Local-First**: No cloud dependencies, runs entirely on your machine
+- **Visual Exploration**: Web viewer for browsing catalogs and dependency graphs
+- **Governance Automation**: Generate compliance docs from imported specs
+- **Extensible**: Adapter system for custom import sources
+- **Truthful Telemetry**: Performance metrics from real operations (no seeded data)
 
 ## 🔧 Runtime Integration
 

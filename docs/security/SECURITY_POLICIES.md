@@ -26,7 +26,7 @@ Starting with Sprint 21, the OSSP-AGI platform enforces secure-by-default behavi
 export REGISTRY_API_KEY=$(node -e "console.log(require('crypto').randomBytes(32).toString('hex'))")
 
 # Start the registry service
-npm run registry:start
+node packages/runtime/registry/server.mjs
 ```
 
 **Authentication**:
@@ -93,7 +93,7 @@ The registry and IAM services validate configuration at startup:
 **Startup Failure**:
 If any check fails, the service exits immediately with an actionable error message.
 
-> The `npm run registry:start` helper renders this checklist automatically and surfaces warnings for missing IAM policy files or unwritable audit destinations so demos never proceed with permissive defaults.
+> Launching the registry via `node packages/runtime/registry/server.mjs` renders this checklist automatically and surfaces warnings for missing IAM policy files or unwritable audit destinations so demos never proceed with permissive defaults.
 
 ### Migration from Insecure Defaults
 
