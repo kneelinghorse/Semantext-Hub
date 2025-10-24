@@ -20,25 +20,52 @@ This guide explains how to integrate the OSSP-AGI runtime components into your a
 
 ### Starting the Registry Server
 
-The canonical Registry HTTP server is exported from `packages/runtime/registry/server.mjs`:
+The canonical Registry HTTP server is exported from `packages/runtime/registry/server.mjs`. This is the **single HTTP entry point** for the registry service.
+
+**Important:** The legacy file-based registry at `app/services/registry/server.mjs` has been deprecated and now serves as a thin compatibility layer that delegates to this runtime server.
 
 ```javascript
-import { createServer } from 'packages/runtime/registry/server.mjs';
+import { createServer, startServer } from 'packages/runtime/registry/server.mjs';
 
-// Create the Express app instance
+// Option 1: Create Express app and start manually
+const apiKey = process.env.REGISTRY_API_KEY;
+if (!apiKey) {
+  throw new Error('REGISTRY_API_KEY must be set before starting the registry server.');
+}
+
 const app = await createServer({
-  apiKey: process.env.REGISTRY_API_KEY || 'local-dev-key',
+  apiKey,
   registryConfigPath: './config/registry.config.json',
   rateLimitConfigPath: './config/security/rate-limit.config.json',
   requireProvenance: true,
+  dbPath: './var/registry.sqlite',
 });
 
-// Start listening
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
   console.log(`Registry server listening on port ${port}`);
 });
+
+// Option 2: Use startServer for simplified startup
+const secureApiKey = process.env.REGISTRY_API_KEY;
+if (!secureApiKey) {
+  throw new Error('REGISTRY_API_KEY must be provided before calling startServer().');
+}
+
+const { app, port, server, close } = await startServer({
+  apiKey: secureApiKey,
+  port: process.env.PORT || 3000,
+  requireProvenance: true,
+  dbPath: './var/registry.sqlite',
+});
+
+// Graceful shutdown
+process.on('SIGTERM', async () => {
+  await close();
+});
 ```
+
+> Tip: The new `packages/runtime/package.json` exports map allows importers to reference the canonical runtime entry with standard Node resolution (`import { startServer } from '@ossp/runtime/registry/server'`) once the package is consumed outside this repository.
 
 ### Available Endpoints
 
@@ -54,7 +81,9 @@ The registry server exposes the following endpoints:
 
 ### Environment Variables
 
-- `REGISTRY_API_KEY` - API key for authentication (default: 'local-dev-key')
+- `REGISTRY_API_KEY` - API key for authentication (**required**; no default fallback)
+- `OSSP_IAM_POLICY` - Optional path to IAM policy (defaults to `app/config/security/delegation-policy.json`)
+- `OSSP_IAM_AUDIT_LOG` - Optional path for IAM audit log (defaults to `artifacts/security/denials.jsonl`)
 - `PORT` - Server port (default: 3000)
 - `PROVENANCE_PUBKEY_PATH` - Path to public key for provenance verification
 

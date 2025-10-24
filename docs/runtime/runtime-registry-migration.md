@@ -17,8 +17,13 @@ This is the authoritative guide for working with the unified runtime registry se
 ```javascript
 import { startServer } from '../../packages/runtime/registry/server.mjs';
 
+const registryApiKey = process.env.REGISTRY_API_KEY;
+if (!registryApiKey) {
+  throw new Error('Set REGISTRY_API_KEY before starting the runtime registry.');
+}
+
 const runtime = await startServer({
-  apiKey: process.env.REGISTRY_API_KEY || 'your-api-key',
+  apiKey: registryApiKey,
   dbPath: './var/registry.sqlite',
   host: '127.0.0.1',
   port: 3000,
@@ -600,4 +605,3 @@ For questions or issues:
 **Mission Status:** ✅ Complete  
 **Last Verified:** 2025-10-23  
 **Next Review:** After next major registry feature release
-

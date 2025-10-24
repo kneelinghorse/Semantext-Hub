@@ -9,10 +9,15 @@ if (!configPath) {
   process.exit(1);
 }
 
+if (!apiKey || typeof apiKey !== 'string' || apiKey.trim().length === 0) {
+  console.error('[registry-test-server] Missing API key argument (secure defaults enforced)');
+  process.exit(1);
+}
+
 const port = Number(portArg) || 0;
 const options = {
   registryConfigPath: configPath,
-  apiKey: apiKey || 'local-dev-key',
+  apiKey,
   port,
 };
 

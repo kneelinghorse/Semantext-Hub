@@ -15,7 +15,7 @@
  * 
  * Options:
  *   --base-url <url>       Registry base URL (default: http://localhost:3000)
- *   --api-key <key>        API key (default: local-dev-key)
+ *   --api-key <key>        API key (required if REGISTRY_API_KEY not set)
  *   --samples <n>          Number of samples per endpoint (default: 50)
  *   --output <path>        Output JSONL file (optional)
  *   --verbose              Enable verbose logging
@@ -43,7 +43,10 @@ if (!DSSE_PRIVATE_KEY) {
 function parseArgs(argv) {
   const args = {
     baseUrl: 'http://localhost:3000',
-    apiKey: 'local-dev-key',
+    apiKey:
+      typeof process.env.REGISTRY_API_KEY === 'string'
+        ? process.env.REGISTRY_API_KEY.trim()
+        : null,
     samples: 50,
     output: null,
     verbose: false,
@@ -75,6 +78,10 @@ function parseArgs(argv) {
     }
   }
 
+  if (typeof args.apiKey === 'string') {
+    args.apiKey = args.apiKey.trim();
+  }
+
   return args;
 }
 
@@ -90,15 +97,15 @@ Usage:
 
 Options:
   --base-url <url>       Registry base URL (default: http://localhost:3000)
-  --api-key <key>        API key (default: local-dev-key)
+  --api-key <key>        API key (required if REGISTRY_API_KEY not set)
   --samples <n>          Number of samples per endpoint (default: 50)
   --output <path>        Output JSONL file (optional)
   --verbose              Enable verbose logging
   --help                 Show this help
 
 Examples:
-  # Basic smoke test
-  node tests/runtime/registry-http.smoke.mjs
+  # Basic smoke test (requires API key)
+  REGISTRY_API_KEY=test-key node tests/runtime/registry-http.smoke.mjs
 
   # Custom URL and API key with output
   node tests/runtime/registry-http.smoke.mjs \\
@@ -469,6 +476,13 @@ async function main() {
   if (args.help) {
     printHelp();
     return 0;
+  }
+
+  if (!args.apiKey || args.apiKey.length === 0) {
+    console.error(
+      'Missing API key. Provide --api-key <key> or set REGISTRY_API_KEY before running the smoke tests.',
+    );
+    return 1;
   }
 
   try {

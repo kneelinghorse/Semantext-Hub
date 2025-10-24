@@ -5,7 +5,10 @@ import { performance } from 'node:perf_hooks';
 const OUT = 'artifacts/perf/registry-load.jsonl';
 const SAMPLES_REQUIRED = Number(process.env.REGISTRY_SAMPLES || 50);
 const MAX_ATTEMPTS_FACTOR = Number(process.env.REGISTRY_SAMPLE_ATTEMPTS_FACTOR || 2);
-const DEFAULT_API_KEY = process.env.REGISTRY_API_KEY || 'local-dev-key';
+const REQUIRED_API_KEY =
+  typeof process.env.REGISTRY_API_KEY === 'string'
+    ? process.env.REGISTRY_API_KEY.trim()
+    : '';
 const DEFAULT_PORT = Number(process.env.REGISTRY_PORT || 3201);
 
 fs.mkdirSync('artifacts/perf', { recursive: true });
@@ -47,7 +50,7 @@ async function seedTestManifest(baseUrl, apiKey) {
   return testUrn;
 }
 
-async function sample(route, { required = SAMPLES_REQUIRED, apiKey = DEFAULT_API_KEY } = {}) {
+async function sample(route, { required = SAMPLES_REQUIRED, apiKey = REQUIRED_API_KEY } = {}) {
   const attemptsLimit = required * Math.max(1, MAX_ATTEMPTS_FACTOR);
   const rows = [];
   let successes = 0;
@@ -93,7 +96,12 @@ async function sample(route, { required = SAMPLES_REQUIRED, apiKey = DEFAULT_API
 (async () => {
 let registryUrl = process.env.REGISTRY_URL;
 let localServer = null;
-const apiKey = DEFAULT_API_KEY;
+const apiKey = REQUIRED_API_KEY;
+
+if (!apiKey) {
+  console.error('[perf] REGISTRY_API_KEY must be set before running registry-load benchmarks.');
+  process.exit(1);
+}
 
 try {
   if (!registryUrl) {

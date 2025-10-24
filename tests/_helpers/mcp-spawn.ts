@@ -15,6 +15,7 @@ export async function spawnMCPWithA2AStub(opts: { protocolRoot?: string, enableL
 
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const appRoot = opts.protocolRoot || path.resolve(__dirname, '../../');
+  const registryApiKey = 'mcp-e2e-test-key';
 
   const client = createMCPClient({
     endpoint: {
@@ -23,7 +24,8 @@ export async function spawnMCPWithA2AStub(opts: { protocolRoot?: string, enableL
       env: {
         PROTOCOL_ROOT: appRoot,
         A2A_BASE_URL: stub.url,
-        A2A_ENABLE_LOGGING: 'false'
+        A2A_ENABLE_LOGGING: 'false',
+        OSSP_REGISTRY_API_KEY: registryApiKey
       }
     },
     timeout: 5000,

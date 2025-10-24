@@ -150,6 +150,90 @@ npm test
 npm test -- tests/integration/agent-full-suite.test.js
 ```
 
+## 🔒 Security Setup (Required)
+
+**Starting with Sprint 21**, OSSP-AGI enforces **secure-by-default** behavior. Services will not start without proper configuration.
+
+### Registry API Key (Required)
+
+The registry service requires an explicit API key. No insecure defaults are provided.
+
+```bash
+# Generate a secure API key (recommended)
+export REGISTRY_API_KEY=$(node -e "console.log(require('crypto').randomBytes(32).toString('hex'))")
+
+# Or set a custom key (minimum 20 characters recommended)
+export REGISTRY_API_KEY="your-secure-api-key-here"
+
+# Verify the key is set
+echo $REGISTRY_API_KEY
+
+# Start the registry service
+npm run registry:start
+```
+
+**What happens without a key?**
+```
+⚠️  SECURITY ERROR: Registry startup blocked - missing API key
+
+The registry requires an explicit API key for secure operation.
+Insecure defaults (e.g., "local-dev-key") have been removed.
+
+To fix this, set the REGISTRY_API_KEY environment variable:
+  export REGISTRY_API_KEY="your-secure-api-key-here"
+```
+
+### IAM Delegation Policy (Required)
+
+The IAM system requires an explicit delegation policy. By default, all access is denied.
+
+```bash
+# Create the policy directory
+mkdir -p app/config/security
+
+# Create a delegation policy file
+cat > app/config/security/delegation-policy.json <<EOF
+{
+  "mode": "enforce",
+  "agents": {
+    "urn:agent:runtime:workflow-executor": {
+      "allow": ["execute_workflow", "read_manifest"],
+      "resources": ["approved/*", "drafts/*"]
+    }
+  },
+  "exemptions": ["public/*"]
+}
+EOF
+
+# Or set a custom policy path (preferred variable: OSSP_IAM_POLICY)
+export OSSP_IAM_POLICY="./my-custom-policy.json"
+# Legacy deployments that still export DELEGATION_POLICY_PATH will continue to work, but the new variable is required for security hardening.
+```
+
+**Authorization Behavior:**
+- ✅ **Allowed**: Requests matching the policy (capability + resource pattern)
+- ❌ **Denied (403)**: Requests not matching the policy
+- 📝 **Audit Log**: All denials logged to `artifacts/security/denials.jsonl`
+
+### Quick Start with Secure Defaults
+
+```bash
+# 1. Set up security configuration
+export REGISTRY_API_KEY=$(node -e "console.log(require('crypto').randomBytes(32).toString('hex'))")
+
+# 2. Create minimal IAM policy
+mkdir -p app/config/security
+echo '{"mode":"enforce","agents":{},"exemptions":[]}' > app/config/security/delegation-policy.json
+
+# 3. Run tests (they include required keys)
+npm test
+
+# 4. Start services (startup checklist warns if any prerequisites are missing)
+npm run registry:start
+```
+
+For detailed security policies and best practices, see [`docs/security/SECURITY_POLICIES.md`](docs/security/SECURITY_POLICIES.md).
+
 ## 📚 Documentation
 
 - **Protocol Examples**: See `docs/` directory for detailed examples

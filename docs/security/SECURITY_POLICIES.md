@@ -9,6 +9,151 @@ The security scanning system provides comprehensive protection against:
 - **License Violations**: Disallowed licenses that could create legal issues
 - **Security Vulnerabilities**: Code patterns that could lead to security exploits
 
+## Secure Defaults (Sprint 21+)
+
+Starting with Sprint 21, the OSSP-AGI platform enforces secure-by-default behavior across all runtime services:
+
+### Registry API Security
+
+**Required Configuration**:
+- **API Key**: The registry **requires** an explicit API key via `REGISTRY_API_KEY` environment variable or `options.apiKey`.
+- **No Fallbacks**: Insecure defaults (e.g., `"local-dev-key"`) have been **removed**.
+- **Startup Validation**: The registry refuses to start without a valid API key.
+
+**Example Setup**:
+```bash
+# Generate a secure API key (recommended)
+export REGISTRY_API_KEY=$(node -e "console.log(require('crypto').randomBytes(32).toString('hex'))")
+
+# Start the registry service
+npm run registry:start
+```
+
+**Authentication**:
+- All protected endpoints require the `X-API-Key` header.
+- Missing or incorrect keys return `401 Unauthorized`.
+- Public endpoints (health, OpenAPI spec) remain accessible.
+
+### IAM Authorization (Fail Closed)
+
+**Policy Requirements**:
+- **Explicit Policy**: IAM requires a valid delegation policy file at runtime.
+- **No Permissive Defaults**: Missing policies cause startup failure (no implicit allow).
+- **Fail Closed**: Unauthorized requests receive `403 Forbidden` (not warnings).
+
+**Policy Location**:
+- Default: `app/config/security/delegation-policy.json`
+- Override: `OSSP_IAM_POLICY` environment variable (preferred)\
+  ↳ `DELEGATION_POLICY_PATH` remains supported for backward compatibility.
+
+**Audit Log Location**:
+- Default: `artifacts/security/denials.jsonl`
+- Override: `OSSP_IAM_AUDIT_LOG` environment variable (preferred)\
+  ↳ `DELEGATION_AUDIT_LOG` remains supported for backward compatibility.
+
+**Example Policy**:
+```json
+{
+  "mode": "enforce",
+  "agents": {
+    "urn:agent:runtime:workflow-executor": {
+      "allow": ["execute_workflow", "read_manifest"],
+      "resources": ["approved/*", "drafts/*"]
+    }
+  },
+  "exemptions": ["public/*"]
+}
+```
+
+**Authorization Behavior**:
+- **Denied by Default**: Capabilities not in the policy are denied (403).
+- **Resource Matching**: Requests must match both capability and resource patterns.
+- **Audit Logging**: All denials are logged to `artifacts/security/denials.jsonl`.
+- **Mode Independence**: Both `enforce` and `permissive` modes deny unauthorized requests (no fall-through).
+
+### Startup Checklist
+
+The registry and IAM services validate configuration at startup:
+
+**Registry Checklist**:
+```
+✓ REGISTRY_API_KEY is set and non-empty
+✓ Database connection is valid
+✓ Provenance keys are loaded (if required)
+✓ Rate limit configuration is valid
+```
+
+**IAM Checklist**:
+```
+✓ Delegation policy file exists and is readable (OSSP_IAM_POLICY or default path)
+✓ Policy JSON is valid
+✓ Audit log directory is writable (OSSP_IAM_AUDIT_LOG or default path)
+```
+
+**Startup Failure**:
+If any check fails, the service exits immediately with an actionable error message.
+
+> The `npm run registry:start` helper renders this checklist automatically and surfaces warnings for missing IAM policy files or unwritable audit destinations so demos never proceed with permissive defaults.
+
+### Migration from Insecure Defaults
+
+**Before (Sprint ≤20)**:
+```javascript
+// Insecure: fallback to 'local-dev-key'
+const apiKey = process.env.REGISTRY_API_KEY || 'local-dev-key';
+```
+
+**After (Sprint 21+)**:
+```javascript
+// Secure: fail if not provided
+const apiKey = process.env.REGISTRY_API_KEY;
+if (!apiKey) {
+  throw new Error('REGISTRY_API_KEY is required');
+}
+```
+
+### Testing with Secure Defaults
+
+**Unit Tests**:
+```javascript
+// Always provide explicit keys
+const app = await createServer({
+  apiKey: 'test-secure-key-12345',
+  requireProvenance: false,
+});
+```
+
+**E2E Tests**:
+```bash
+# Set test API key before running tests
+export REGISTRY_API_KEY=test-integration-key
+npm run test:e2e
+```
+
+**CI/CD**:
+```yaml
+# GitHub Actions example
+env:
+  REGISTRY_API_KEY: ${{ secrets.REGISTRY_API_KEY }}
+```
+
+### Security Best Practices
+
+1. **API Keys**:
+   - Use cryptographically random keys (≥32 bytes)
+   - Rotate keys periodically
+   - Store keys in secure vaults (not in code)
+
+2. **IAM Policies**:
+   - Start with minimal permissions (principle of least privilege)
+   - Use specific resource patterns (avoid `*` wildcards)
+   - Review audit logs regularly
+
+3. **Deployment**:
+   - Never commit keys to version control
+   - Use environment-specific keys (dev, staging, prod)
+   - Validate configuration in CI before deployment
+
 ## Security Scan Command
 
 ### Usage

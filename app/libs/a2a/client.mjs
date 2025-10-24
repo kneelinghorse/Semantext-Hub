@@ -8,7 +8,10 @@ import fetch from 'node-fetch';
 import { MetricsIngestWriter } from '../../services/obs/ingest.mjs';
 
 const DEFAULT_REGISTRY_URL = process.env.OSSP_REGISTRY_URL ?? 'http://localhost:3000';
-const DEFAULT_API_KEY = process.env.OSSP_REGISTRY_API_KEY ?? 'local-dev-key';
+const DEFAULT_API_KEY =
+  typeof process.env.OSSP_REGISTRY_API_KEY === 'string'
+    ? process.env.OSSP_REGISTRY_API_KEY.trim()
+    : null;
 const DEFAULT_TIMEOUT_MS = 5000;
 const DEFAULT_RETRIES = 2;
 const DEFAULT_BACKOFF_BASE = 200;
@@ -162,6 +165,18 @@ function pickEndpoint(card) {
     return endpoints.http;
   }
   return null;
+}
+
+function resolveRegistryApiKey(candidate) {
+  if (typeof candidate === 'string' && candidate.trim().length > 0) {
+    return candidate.trim();
+  }
+  if (typeof DEFAULT_API_KEY === 'string' && DEFAULT_API_KEY.length > 0) {
+    return DEFAULT_API_KEY;
+  }
+  throw new Error(
+    'Registry API key is required. Provide options.apiKey or set OSSP_REGISTRY_API_KEY environment variable.',
+  );
 }
 
 async function resolveByUrn(target, { fetchImpl, registryUrl, apiKey, timeout, cacheTtl }) {
@@ -438,6 +453,9 @@ export async function callAgent(target, method, payload = {}, options = {}) {
       : new MetricsIngestWriter({ sessionId, root: options.logRoot }));
 
   const correlationId = options.correlationId ?? randomUUID();
+  const registryUrl = options.registryUrl ?? DEFAULT_REGISTRY_URL;
+  const registryApiKey = resolveRegistryApiKey(options.apiKey);
+
   const trace = {
     target,
     method: operation,
@@ -496,8 +514,8 @@ export async function callAgent(target, method, payload = {}, options = {}) {
     try {
       resolved = await resolveTarget(target, {
         fetchImpl,
-        registryUrl: options.registryUrl ?? DEFAULT_REGISTRY_URL,
-        apiKey: options.apiKey ?? DEFAULT_API_KEY,
+        registryUrl,
+        apiKey: registryApiKey,
         timeout,
         cacheTtl: options.cacheTtl ?? DEFAULT_CACHE_TTL,
       });

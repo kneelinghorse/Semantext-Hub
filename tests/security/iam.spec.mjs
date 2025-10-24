@@ -45,10 +45,11 @@ describe('IAM authorize()', () => {
     expect(decision.reason).toBe('allowed_by_policy');
   });
 
-  it('permits (warn) when capability not allowed in permissive mode', async () => {
+  it('denies when capability not allowed even in permissive mode', async () => {
     const decision = await authorize('cli:local', 'registry:write', 'urn:protocol:api:update-user');
     expect(decision.mode).toBe('permissive');
-    expect(decision.allowed).toBe(true); // effective decision in permissive mode
+    expect(decision.allowed).toBe(false);
+    expect(decision.status).toBe(403);
     expect(decision.reason).toBe('capability_not_allowed');
   });
 
@@ -62,5 +63,6 @@ describe('IAM authorize()', () => {
     expect(last).toHaveProperty('capability');
     expect(last).toHaveProperty('resource');
     expect(last).toHaveProperty('mode', 'permissive');
+    expect(last).toHaveProperty('result', 'denied');
   });
 });

@@ -5,8 +5,6 @@ import { upsertManifest, getManifest, queryByCapability, resolve, listManifests 
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { validateProvenance, summarizeProvenance } from '../security/provenance.mjs';
-
-const DEFAULT_API_KEY = process.env.REGISTRY_API_KEY || 'local-dev-key';
 const DEFAULT_RATE_LIMIT_CONFIG = fileURLToPath(
   new URL('../../../app/config/security/rate-limit.config.json', import.meta.url),
 );
@@ -143,7 +141,7 @@ export async function createServer(options = {}) {
     dbPath = null,
     pragmas = null,
     rateLimit: rateLimitOverrides,
-    apiKey = DEFAULT_API_KEY,
+    apiKey,
     jsonLimit = '512kb',
     provenanceKeyPath,
     provenanceKeys,
@@ -152,8 +150,19 @@ export async function createServer(options = {}) {
     requireProvenance = true,
   } = options;
 
-  if (!apiKey) {
-    throw new Error('Registry API key must be provided via options.apiKey or REGISTRY_API_KEY.');
+  const envApiKey =
+    typeof process.env.REGISTRY_API_KEY === 'string'
+      ? process.env.REGISTRY_API_KEY.trim()
+      : '';
+  const resolvedApiKey =
+    typeof apiKey === 'string' && apiKey.trim().length > 0
+      ? apiKey.trim()
+      : envApiKey;
+
+  if (!resolvedApiKey) {
+    throw new Error(
+      'Registry API key must be provided via options.apiKey or REGISTRY_API_KEY environment variable. Insecure defaults have been removed.',
+    );
   }
 
   const registryConfigFromFile = await loadRegistryConfig(registryConfigPath);
@@ -203,6 +212,7 @@ export async function createServer(options = {}) {
   app.set('rateLimitConfigRaw', rateLimitConfigFromFile || {});
   app.set('provenanceVerifier', provenanceVerifier);
   app.set('provenanceRequired', requireProvenance !== false);
+  app.set('registryApiKey', resolvedApiKey);
 
   app.use(express.json({ limit: jsonLimit }));
   
@@ -236,7 +246,7 @@ export async function createServer(options = {}) {
 
   const requireApiKey = (request, response, next) => {
     const provided = request.get('X-API-Key');
-    if (!provided || provided !== apiKey) {
+    if (!provided || provided !== resolvedApiKey) {
       return response.status(401).json({
         error: 'unauthorized',
         message: 'Valid X-API-Key header is required.',

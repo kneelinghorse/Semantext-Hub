@@ -2,29 +2,58 @@ import { promises as fsp } from 'fs';
 import fs from 'fs';
 import path from 'path';
 
-const POLICY_PATH = process.env.DELEGATION_POLICY_PATH
-  ? path.resolve(process.cwd(), process.env.DELEGATION_POLICY_PATH)
-  : path.resolve(process.cwd(), 'app/config/security/delegation-policy.json');
+function resolvePolicyPath() {
+  const policyEnv =
+    process.env.OSSP_IAM_POLICY ??
+    process.env.DELEGATION_POLICY_PATH ??
+    '';
+  const trimmed =
+    typeof policyEnv === 'string' && policyEnv.trim().length > 0
+      ? policyEnv.trim()
+      : null;
+  return trimmed
+    ? path.resolve(process.cwd(), trimmed)
+    : path.resolve(process.cwd(), 'app/config/security/delegation-policy.json');
+}
 
-const AUDIT_LOG_PATH = process.env.DELEGATION_AUDIT_LOG
-  ? path.resolve(process.cwd(), process.env.DELEGATION_AUDIT_LOG)
-  : path.resolve(process.cwd(), 'artifacts/security/denials.jsonl');
+function resolveAuditLogPath() {
+  const auditEnv =
+    process.env.OSSP_IAM_AUDIT_LOG ??
+    process.env.DELEGATION_AUDIT_LOG ??
+    '';
+  const trimmed =
+    typeof auditEnv === 'string' && auditEnv.trim().length > 0
+      ? auditEnv.trim()
+      : null;
+  return trimmed
+    ? path.resolve(process.cwd(), trimmed)
+    : path.resolve(process.cwd(), 'artifacts/security/denials.jsonl');
+}
 
 let cachedPolicy = null;
 let cachedMtimeMs = 0;
+let cachedPolicyPath = null;
 
 async function loadPolicy() {
+  const policyPath = resolvePolicyPath();
   try {
-    const stat = await fsp.stat(POLICY_PATH);
-    if (!cachedPolicy || stat.mtimeMs !== cachedMtimeMs) {
-      const raw = await fsp.readFile(POLICY_PATH, 'utf-8');
+    const stat = await fsp.stat(policyPath);
+    if (
+      !cachedPolicy ||
+      stat.mtimeMs !== cachedMtimeMs ||
+      cachedPolicyPath !== policyPath
+    ) {
+      const raw = await fsp.readFile(policyPath, 'utf-8');
       cachedPolicy = JSON.parse(raw);
       cachedMtimeMs = stat.mtimeMs;
+      cachedPolicyPath = policyPath;
     }
     return cachedPolicy;
   } catch (err) {
-    // Default permissive policy if missing
-    return { mode: 'permissive', agents: {}, resources: [] };
+    // Fail closed: deny all if policy is missing or unreadable
+    throw new Error(
+      `IAM policy file not found or unreadable at ${policyPath}. Secure defaults require an explicit policy. Error: ${err.message}`,
+    );
   }
 }
 
@@ -56,14 +85,14 @@ function isExempt(exemptions = [], resource = '') {
 }
 
 async function ensureAuditDir() {
-  const dir = path.dirname(AUDIT_LOG_PATH);
+  const dir = path.dirname(resolveAuditLogPath());
   await fsp.mkdir(dir, { recursive: true });
 }
 
 async function writeAudit(entry) {
   try {
     await ensureAuditDir();
-    fs.appendFileSync(AUDIT_LOG_PATH, JSON.stringify(entry) + '\n');
+    fs.appendFileSync(resolveAuditLogPath(), JSON.stringify(entry) + '\n');
   } catch (err) {
     // Best-effort; do not throw
   }
@@ -106,15 +135,21 @@ export async function authorize(agentId, capability, resource) {
       ? 'resource_not_matched'
       : 'capability_not_allowed';
 
-  const effectiveAllowed = allowed || mode !== 'enforce';
-  const decision = { allowed: effectiveAllowed, mode, reason };
+  // Fail closed: deny unless explicitly allowed (no permissive fall-through)
+  const decision = { 
+    allowed, 
+    mode,
+    reason,
+    status: allowed ? 200 : 403
+  };
+
   const auditEntry = {
     ts,
     agent: agentId,
     capability,
     resource,
     allowed,
-    effective: effectiveAllowed,
+    effective: allowed,
     mode,
     policy: 'delegation',
     result: allowed ? 'allowed' : 'denied',
@@ -123,8 +158,8 @@ export async function authorize(agentId, capability, resource) {
 
   await writeAudit(auditEntry);
 
-  if (!allowed && mode === 'permissive') {
-    console.warn(`[IAM WARN] ${agentId} lacks '${capability}' for ${resource} (permissive)`);
+  if (!allowed) {
+    console.error(`[IAM DENY] ${agentId} denied '${capability}' for '${resource}' - ${reason} (mode: ${mode})`);
   }
 
   return decision;

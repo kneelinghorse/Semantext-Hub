@@ -127,7 +127,7 @@ Options:
   --circuit-threshold <n> Failures before circuit opens (default: 3)
   --circuit-cooldown <ms> Cooldown before half-open (default: 15000)
   --registry-url <url> Registry base URL (default: http://localhost:3000)
-  --api-key <key>      Registry API key (default: local-dev-key)
+  --api-key <key>      Registry API key (required if OSSP_REGISTRY_API_KEY not set)
   --session <id>       Metrics session identifier
   --log-root <path>    Metrics log root directory
   --header "Name: Value"  Extra header for agent request (repeatable)
@@ -234,6 +234,15 @@ export async function run(argv = process.argv.slice(2)) {
     console.error(`Unknown command: ${options.command}`);
     return EXIT_ERROR;
   }
+
+  const cliApiKey = options.apiKey ?? process.env.OSSP_REGISTRY_API_KEY;
+  if (!cliApiKey || typeof cliApiKey !== 'string' || cliApiKey.trim().length === 0) {
+    console.error(
+      'Registry API key is required. Provide --api-key or set OSSP_REGISTRY_API_KEY before running this command.',
+    );
+    return EXIT_ERROR;
+  }
+  options.apiKey = cliApiKey.trim();
 
   const callOptions = buildCallOptions(options);
   const payload = {
