@@ -1,14 +1,15 @@
 /**
- * Registry API Server
+ * Registry API Server - Test/Mock Implementation
  * 
- * Provides RESTful API endpoints for agent registry and discovery with:
- * - HTTP server implementation
- * - RESTful endpoints for agent operations
- * - Request validation and error handling
- * - CORS support
- * - Rate limiting
- * - Structured logging
- * - Integration with registry and discovery service
+ * NOTE: This is a TEST/MOCK implementation for URN-based agent discovery.
+ * For production registry HTTP server, use: packages/runtime/registry/server.mjs
+ * 
+ * This module provides:
+ * - Mock HTTP server for testing URN registry and discovery
+ * - Request handling for test scenarios
+ * - Integration testing support
+ * 
+ * @deprecated For production use, import from packages/runtime/registry/server.mjs
  */
 
 import { EventEmitter } from 'events';
@@ -121,8 +122,8 @@ export class RegistryAPIServer extends EventEmitter {
       await this.registry.initialize();
       await this.discoveryService.initialize();
 
-      // Start HTTP server
-      await this._startHttpServer();
+      // Start mock server (for testing only)
+      await this._startMockServer();
 
       this.isRunning = true;
       this.emit('started', {
@@ -171,7 +172,7 @@ export class RegistryAPIServer extends EventEmitter {
         console.debug('[Registry API Server]', logEntry);
       }
 
-      await this._stopHttpServer();
+      await this._stopMockServer();
       await this.discoveryService.shutdown();
       await this.registry.shutdown();
 
@@ -275,34 +276,38 @@ export class RegistryAPIServer extends EventEmitter {
   }
 
   /**
-   * Start HTTP server
+   * Start mock server - TEST UTILITY ONLY
+   * 
+   * NOTE: This is NOT a production HTTP server.
+   * For production registry HTTP server, use packages/runtime/registry/server.mjs
+   * 
+   * This mock server is used only for unit testing URN registry and discovery services.
+   * 
    * @private
    * @returns {Promise<void>}
    */
-  async _startHttpServer() {
+  async _startMockServer() {
+    // TESTING UTILITY: In-memory mock server for unit tests only
+    // Production code MUST use packages/runtime/registry/server.mjs
     return new Promise((resolve, reject) => {
       try {
-        // Mock HTTP server implementation
-        // In a real implementation, this would use Express, Fastify, or similar
         this.server = {
           listen: (port, host, callback) => {
-            // Simulate server startup
             setTimeout(() => {
               if (callback) callback();
               resolve();
-            }, 100);
+            }, 10);
           },
           close: (callback) => {
-            // Simulate server shutdown
             setTimeout(() => {
               if (callback) callback();
-            }, 50);
+            }, 10);
           }
         };
 
         this.server.listen(this.config.port, this.config.host, () => {
           if (this.config.enableLogging) {
-            console.log(`[Registry API Server] Server running on http://${this.config.host}:${this.config.port}`);
+            console.log(`[TEST] Mock Registry API Server on http://${this.config.host}:${this.config.port}`);
           }
         });
       } catch (error) {
@@ -312,11 +317,11 @@ export class RegistryAPIServer extends EventEmitter {
   }
 
   /**
-   * Stop HTTP server
+   * Stop mock server - TEST UTILITY ONLY
    * @private
    * @returns {Promise<void>}
    */
-  async _stopHttpServer() {
+  async _stopMockServer() {
     return new Promise((resolve, reject) => {
       try {
         if (this.server) {

@@ -1,12 +1,16 @@
 /**
- * Well-Known Server for Agent Discovery
+ * Well-Known Server for Agent Discovery - Test/Mock Implementation
+ * 
+ * NOTE: This is a TEST/MOCK implementation for well-known endpoints.
+ * For production registry HTTP server, use: packages/runtime/registry/server.mjs
  * 
  * Serves ACM manifests through /.well-known/agent-capabilities endpoint with:
- * - HTTP server implementation
+ * - Mock HTTP server for testing
  * - CORS support
- * - Proper HTTP headers
  * - Error handling and logging
  * - Integration with ACM generator and URN resolver
+ * 
+ * @deprecated For production use, integrate with packages/runtime/registry/server.mjs
  */
 
 import { EventEmitter } from 'events';
@@ -96,8 +100,8 @@ export class WellKnownServer extends EventEmitter {
         console.debug('[Well-Known Server]', logEntry);
       }
 
-      // Start HTTP server
-      await this._startHttpServer();
+      // Start mock server (for testing only)
+      await this._startMockServer();
 
       this.isRunning = true;
       this.emit('started', {
@@ -146,7 +150,7 @@ export class WellKnownServer extends EventEmitter {
         console.debug('[Well-Known Server]', logEntry);
       }
 
-      await this._stopHttpServer();
+      await this._stopMockServer();
 
       this.isRunning = false;
       this.emit('stopped');
@@ -187,34 +191,38 @@ export class WellKnownServer extends EventEmitter {
   }
 
   /**
-   * Start HTTP server
+   * Start mock server - TEST UTILITY ONLY
+   * 
+   * NOTE: This is NOT a production HTTP server.
+   * For production registry HTTP server, use packages/runtime/registry/server.mjs
+   * 
+   * This mock server is used only for unit testing well-known endpoints.
+   * 
    * @private
    * @returns {Promise<void>}
    */
-  async _startHttpServer() {
+  async _startMockServer() {
+    // TESTING UTILITY: In-memory mock server for unit tests only
+    // Production code MUST use packages/runtime/registry/server.mjs
     return new Promise((resolve, reject) => {
       try {
-        // Mock HTTP server implementation
-        // In a real implementation, this would use Express, Fastify, or similar
         this.server = {
           listen: (port, host, callback) => {
-            // Simulate server startup
             setTimeout(() => {
               if (callback) callback();
               resolve();
-            }, 100);
+            }, 10);
           },
           close: (callback) => {
-            // Simulate server shutdown
             setTimeout(() => {
               if (callback) callback();
-            }, 50);
+            }, 10);
           }
         };
 
         this.server.listen(this.config.port, this.config.host, () => {
           if (this.config.enableLogging) {
-            console.log(`[Well-Known Server] Server running on http://${this.config.host}:${this.config.port}`);
+            console.log(`[TEST] Mock Well-Known Server on http://${this.config.host}:${this.config.port}`);
           }
         });
       } catch (error) {
@@ -224,11 +232,11 @@ export class WellKnownServer extends EventEmitter {
   }
 
   /**
-   * Stop HTTP server
+   * Stop mock server - TEST UTILITY ONLY
    * @private
    * @returns {Promise<void>}
    */
-  async _stopHttpServer() {
+  async _stopMockServer() {
     return new Promise((resolve, reject) => {
       try {
         if (this.server) {

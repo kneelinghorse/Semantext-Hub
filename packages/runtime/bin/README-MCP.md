@@ -66,20 +66,25 @@ This MCP (Model Context Protocol) server wraps the protocol discovery tooling fo
 
 ### Agent Operations
 
+**Current Protocol Support**: A2A (Agent-to-Agent) HTTP protocol is fully implemented. 
+MCP and custom protocols return `not_implemented` errors and are deferred to future sprints.
+
 - **agent_resolve** - Resolve agent metadata by URN with performance optimization
   - `agent_urn`: Agent URN to resolve
   - Returns: Agent metadata with endpoints, protocol, and capabilities
   
-- **agent_run** - Execute specific tool on an agent with error handling
+- **agent_run** - Execute specific tool on an agent with A2A protocol
   - `agent_urn`: Agent URN
   - `tool`: Tool name to execute
   - `args`: Tool arguments object
   - Returns: Tool execution result with performance metrics
+  - **Note**: Only A2A protocol is currently supported. MCP/custom protocols return error.
   
-- **workflow_run** - Execute workflow file with agent nodes and input validation
+- **workflow_run** - Execute workflow file with agent nodes using A2A protocol
   - `workflow_path`: Path to workflow file
   - `inputs`: Workflow input parameters object
   - Returns: Workflow execution result with step outputs
+  - **Note**: Workflow nodes must use A2A protocol. MCP protocol nodes will fail.
 
 ### Documentation & Visualization
 

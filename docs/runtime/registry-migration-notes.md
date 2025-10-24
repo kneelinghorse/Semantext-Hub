@@ -105,26 +105,14 @@ Response: { urn, body, digest, issuer, signature, updated_at, provenance }
 
 1. **Import Changes:**
    ```javascript
-   // Before
-   import { createRegistryServer, startRegistryServer } from '../app/services/registry/server.mjs';
-   
-   // After
+   // Canonical import after IM-01C
    import { startServer, createServer } from '../../packages/runtime/registry/server.mjs';
    import { openDb } from '../../packages/runtime/registry/db.mjs';
    ```
+   Legacy helpers from `app/services/registry/server.mjs` were removed; the file now re-exports the runtime server with a deprecation warning.
 
 2. **Server Creation:**
    ```javascript
-   // Before
-   const { app, store } = await createRegistryServer({
-     apiKey: 'key',
-     storePath: './store.jsonl',
-     indexPath: './index.json',
-     capIndexPath: './cap-index.json',
-     signaturePolicyPath: './policy.json',
-   });
-   
-   // After
    const db = await openDb({ dbPath: './registry.sqlite' });
    await db.exec(schemaSql); // Apply schema
    await db.close();
@@ -271,10 +259,26 @@ rg "app/services/registry/server" --glob '*.{js,mjs}'
 
 These are test-only issues; application code (CLI, A2A client) has been fully migrated.
 
-## Next Steps
+## Migration Status (IM-01C-20251103)
 
-1. **Update test suites** - Refactor `tests/api/*.spec.mjs` to use `/v1` endpoints and SQLite assertions
-2. **Remove legacy server** - Delete `app/services/registry/server.mjs` after all consumers migrated
+### Completed
+
+1. ✅ **Legacy server converted to thin re-export** - `app/services/registry/server.mjs` now delegates to runtime
+2. ✅ **Test stubs marked as deprecated** - `packages/runtime/runtime/registry-api.js` and `well-known-server.js` clearly marked as test utilities
+3. ✅ **Documentation updated** - `docs/runtime-integration-guide.md` references runtime server as single entry point
+4. ✅ **Migration notes preserved** - This document serves as historical reference
+
+### Implementation Notes
+
+- **JSONL storage removed**: The old RegistryStore class with JSONL files has been removed
+- **Runtime server is canonical**: `packages/runtime/registry/server.mjs` is the single HTTP entry point
+- **Compatibility layer**: Legacy imports still work but delegate to runtime with deprecation warnings
+- **Test utilities retained**: Mock HTTP servers in `registry-api.js` and `well-known-server.js` kept for testing, clearly marked
+
+### Next Steps
+
+1. **Update test suites** - Refactor `tests/api/*.spec.mjs` to use `/v1` endpoints and SQLite assertions (if not already done)
+2. **Consider removing compatibility layer** - After ensuring no external consumers, remove `app/services/registry/server.mjs` entirely
 3. **Update CI** - Ensure CI uses runtime server for integration tests
 4. **Update documentation** - Reflect new endpoints in API docs and quickstart guides
 
