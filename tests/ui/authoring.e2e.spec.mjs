@@ -33,10 +33,12 @@ async function recordLatency(kind, took_ms) {
 describe('Authoring UI E2E Flows (Mission S19.2)', () => {
   const tmpDir = path.resolve(process.cwd(), 'artifacts/ui/tmp-e2e');
   let app;
+  let api;
 
   beforeAll(() => {
     ensureDirSync(tmpDir);
     app = createApp({ baseDir: tmpDir });
+    api = request.agent(app);
   });
 
   describe('Flow 1: edit→validate→save→graph', () => {
@@ -70,7 +72,7 @@ describe('Authoring UI E2E Flows (Mission S19.2)', () => {
       };
 
       // Step 2: Validate - using viewer route POST /api/validate
-      const validateRes = await request(app)
+      const validateRes = await api
         .post('/api/validate')
         .send({ schema, manifest, baseDir: tmpDir });
 
@@ -88,7 +90,7 @@ describe('Authoring UI E2E Flows (Mission S19.2)', () => {
       expect(JSON.parse(saved)).toEqual(manifest);
 
       // Step 4: Graph - using viewer route POST /api/graph
-      const graphRes = await request(app)
+      const graphRes = await api
         .post('/api/graph')
         .send({ manifest });
 
@@ -112,10 +114,10 @@ describe('Authoring UI E2E Flows (Mission S19.2)', () => {
       };
       const manifest = { id: 'test' };
 
-      const r1 = await request(app).post('/api/validate').send({ schema, manifest });
+      const r1 = await api.post('/api/validate').send({ schema, manifest });
       expect(r1.status).toBe(200);
 
-      const r2 = await request(app).post('/api/graph').send({ manifest });
+      const r2 = await api.post('/api/graph').send({ manifest });
       expect(r2.status).toBe(200);
 
       // Verify no errors in responses
@@ -141,7 +143,7 @@ describe('Authoring UI E2E Flows (Mission S19.2)', () => {
         age: -5 // negative
       };
 
-      const res = await request(app)
+      const res = await api
         .post('/api/validate')
         .send({ schema, manifest: invalidManifest });
 
@@ -179,7 +181,7 @@ describe('Authoring UI E2E Flows (Mission S19.2)', () => {
         }
       };
 
-      const res = await request(app)
+      const res = await api
         .post('/api/validate')
         .send({ schema, manifest });
 
@@ -197,7 +199,7 @@ describe('Authoring UI E2E Flows (Mission S19.2)', () => {
   describe('Flow 3: dark/light theme persistence', () => {
     test('UI serves theme toggle functionality', async () => {
       // Test that the UI HTML includes theme toggle
-      const htmlRes = await request(app).get('/');
+      const htmlRes = await api.get('/');
       expect(htmlRes.status).toBe(200);
       expect(htmlRes.text).toContain('theme-toggle');
       // data-theme is set by JavaScript, not in initial HTML
@@ -205,7 +207,7 @@ describe('Authoring UI E2E Flows (Mission S19.2)', () => {
     });
 
     test('CSS includes theme variables', async () => {
-      const cssRes = await request(app).get('/styles.css');
+      const cssRes = await api.get('/styles.css');
       expect(cssRes.status).toBe(200);
       expect(cssRes.text).toContain('[data-theme="light"]');
       expect(cssRes.text).toContain('--bg');
@@ -213,7 +215,7 @@ describe('Authoring UI E2E Flows (Mission S19.2)', () => {
     });
 
     test('JS includes theme persistence logic', async () => {
-      const jsRes = await request(app).get('/main.js');
+      const jsRes = await api.get('/main.js');
       expect(jsRes.status).toBe(200);
       expect(jsRes.text).toContain('localStorage');
       expect(jsRes.text).toContain('theme');
@@ -234,7 +236,7 @@ describe('Authoring UI E2E Flows (Mission S19.2)', () => {
       // Run 50 preview calls
       for (let i = 0; i < 50; i++) {
         const start = Date.now();
-        const res = await request(app)
+        const res = await api
           .post('/api/graph')
           .send({ manifest });
         const took = Date.now() - start;
@@ -277,7 +279,7 @@ describe('Authoring UI E2E Flows (Mission S19.2)', () => {
       // Run 50 validation calls
       for (let i = 0; i < 50; i++) {
         const start = Date.now();
-        const res = await request(app)
+        const res = await api
           .post('/api/validate')
           .send({ schema, manifest });
         const took = Date.now() - start;
@@ -305,7 +307,7 @@ describe('Authoring UI E2E Flows (Mission S19.2)', () => {
       };
       const manifest = { test: true };
 
-      const res = await request(app)
+      const res = await api
         .post('/api/validate')
         .send({ schema, manifest });
 
@@ -321,7 +323,7 @@ describe('Authoring UI E2E Flows (Mission S19.2)', () => {
     test('POST /api/graph matches viewer contract', async () => {
       const manifest = { id: 'test-contract' };
 
-      const res = await request(app)
+      const res = await api
         .post('/api/graph')
         .send({ manifest });
 
@@ -340,7 +342,7 @@ describe('Authoring UI E2E Flows (Mission S19.2)', () => {
 
     test('error responses have consistent structure', async () => {
       // Missing schema
-      const res1 = await request(app)
+      const res1 = await api
         .post('/api/validate')
         .send({ manifest: {} });
 
