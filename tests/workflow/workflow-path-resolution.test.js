@@ -51,7 +51,24 @@ describe('Workflow Path Resolution Regression Tests', () => {
     });
   });
 
-  describe('Workflow Execution', () => {
+  function expectWorkflowDisabled(result, workflowPath) {
+    expect(result).toBeDefined();
+    expect(result).toMatchObject({
+      status: 501,
+      ok: false,
+      error: 'workflow_run_unsupported',
+      sprint: 'S21.2',
+    });
+    expect(result.message).toContain('Workflow execution is disabled');
+    expect(result.documentation).toContain('docs/SPRINT_21_SURFACE_CHANGES.md');
+    expect(Array.isArray(result.guidance)).toBe(true);
+    expect(result.guidance.length).toBeGreaterThan(0);
+    expect(result.requested).toBeDefined();
+    expect(result.requested.workflowPath).toContain(path.basename(workflowPath));
+    expect(result.requested.resolvedPath).toContain(path.basename(workflowPath));
+  }
+
+  describe('Workflow Execution (Surface Disabled in S21)', () => {
     test('should execute workflow-research-pipeline.yaml without path resolution errors', async () => {
       const workflowPath = path.join(examplesDir, 'workflow-research-pipeline.yaml');
       
@@ -65,8 +82,7 @@ describe('Workflow Path Resolution Regression Tests', () => {
         root: process.cwd() 
       });
       
-      expect(result).toBeDefined();
-      expect(result.state).toBe('completed');
+      expectWorkflowDisabled(result, workflowPath);
     });
 
     test('should handle workflow with relative path references', async () => {
@@ -86,8 +102,7 @@ describe('Workflow Path Resolution Regression Tests', () => {
           root 
         });
         
-        expect(result).toBeDefined();
-        expect(result.state).toBe('completed');
+        expectWorkflowDisabled(result, workflowPath);
       }
     });
   });
@@ -215,7 +230,7 @@ describe('Workflow Path Resolution Regression Tests', () => {
       expect(result.combined.valid).toBe(true);
     });
 
-    test('workflow execution should complete within performance threshold', async () => {
+    test('workflow execution should exit quickly with unsupported surface response', async () => {
       const workflowPath = path.join(examplesDir, 'workflow-research-pipeline.yaml');
       
       const startTime = performance.now();
@@ -228,9 +243,9 @@ describe('Workflow Path Resolution Regression Tests', () => {
       
       const duration = endTime - startTime;
       
-      // Should complete within 50ms (performance regression threshold)
-      expect(duration).toBeLessThan(50);
-      expect(result.state).toBe('completed');
+      // Disabled surfaces should fail fast (< 10ms under typical load)
+      expect(duration).toBeLessThan(10);
+      expectWorkflowDisabled(result, workflowPath);
     });
   });
 });
