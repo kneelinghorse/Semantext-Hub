@@ -3,7 +3,7 @@ import path from 'node:path';
 
 const DEFAULT_LOG_MATCHERS = {
   nameIncludes: ['performance', 'metrics'],
-  extensions: ['.jsonl', '.log'],
+  extensions: ['.jsonl'],
 };
 
 /**
@@ -37,6 +37,7 @@ export class PerformanceCollector {
         uptime: 0,
       },
     };
+    this._sourceLogFiles = new Set();
   }
 
   recordDiscovery(startTime, endTime, cached = false, error = false) {
@@ -59,6 +60,15 @@ export class PerformanceCollector {
       this.metrics.discovery.requests.length === 0 &&
       this.metrics.mcp.requests.length === 0
     );
+  }
+
+  trackSource(filePath) {
+    if (!filePath) return;
+    this._sourceLogFiles.add(filePath);
+  }
+
+  getSourceLogs() {
+    return Array.from(this._sourceLogFiles).sort();
   }
 
   getSummary() {
@@ -174,42 +184,52 @@ export function parsePerfLogEntry(logEntry, collector) {
   }
 }
 
-export function seedMockPerfData(collector) {
-  for (let index = 0; index < 50; index += 1) {
-    const duration = Math.random() * 800 + 100;
-    collector.recordDiscovery(Date.now() - duration, Date.now(), Math.random() > 0.3);
-  }
-
-  for (let index = 0; index < 30; index += 1) {
-    const duration = Math.random() * 2500 + 200;
-    collector.recordMCP(Date.now() - duration, Date.now(), Math.random() > 0.5);
-  }
-}
+// REMOVED: seedMockPerfData()
+// Performance data must come from real execution logs.
+// If you see "missing perf data" errors, ensure your tests/workbench runs
+// generate JSONL telemetry under artifacts/perf/
 
 export async function collectWorkspacePerfMetrics({
   workspace,
   artifactsDir = 'artifacts',
   verbose = false,
-  fallbackToMocks = true,
   logMatchers = DEFAULT_LOG_MATCHERS,
   onWarning,
 } = {}) {
   const collector = new PerformanceCollector();
   if (!workspace) {
-    if (fallbackToMocks) seedMockPerfData(collector);
-    return collector;
+    const error = new Error(
+      'Missing workspace parameter. Cannot collect performance metrics without a workspace path.'
+    );
+    if (typeof onWarning === 'function') {
+      onWarning(error.message);
+    }
+    throw error;
   }
 
   const artifactsRoot = path.resolve(workspace, artifactsDir);
   try {
     await access(artifactsRoot);
-  } catch {
-    if (fallbackToMocks) seedMockPerfData(collector);
-    return collector;
+  } catch (error) {
+    const message = `Artifacts directory not found: ${artifactsRoot}. Ensure tests/workbench runs generate telemetry logs.`;
+    if (typeof onWarning === 'function') {
+      onWarning(message);
+    }
+    throw new Error(message);
   }
 
   const logFiles = await findPerformanceLogs(artifactsRoot, logMatchers);
+  if (logFiles.length === 0) {
+    const message = `No performance logs found in ${artifactsRoot}. Expected files matching ${JSON.stringify(logMatchers)}.`;
+    if (typeof onWarning === 'function') {
+      onWarning(message);
+    }
+    throw new Error(message);
+  }
+
   for (const logFile of logFiles) {
+    const discoveryBefore = collector.metrics.discovery.requests.length;
+    const mcpBefore = collector.metrics.mcp.requests.length;
     try {
       const content = await readFile(logFile, 'utf8');
       const lines = content.split('\n').filter((line) => line.trim().length > 0);
@@ -226,11 +246,24 @@ export async function collectWorkspacePerfMetrics({
         onWarning(`Failed to load performance log ${logFile}: ${error.message}`);
       }
     }
+
+    const discoveryAfter = collector.metrics.discovery.requests.length;
+    const mcpAfter = collector.metrics.mcp.requests.length;
+    if (discoveryAfter > discoveryBefore || mcpAfter > mcpBefore) {
+      collector.trackSource(logFile);
+    }
   }
 
-  if (collector.isEmpty() && fallbackToMocks) {
-    seedMockPerfData(collector);
+  if (collector.isEmpty()) {
+    const message = `Performance logs found but contain no parseable metrics. Check log format in ${artifactsRoot}.`;
+    if (typeof onWarning === 'function') {
+      onWarning(message);
+    }
+    throw new Error(message);
   }
+
+  // Expose immutable list of parsed source logs for downstream reporting.
+  collector.sourceLogFiles = Object.freeze(collector.getSourceLogs());
 
   return collector;
 }

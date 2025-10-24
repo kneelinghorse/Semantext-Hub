@@ -7,9 +7,10 @@
  * Emits catalog-focused summaries while leaving shared logic in the metrics layer.
  */
 
-import chalk from 'chalk';
 import { performance } from 'perf_hooks';
 import { randomUUID } from 'crypto';
+import path from 'node:path';
+import chalk from 'chalk';
 import { adapterTracing } from '../../utils/trace.js';
 import { collectWorkspacePerfMetrics } from '../../src/metrics/perf.js';
 
@@ -111,6 +112,17 @@ function displayStatus(summary, { verbose = false } = {}) {
     console.log(
       chalk.gray(`  RSS: ${(summary.system.memoryUsage.rss / 1024 / 1024).toFixed(2)}MB`),
     );
+    if (Array.isArray(summary.sourceLogs) && summary.sourceLogs.length > 0) {
+      console.log();
+      console.log(chalk.gray('Source Logs:'));
+      for (const source of summary.sourceLogs) {
+        console.log(
+          chalk.gray(
+            `  - ${source.relative ?? source.absolute ?? source}`,
+          ),
+        );
+      }
+    }
   }
 
   console.log();
@@ -148,6 +160,15 @@ async function perfStatusCommand(options = {}) {
       });
 
       const summary = collector.getSummary();
+      const sourceLogs =
+        Array.isArray(collector.sourceLogFiles) && collector.sourceLogFiles.length > 0
+          ? collector.sourceLogFiles.map((filePath) => ({
+              absolute: filePath,
+              relative: path.relative(workspace, filePath),
+            }))
+          : [];
+      summary.sourceLogs = sourceLogs;
+      summary.latestLog = sourceLogs[0]?.absolute ?? null;
       summary.correlationId = correlationId;
       summary.timestamp = new Date().toISOString();
 
@@ -177,12 +198,30 @@ async function perfStatusCommand(options = {}) {
     } catch (error) {
       const executionTime = performance.now() - startTime;
       console.error(chalk.red(`\n❌ Performance status failed: ${error.message}`));
+      
+      // Provide actionable guidance for missing logs
+      if (error.message.includes('not found') || error.message.includes('No performance logs')) {
+        console.error(chalk.yellow('\n💡 Troubleshooting:'));
+        console.error(chalk.gray('   1. Run tests to generate telemetry:'));
+        console.error(chalk.gray('      npm run test:fast'));
+        console.error(chalk.gray('      npm run test:performance'));
+        console.error(chalk.gray('   2. Check that logs exist in artifacts/perf/'));
+        console.error(chalk.gray('   3. See artifacts/perf/README.md for log format'));
+      }
+      
       if (verbose) {
-        console.error(chalk.gray(`Execution time: ${executionTime.toFixed(2)}ms`));
+        console.error(chalk.gray(`\nExecution time: ${executionTime.toFixed(2)}ms`));
         console.error(chalk.gray(`Correlation ID: ${correlationId}`));
         console.error(chalk.gray(`Error details: ${error.stack}`));
       }
-      throw error;
+      
+      process.exitCode = 1;
+      return {
+        success: false,
+        error: error.message,
+        correlationId,
+        executionTime,
+      };
     }
   });
 }

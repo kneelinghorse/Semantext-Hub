@@ -40,18 +40,70 @@ jobs:
 
       - name: Collect performance metrics
         run: |
-          mkdir -p .artifacts
-          node cli/index.js perf:status --format json > .artifacts/perf.json
+          set -eo pipefail
+          mkdir -p .artifacts/perf
+          node cli/index.js perf:status --format json > .artifacts/perf/summary.json
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import path from 'node:path';
+
+          const summaryPath = '.artifacts/perf/summary.json';
+          const summary = JSON.parse(fs.readFileSync(summaryPath, 'utf8'));
+
+          const candidates = [];
+          if (typeof summary.latestLog === 'string') {
+            candidates.push(summary.latestLog);
+          }
+          if (Array.isArray(summary.sourceLogs)) {
+            for (const item of summary.sourceLogs) {
+              if (item && typeof item === 'object') {
+                if (typeof item.absolute === 'string') {
+                  candidates.push(item.absolute);
+                }
+                if (typeof item.relative === 'string') {
+                  candidates.push(path.resolve(process.cwd(), item.relative));
+                }
+              } else if (typeof item === 'string') {
+                candidates.push(item);
+              }
+            }
+          }
+
+          const resolved = [];
+          for (const candidate of candidates) {
+            if (typeof candidate !== 'string' || candidate.trim().length === 0) continue;
+            resolved.push(path.resolve(process.cwd(), candidate));
+          }
+
+          const seen = new Set();
+          let source = null;
+          for (const candidate of resolved) {
+            if (seen.has(candidate)) continue;
+            seen.add(candidate);
+            if (fs.existsSync(candidate)) {
+              source = candidate;
+              break;
+            }
+          }
+
+          if (!source) {
+            console.error('Unable to locate source JSONL log from perf summary.');
+            process.exit(1);
+          }
+
+          console.log(`Using performance log: ${source}`);
+          fs.copyFileSync(source, path.resolve('.artifacts/perf/latest.jsonl'));
+          NODE
 
       - name: Enforce performance budgets
-        run: node scripts/ci/perf-budget.js
+        run: node scripts/ci/perf-budget.js --file .artifacts/perf/summary.json
 
       - name: Upload performance artifact
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: perf-fast
-          path: .artifacts/perf.json
+          path: .artifacts/perf
 
   full:
     name: Full Validation
@@ -94,11 +146,63 @@ jobs:
 
       - name: Collect performance metrics
         run: |
-          mkdir -p .artifacts
-          node cli/index.js perf:status --format json > .artifacts/perf.json
+          set -eo pipefail
+          mkdir -p .artifacts/perf
+          node cli/index.js perf:status --format json > .artifacts/perf/summary.json
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import path from 'node:path';
+
+          const summaryPath = '.artifacts/perf/summary.json';
+          const summary = JSON.parse(fs.readFileSync(summaryPath, 'utf8'));
+
+          const candidates = [];
+          if (typeof summary.latestLog === 'string') {
+            candidates.push(summary.latestLog);
+          }
+          if (Array.isArray(summary.sourceLogs)) {
+            for (const item of summary.sourceLogs) {
+              if (item && typeof item === 'object') {
+                if (typeof item.absolute === 'string') {
+                  candidates.push(item.absolute);
+                }
+                if (typeof item.relative === 'string') {
+                  candidates.push(path.resolve(process.cwd(), item.relative));
+                }
+              } else if (typeof item === 'string') {
+                candidates.push(item);
+              }
+            }
+          }
+
+          const resolved = [];
+          for (const candidate of candidates) {
+            if (typeof candidate !== 'string' || candidate.trim().length === 0) continue;
+            resolved.push(path.resolve(process.cwd(), candidate));
+          }
+
+          const seen = new Set();
+          let source = null;
+          for (const candidate of resolved) {
+            if (seen.has(candidate)) continue;
+            seen.add(candidate);
+            if (fs.existsSync(candidate)) {
+              source = candidate;
+              break;
+            }
+          }
+
+          if (!source) {
+            console.error('Unable to locate source JSONL log from perf summary.');
+            process.exit(1);
+          }
+
+          console.log(`Using performance log: ${source}`);
+          fs.copyFileSync(source, path.resolve('.artifacts/perf/latest.jsonl'));
+          NODE
 
       - name: Enforce performance budgets
-        run: node scripts/ci/perf-budget.js
+        run: node scripts/ci/perf-budget.js --file .artifacts/perf/summary.json
 
       - name: Upload coverage
         uses: actions/upload-artifact@v4
@@ -112,7 +216,7 @@ jobs:
         if: always()
         with:
           name: perf-full-${{ matrix.node-version }}
-          path: .artifacts/perf.json
+          path: .artifacts/perf
 
       - name: Upload benchmark results
         uses: actions/upload-artifact@v4
@@ -176,8 +280,182 @@ jobs:
     if: always()
 
     steps:
-      - name: Generate CI summary
+      - name: Download fast perf artifact
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: perf-fast
+          path: .artifacts-fast
+
+      - name: Download full perf artifact
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: perf-full-20
+          path: .artifacts-full
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Generate CI summary with live metrics
         run: |
+          set -eo pipefail
+
+          summarize_dir() {
+            local dir="$1"
+            DIR="$dir" node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import path from 'node:path';
+
+          const dir = process.env.DIR;
+          const summaryPath = path.join(dir, 'summary.json');
+          const logPath = path.join(dir, 'latest.jsonl');
+
+          const result = {
+            dir,
+            hasSummary: false,
+            hasLog: false,
+            latestLog: null,
+            tools: {},
+            summary: null,
+            errors: [],
+          };
+
+          if (fs.existsSync(summaryPath)) {
+            try {
+              result.summary = JSON.parse(fs.readFileSync(summaryPath, 'utf8'));
+              result.hasSummary = true;
+            } catch (error) {
+              result.errors.push(`Failed to parse summary.json: ${error.message}`);
+            }
+          }
+
+          if (fs.existsSync(logPath)) {
+            result.hasLog = true;
+            result.latestLog = logPath;
+            try {
+              const text = fs.readFileSync(logPath, 'utf8');
+              const lines = text.split('\n').filter((line) => line.trim().length > 0);
+              const byTool = new Map();
+
+              for (const line of lines) {
+                try {
+                  const entry = JSON.parse(line);
+                  if (!entry || typeof entry.tool !== 'string') continue;
+                  const duration =
+                    typeof entry.ms === 'number'
+                      ? entry.ms
+                      : typeof entry.duration === 'number'
+                        ? entry.duration
+                        : typeof entry.latency === 'number'
+                          ? entry.latency
+                          : null;
+                  if (!Number.isFinite(duration)) continue;
+                  const tool = entry.tool.toLowerCase();
+                  if (!byTool.has(tool)) byTool.set(tool, []);
+                  byTool.get(tool).push(duration);
+                } catch {
+                  // Ignore malformed line
+                }
+              }
+
+              const computeStats = (durations) => {
+                const sorted = durations.slice().sort((a, b) => a - b);
+                const count = sorted.length;
+                if (count === 0) {
+                  return { count: 0, avg: null, p95: null };
+                }
+                const sum = sorted.reduce((acc, value) => acc + value, 0);
+                const avg = sum / count;
+                const index = Math.min(count - 1, Math.ceil(count * 0.95) - 1);
+                const p95 = sorted[index];
+                return { count, avg, p95 };
+              };
+
+              for (const [tool, durations] of byTool.entries()) {
+                result.tools[tool] = computeStats(durations);
+              }
+            } catch (error) {
+              result.errors.push(`Failed to parse latest.jsonl: ${error.message}`);
+            }
+          }
+
+          console.log(JSON.stringify(result));
+          NODE
+          }
+
+          FAST_JSON=$(summarize_dir ".artifacts-fast")
+          FULL_JSON=$(summarize_dir ".artifacts-full")
+
+          format_metric() {
+            local json="$1"
+            local tool="$2"
+            local field="$3"
+            local fallback="$4"
+            local value
+            value=$(echo "$json" | jq -r --arg tool "$tool" --arg field "$field" '
+              if (.tools[$tool][$field] != null) then (.tools[$tool][$field]) else null end
+            ')
+            if [ "$value" = "null" ] || [ -z "$value" ]; then
+              value=$(echo "$json" | jq -r --arg tool "$tool" --arg field "$field" '
+                if (.summary[$tool][$field] != null) then (.summary[$tool][$field]) else null end
+              ' 2>/dev/null)
+            fi
+            if [ "$value" = "null" ] || [ -z "$value" ]; then
+              echo "$fallback"
+            else
+              if [[ "$value" =~ ^-?[0-9]+(\.[0-9]+)?$ ]]; then
+                printf "%.2f" "$value"
+              else
+                echo "$fallback"
+              fi
+            fi
+          }
+
+          format_count() {
+            local json="$1"
+            local tool="$2"
+            local fallback="$3"
+            local value
+            value=$(echo "$json" | jq -r --arg tool "$tool" '
+              if (.tools[$tool].count != null) then (.tools[$tool].count) else null end
+            ')
+            if [ "$value" = "null" ] || [ -z "$value" ]; then
+              value=$(echo "$json" | jq -r --arg tool "$tool" '
+                if (.summary[$tool].total != null) then (.summary[$tool].total) else null end
+              ' 2>/dev/null)
+            fi
+            if [ "$value" = "null" ] || [ -z "$value" ]; then
+              echo "$fallback"
+            else
+              echo "$value"
+            fi
+          }
+
+          format_ms() {
+            local value="$1"
+            if [ "$value" = "N/A" ]; then
+              echo "N/A"
+            else
+              echo "${value}ms"
+            fi
+          }
+
+          fast_discovery_p95=$(format_metric "$FAST_JSON" "discovery" "p95" "N/A")
+          fast_mcp_p95=$(format_metric "$FAST_JSON" "mcp" "p95" "N/A")
+          fast_discovery_count=$(format_count "$FAST_JSON" "discovery" "0")
+          fast_mcp_count=$(format_count "$FAST_JSON" "mcp" "0")
+
+          full_discovery_p95=$(format_metric "$FULL_JSON" "discovery" "p95" "N/A")
+          full_mcp_p95=$(format_metric "$FULL_JSON" "mcp" "p95" "N/A")
+          full_discovery_count=$(format_count "$FULL_JSON" "discovery" "0")
+          full_mcp_count=$(format_count "$FULL_JSON" "mcp" "0")
+
+          fast_has_log=$(echo "$FAST_JSON" | jq -r '.hasLog')
+          full_has_log=$(echo "$FULL_JSON" | jq -r '.hasLog')
+
           echo "## CI Pipeline Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
@@ -186,10 +464,30 @@ jobs:
           echo "| Full Validation | ${{ needs.full.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Docker Build & Test | ${{ needs.docker_image.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Performance Budgets" >> $GITHUB_STEP_SUMMARY
-          echo "- Discovery P95 ≤ 1000ms" >> $GITHUB_STEP_SUMMARY
-          echo "- MCP P95 ≤ 3000ms" >> $GITHUB_STEP_SUMMARY
+          echo "### Performance Metrics (Live from JSONL)" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "$fast_has_log" = "true" ]; then
+            echo "**Fast Guardrail:**" >> $GITHUB_STEP_SUMMARY
+            echo "- Discovery P95: $(format_ms "$fast_discovery_p95") (samples: ${fast_discovery_count})" >> $GITHUB_STEP_SUMMARY
+            echo "- MCP P95: $(format_ms "$fast_mcp_p95") (samples: ${fast_mcp_count})" >> $GITHUB_STEP_SUMMARY
+            echo "  _Budgets: discovery ≤1000ms, MCP ≤3000ms_" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Fast run metrics unavailable" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "$full_has_log" = "true" ]; then
+            echo "**Full Validation:**" >> $GITHUB_STEP_SUMMARY
+            echo "- Discovery P95: $(format_ms "$full_discovery_p95") (samples: ${full_discovery_count})" >> $GITHUB_STEP_SUMMARY
+            echo "- MCP P95: $(format_ms "$full_mcp_p95") (samples: ${full_mcp_count})" >> $GITHUB_STEP_SUMMARY
+            echo "  _Budgets: discovery ≤1000ms, MCP ≤3000ms_" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Full run metrics unavailable" >> $GITHUB_STEP_SUMMARY
+          fi
+          
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### CI Pipeline Targets" >> $GITHUB_STEP_SUMMARY
-          echo "- Fast guardrail: ≤ 5 minutes" >> $GITHUB_STEP_SUMMARY
+          echo "- Fast guardrail: ≤5 minutes" >> $GITHUB_STEP_SUMMARY
           echo "- Full validation: Includes coverage + perf benchmarks" >> $GITHUB_STEP_SUMMARY
+          echo "- All metrics derived from real workbench execution (no mock data)" >> $GITHUB_STEP_SUMMARY
