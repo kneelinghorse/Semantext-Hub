@@ -145,4 +145,52 @@ describe('release canary + rollback', () => {
     expect(auditEntry.stats.sessionId).toBe('test-session-fail');
     expect(Array.isArray(auditEntry.stats.breaches)).toBe(true);
   });
+
+  it('aborts early when registry resolution fails', async () => {
+    let currentTime = 0;
+    jest.spyOn(Date, 'now').mockImplementation(() => currentTime);
+    const delayImpl = jest.fn(async (ms) => {
+      currentTime += ms;
+    });
+
+    const callAgentMock = jest.fn().mockResolvedValue({
+      ok: false,
+      trace: { durationMs: 180 },
+      error: { message: 'Registry resolve failed (404)' },
+    });
+    const fetchMock = createFetchMock();
+
+    const exitCode = await runCanary(
+      [
+        '--duration',
+        '10',
+        '--qps',
+        '5',
+        '--manifest',
+        manifestPath,
+        '--log-root',
+        logsDir,
+        '--session',
+        'test-session-missing',
+        '--max-error-rate',
+        '0.5',
+      ],
+      {
+        callAgentImpl: callAgentMock,
+        fetchImpl: fetchMock,
+        delayImpl,
+        correlationId: 'corr-missing',
+      },
+    );
+
+    expect(exitCode).toBe(1);
+    expect(callAgentMock).toHaveBeenCalledTimes(1);
+
+    const manifest = await loadManifestExtend(manifestPath);
+    expect(manifest.annotations.canary).toBeUndefined();
+    expect(manifest.audit).toHaveLength(1);
+    const [auditEntry] = manifest.audit;
+    expect(auditEntry.reason).toContain('fatal:');
+    expect(auditEntry.stats.fatalError).toContain('Registry resolve failed');
+  });
 });

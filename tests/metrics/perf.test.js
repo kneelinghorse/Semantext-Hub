@@ -61,8 +61,10 @@ describe('metrics/perf shared helpers', () => {
 
       const logPath = path.join(artifactsDir, 'metrics.jsonl');
       const entry = JSON.stringify({
-        message: 'Discovery run',
-        duration: 120,
+        tool: 'wsap',
+        step: 'catalog',
+        ms: 120,
+        ok: true,
       });
       await writeFile(logPath, `${entry}\n`, 'utf8');
 

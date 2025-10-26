@@ -29,6 +29,13 @@ const DEFAULT_ERROR_RATE = 0.1;
 const DEFAULT_TIMEOUT_MS = 5000;
 const DEFAULT_HEALTH_TIMEOUT_MS = 3500;
 
+const FATAL_ERROR_PATTERNS = [
+  /registry resolve failed/i,
+  /does not expose a default endpoint/i,
+  /circuit breaker is open/i,
+  /circuit_open/i,
+];
+
 const EXIT_OK = 0;
 const EXIT_FAIL = 1;
 
@@ -228,6 +235,7 @@ async function runCanary({
   const endTime = startTime + durationMs;
   let lastLogPath = null;
   let iteration = 0;
+  let fatalError = null;
 
   while (Date.now() < endTime || attempts.length === 0) {
     iteration += 1;
@@ -272,6 +280,18 @@ async function runCanary({
       err: errMessage,
     });
 
+    const fatalTriggered =
+      !ok &&
+      fatalError == null &&
+      typeof errMessage === 'string' &&
+      FATAL_ERROR_PATTERNS.some((pattern) => pattern.test(errMessage));
+    if (fatalTriggered) {
+      fatalError = errMessage;
+      console.warn(
+        `[release-canary] Fatal error encountered after ${attempts.length} attempt(s): ${errMessage}`,
+      );
+    }
+
     if (metricsWriter) {
       try {
         const { path: logPath } = await metricsWriter.log({
@@ -285,6 +305,10 @@ async function runCanary({
       } catch {
         // ignore metrics errors
       }
+    }
+
+    if (fatalError) {
+      break;
     }
 
     if (Date.now() >= endTime) {
@@ -318,6 +342,7 @@ async function runCanary({
       qps: options.qps,
       windowSeconds: options.duration,
       logPath: lastLogPath,
+      fatalError,
     },
   };
 }
@@ -383,6 +408,9 @@ export async function run(argv = process.argv.slice(2), overrides = {}) {
     if (stats.attempts === 0) {
       breaches.push('no_samples_collected');
     } else {
+      if (stats.fatalError) {
+        breaches.push(`fatal:${stats.fatalError}`);
+      }
       if (stats.p95 > options.p95) {
         breaches.push(`p95:${stats.p95.toFixed(2)}>${options.p95}`);
       }
@@ -415,6 +443,7 @@ export async function run(argv = process.argv.slice(2), overrides = {}) {
     durationMs: 0,
     qps: options.qps,
     windowSeconds: options.duration,
+    fatalError: null,
   };
 
   if (breaches.length > 0) {

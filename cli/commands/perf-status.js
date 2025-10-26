@@ -12,7 +12,10 @@ import { randomUUID } from 'crypto';
 import path from 'node:path';
 import chalk from 'chalk';
 import { adapterTracing } from '../../utils/trace.js';
-import { collectWorkspacePerfMetrics } from '../../src/metrics/perf.js';
+import {
+  collectWorkspacePerfMetrics,
+  DEFAULT_MAX_LOG_AGE_MS,
+} from '../../src/metrics/perf.js';
 
 function displayStatus(summary, { verbose = false } = {}) {
   console.log(chalk.blue('\n📊 Performance Status Summary'));
@@ -157,6 +160,7 @@ async function perfStatusCommand(options = {}) {
         workspace,
         verbose,
         onWarning: warn,
+        maxLogAgeMs: DEFAULT_MAX_LOG_AGE_MS,
       });
 
       const summary = collector.getSummary();

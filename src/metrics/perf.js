@@ -1,10 +1,14 @@
-import { access, readFile, readdir } from 'node:fs/promises';
+import { access, readFile, readdir, stat } from 'node:fs/promises';
 import path from 'node:path';
 
 const DEFAULT_LOG_MATCHERS = {
   nameIncludes: ['performance', 'metrics'],
   extensions: ['.jsonl'],
 };
+
+const DEFAULT_MAX_LOG_AGE_MINUTES = 60;
+const MS_PER_MINUTE = 60 * 1000;
+const DEFAULT_MAX_LOG_AGE_MS = DEFAULT_MAX_LOG_AGE_MINUTES * MS_PER_MINUTE;
 
 /**
  * Shared performance summarization utilities.
@@ -151,35 +155,150 @@ export async function findPerformanceLogs(
 
 export function parsePerfLogEntry(logEntry, collector) {
   if (!logEntry || typeof logEntry !== 'object') return;
-  const duration = logEntry.duration ?? logEntry.context?.duration ?? logEntry.ms;
-  if (typeof duration !== 'number') return;
+  const durationCandidates = [
+    logEntry.duration,
+    logEntry.context?.duration,
+    logEntry.ms,
+    logEntry.tookMs,
+    logEntry.took_ms,
+    logEntry.latency,
+    logEntry.responseTime,
+    logEntry.elapsed,
+    logEntry.elapsedMs,
+    logEntry.elapsed_ms,
+  ];
 
-  const message = (logEntry.message ?? '').toLowerCase();
-  const label = (logEntry.step ?? '').toLowerCase();
-  const isDiscovery =
-    message.includes('discovery') || message.includes('catalog') || label.includes('discovery');
-  const isMcp =
-    message.includes('mcp') || message.includes('tool') || label.includes('mcp');
+  let duration = null;
+  for (const candidate of durationCandidates) {
+    if (typeof candidate === 'number' && Number.isFinite(candidate)) {
+      duration = candidate;
+      break;
+    }
+    if (typeof candidate === 'string') {
+      const parsed = Number.parseFloat(candidate);
+      if (Number.isFinite(parsed)) {
+        duration = parsed;
+        break;
+      }
+    }
+  }
 
-  const endTime = Date.now();
-  const startTime = endTime - duration;
-  const cached =
-    message.includes('cache') &&
-    (message.includes('hit') || message.includes('warm')) &&
-    !message.includes('miss');
-  const errored =
-    message.includes('error') ||
-    message.includes('failed') ||
-    message.includes('timeout') ||
-    logEntry.ok === false;
-
-  if (isDiscovery) {
-    collector.recordDiscovery(startTime, endTime, cached, errored);
+  if (duration == null || !Number.isFinite(duration) || duration < 0) {
     return;
   }
 
+  const normalized = (value) =>
+    typeof value === 'string' ? value.toLowerCase() : '';
+
+  const message = normalized(logEntry.message);
+  const label = normalized(logEntry.step);
+  const tool = normalized(logEntry.tool);
+  const category = normalized(logEntry.category);
+  const kind = normalized(logEntry.kind);
+  const service = normalized(logEntry.service);
+  const operation = normalized(logEntry.operation);
+  const route = normalized(logEntry.route);
+  const path = normalized(logEntry.path);
+  const event = normalized(logEntry.event);
+  const type = normalized(logEntry.type);
+  const target = normalized(logEntry.target);
+  const stage = normalized(logEntry.stage);
+  const component = normalized(logEntry.component);
+
+  const textFields = [
+    message,
+    label,
+    tool,
+    category,
+    kind,
+    service,
+    operation,
+    route,
+    path,
+    event,
+    type,
+    target,
+    stage,
+    component,
+  ];
+
+  const discoveryKeywords = [
+    'discovery',
+    'catalog',
+    'registry',
+    'resolve',
+    'urn',
+    'wsap',
+    'ingest',
+    'import',
+    'openapi',
+    'bench:discovery',
+  ];
+
+  const mcpKeywords = [
+    'mcp',
+    'tool',
+    'a2a',
+    'release:canary',
+    'playbook',
+    'workflow',
+    'agent',
+    'bench:mcp',
+    'tool_exec',
+  ];
+
+  const includesKeyword = (keywords) =>
+    textFields.some(
+      (field) => field && keywords.some((keyword) => field.includes(keyword)),
+    );
+
+  const isDiscovery = includesKeyword(discoveryKeywords);
+  const isMcp = includesKeyword(mcpKeywords);
+
+  if (!isDiscovery && !isMcp) {
+    return;
+  }
+
+  const endTime = Date.now();
+  const startTime = endTime - duration;
+
+  const cached =
+    textFields.some((field) => field.includes('cache') && field.includes('hit')) &&
+    !textFields.some((field) => field.includes('cache') && field.includes('miss'));
+
+  const errorCandidates = [
+    normalized(logEntry.err),
+    normalized(logEntry.error),
+    normalized(logEntry.errorMessage),
+    normalized(logEntry.reason),
+  ];
+  const errored =
+    logEntry.ok === false ||
+    (typeof logEntry.status === 'number' && logEntry.status >= 400) ||
+    textFields.some(
+      (field) =>
+        field.includes('error') ||
+        field.includes('failed') ||
+        field.includes('timeout') ||
+        field.includes('circuit_open'),
+    ) ||
+    errorCandidates.some(
+      (field) =>
+        field &&
+        (field.includes('error') ||
+          field.includes('failed') ||
+          field.includes('timeout') ||
+          field.includes('circuit')),
+    );
+
+  if (isDiscovery) {
+    collector.recordDiscovery(startTime, endTime, cached, errored);
+  }
+
   if (isMcp) {
-    const toolExecuted = message.includes('tool') || Boolean(logEntry.toolExecuted);
+    const toolExecuted =
+      textFields.some((field) => field.includes('tool')) ||
+      Boolean(logEntry.toolExecuted);
     collector.recordMCP(startTime, endTime, toolExecuted, errored);
   }
 }
@@ -195,6 +314,7 @@ export async function collectWorkspacePerfMetrics({
   verbose = false,
   logMatchers = DEFAULT_LOG_MATCHERS,
   onWarning,
+  maxLogAgeMs = DEFAULT_MAX_LOG_AGE_MS,
 } = {}) {
   const collector = new PerformanceCollector();
   if (!workspace) {
@@ -227,7 +347,37 @@ export async function collectWorkspacePerfMetrics({
     throw new Error(message);
   }
 
+  const now = Date.now();
+  const staleLogs = [];
+
   for (const logFile of logFiles) {
+    let fileStat;
+    try {
+      fileStat = await stat(logFile);
+    } catch {
+      continue;
+    }
+
+    const ageMs = Math.max(0, now - fileStat.mtimeMs);
+    if (
+      Number.isFinite(maxLogAgeMs) &&
+      maxLogAgeMs > 0 &&
+      ageMs > maxLogAgeMs
+    ) {
+      staleLogs.push({
+        file: logFile,
+        ageMinutes: Math.floor(ageMs / MS_PER_MINUTE),
+      });
+      if (verbose && typeof onWarning === 'function') {
+        onWarning(
+          `Skipping stale performance log ${logFile} (${Math.floor(
+            ageMs / MS_PER_MINUTE,
+          )} minutes old)`,
+        );
+      }
+      continue;
+    }
+
     const discoveryBefore = collector.metrics.discovery.requests.length;
     const mcpBefore = collector.metrics.mcp.requests.length;
     try {
@@ -255,6 +405,20 @@ export async function collectWorkspacePerfMetrics({
   }
 
   if (collector.isEmpty()) {
+    if (staleLogs.length > 0) {
+      const first = staleLogs[0];
+      const message =
+        staleLogs.length === 1
+          ? `Performance logs are stale (${first.ageMinutes} minutes old): ${first.file}.`
+          : `Performance logs are stale (oldest ~${first.ageMinutes} minutes): ${staleLogs
+              .slice(0, 3)
+              .map((entry) => entry.file)
+              .join(', ')}${staleLogs.length > 3 ? ', ...' : ''}`;
+      if (typeof onWarning === 'function') {
+        onWarning(message);
+      }
+      throw new Error(message);
+    }
     const message = `Performance logs found but contain no parseable metrics. Check log format in ${artifactsRoot}.`;
     if (typeof onWarning === 'function') {
       onWarning(message);
@@ -422,4 +586,4 @@ export async function loadPerfBudgets(filePath) {
   }
 }
 
-export { DEFAULT_LOG_MATCHERS };
+export { DEFAULT_LOG_MATCHERS, DEFAULT_MAX_LOG_AGE_MS, DEFAULT_MAX_LOG_AGE_MINUTES };

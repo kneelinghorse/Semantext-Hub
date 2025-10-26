@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import { mkdtemp, rm, mkdir, writeFile } from 'node:fs/promises';
+import { mkdtemp, rm, mkdir, writeFile, utimes } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import {
@@ -106,6 +106,42 @@ describe('Truthful Performance Pipeline', () => {
       expect(collector.sourceLogFiles.length).toBeGreaterThan(0);
       expect(collector.sourceLogFiles[0]).toContain('performance.jsonl');
     });
+
+    it('should skip logs older than the max log age', async () => {
+      const artifactsDir = path.join(tempDir, 'artifacts');
+      await mkdir(artifactsDir, { recursive: true });
+
+      const staleLog = path.join(artifactsDir, 'stale.jsonl');
+      const freshLog = path.join(artifactsDir, 'fresh.jsonl');
+
+      await writeFile(
+        staleLog,
+        JSON.stringify({ step: 'discovery', ms: 200, ok: true, message: 'discovery operation' }) +
+          '\n',
+        'utf8',
+      );
+      const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+      await utimes(staleLog, twoHoursAgo, twoHoursAgo);
+
+      await writeFile(
+        freshLog,
+        JSON.stringify({ step: 'mcp', ms: 80, ok: true, message: 'mcp tool execution' }) + '\n',
+        'utf8',
+      );
+
+      const collector = await collectWorkspacePerfMetrics({
+        workspace: tempDir,
+        artifactsDir: 'artifacts',
+        maxLogAgeMs: 30 * 60 * 1000,
+      });
+
+      const summary = collector.getSummary();
+      expect(summary.discovery.total).toBe(0);
+      expect(summary.mcp.total).toBe(1);
+      expect(Array.isArray(collector.sourceLogFiles)).toBe(true);
+      expect(collector.sourceLogFiles).toHaveLength(1);
+      expect(collector.sourceLogFiles[0]).toContain('fresh.jsonl');
+    });
   });
 
   describe('parsePerfLogEntry', () => {
@@ -184,6 +220,53 @@ describe('Truthful Performance Pipeline', () => {
       const summary = collector.getSummary();
       
       expect(summary.mcp.errors).toBe(1);
+    });
+
+    it('should classify wsap pipeline entries as discovery metrics', () => {
+      const entry = {
+        tool: 'wsap',
+        step: 'catalog',
+        ms: 42.5,
+        ok: true,
+      };
+
+      parsePerfLogEntry(entry, collector);
+      const summary = collector.getSummary();
+
+      expect(summary.discovery.total).toBe(1);
+      expect(summary.discovery.p95).toBeGreaterThan(0);
+    });
+
+    it('should classify registry HTTP routes as discovery metrics', () => {
+      const entry = {
+        route: '/v1/registry/items',
+        duration: 85.1,
+        status: 200,
+        success: true,
+      };
+
+      parsePerfLogEntry(entry, collector);
+      const summary = collector.getSummary();
+
+      expect(summary.discovery.total).toBe(1);
+      expect(summary.discovery.p95).toBeGreaterThan(0);
+    });
+
+    it('should classify release canary entries as MCP metrics and track errors', () => {
+      const entry = {
+        tool: 'release:canary',
+        step: 'a2a.echo',
+        ms: 517,
+        ok: false,
+        err: 'Registry resolve failed (404)',
+      };
+
+      parsePerfLogEntry(entry, collector);
+      const summary = collector.getSummary();
+
+      expect(summary.mcp.total).toBe(1);
+      expect(summary.mcp.errors).toBe(1);
+      expect(summary.mcp.p95).toBeGreaterThan(0);
     });
 
     it('should ignore entries without duration', () => {
