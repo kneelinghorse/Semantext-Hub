@@ -87,6 +87,85 @@ describe('signJws / verifyJws', () => {
     expect(verification.valid).toBe(false);
     expect(verification.errors).toContain('Expected payload does not match signed payload');
   });
+
+  test('rejects unsupported algorithms and missing private keys', () => {
+    expect(() => signJws({ doc: 'demo' }, { keyId: 'urn:test' })).toThrow(
+      'signJws requires a privateKey',
+    );
+
+    const { privateKey } = generateKeyPairSync('ed25519');
+    expect(() =>
+      signJws({ doc: 'demo' }, { privateKey, keyId: 'urn:test', algorithm: 'RS256' }),
+    ).toThrow('Unsupported algorithm: RS256');
+  });
+
+  test('verifyJws enforces issuedAt and expiresAt guards', () => {
+    const { publicKey, privateKey } = generateKeyPairSync('ed25519');
+    const now = new Date();
+    const envelope = signJws(
+      { doc: 'time' },
+      {
+        privateKey,
+        keyId: 'urn:proto:agent:signer@test',
+        issuedAt: new Date(now.getTime() + 60_000).toISOString(),
+        expiresAt: new Date(now.getTime() - 60_000).toISOString(),
+      },
+    );
+
+    const verification = verifyJws(envelope, { publicKey, now });
+    expect(verification.valid).toBe(false);
+    expect(verification.errors).toEqual(
+      expect.arrayContaining([
+        'Signature issued in the future',
+        'Signature expired',
+      ]),
+    );
+  });
+
+  test('verifyJws flags key identifier mismatches', () => {
+    const { publicKey, privateKey } = generateKeyPairSync('ed25519');
+    const envelope = signJws({ doc: 'key' }, { privateKey, keyId: 'urn:proto:agent:signer@test' });
+
+    const verification = verifyJws(envelope, {
+      publicKey,
+      keyId: 'urn:different',
+    });
+
+    expect(verification.valid).toBe(false);
+    expect(verification.errors).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining('Key identifier mismatch'),
+      ]),
+    );
+  });
+
+  test('verifyJws requires a public key for cryptographic checks', () => {
+    const { privateKey } = generateKeyPairSync('ed25519');
+    const envelope = signJws({ doc: 'missing-key' }, { privateKey, keyId: 'urn:proto:agent:signer@test' });
+
+    const verification = verifyJws(envelope, {});
+    expect(verification.valid).toBe(false);
+    expect(verification.errors).toEqual(
+      expect.arrayContaining(['Public key is required for verification']),
+    );
+  });
+
+  test('verifyJws surfaces unsupported header algorithms', () => {
+    const { publicKey, privateKey } = generateKeyPairSync('ed25519');
+    const payload = { doc: 'demo' };
+    const envelope = signJws(payload, {
+      privateKey,
+      keyId: 'urn:proto:agent:signer@test',
+    });
+
+    envelope.header.alg = 'RS256';
+
+    const verification = verifyJws(envelope, { publicKey });
+    expect(verification.valid).toBe(false);
+    expect(verification.errors).toEqual(
+      expect.arrayContaining(['Unsupported algorithm in header: RS256']),
+    );
+  });
 });
 
 function toBase64Url(raw) {

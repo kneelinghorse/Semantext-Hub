@@ -1,8 +1,64 @@
-{"total": {"lines":{"total":1024,"covered":883,"skipped":0,"pct":86.23},"statements":{"total":1072,"covered":910,"skipped":0,"pct":84.88},"functions":{"total":126,"covered":117,"skipped":0,"pct":92.85},"branches":{"total":863,"covered":588,"skipped":0,"pct":68.13},"branchesTrue":{"total":0,"covered":0,"skipped":0,"pct":100}}
-,"/Users/d/portfolio/OSSP-AGI/app/libs/signing/jcs.mjs": {"lines":{"total":21,"covered":16,"skipped":0,"pct":76.19},"functions":{"total":4,"covered":4,"skipped":0,"pct":100},"statements":{"total":26,"covered":18,"skipped":0,"pct":69.23},"branches":{"total":21,"covered":10,"skipped":0,"pct":47.61}}
-,"/Users/d/portfolio/OSSP-AGI/app/libs/signing/jws.mjs": {"lines":{"total":126,"covered":87,"skipped":0,"pct":69.04},"functions":{"total":13,"covered":12,"skipped":0,"pct":92.3},"statements":{"total":138,"covered":90,"skipped":0,"pct":65.21},"branches":{"total":121,"covered":71,"skipped":0,"pct":58.67}}
-,"/Users/d/portfolio/OSSP-AGI/app/services/registry/server.mjs": {"lines":{"total":572,"covered":499,"skipped":0,"pct":87.23},"functions":{"total":60,"covered":57,"skipped":0,"pct":95},"statements":{"total":576,"covered":503,"skipped":0,"pct":87.32},"branches":{"total":507,"covered":361,"skipped":0,"pct":71.2}}
-,"/Users/d/portfolio/OSSP-AGI/app/ui/authoring/server.mjs": {"lines":{"total":95,"covered":82,"skipped":0,"pct":86.31},"functions":{"total":17,"covered":14,"skipped":0,"pct":82.35},"statements":{"total":103,"covered":87,"skipped":0,"pct":84.46},"branches":{"total":85,"covered":47,"skipped":0,"pct":55.29}}
-,"/Users/d/portfolio/OSSP-AGI/packages/runtime/viewer/routes/api.mjs": {"lines":{"total":207,"covered":199,"skipped":0,"pct":96.13},"functions":{"total":30,"covered":30,"skipped":0,"pct":100},"statements":{"total":226,"covered":212,"skipped":0,"pct":93.8},"branches":{"total":129,"covered":99,"skipped":0,"pct":76.74}}
-,"/Users/d/portfolio/OSSP-AGI/packages/runtime/viewer/routes/static.mjs": {"lines":{"total":3,"covered":0,"skipped":0,"pct":0},"functions":{"total":2,"covered":0,"skipped":0,"pct":0},"statements":{"total":3,"covered":0,"skipped":0,"pct":0},"branches":{"total":0,"covered":0,"skipped":0,"pct":100}}
+{
+  "ts": "2025-10-26T19:42:47.835Z",
+  "totals": {
+    "lines": {
+      "total": 683,
+      "covered": 622,
+      "skipped": 0,
+      "pct": 91.06
+    },
+    "statements": {
+      "total": 725,
+      "covered": 652,
+      "skipped": 0,
+      "pct": 89.93
+    },
+    "functions": {
+      "total": 98,
+      "covered": 91,
+      "skipped": 0,
+      "pct": 92.85
+    },
+    "branches": {
+      "total": 597,
+      "covered": 456,
+      "skipped": 0,
+      "pct": 76.38
+    },
+    "branchesTrue": {
+      "total": 0,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 100
+    }
+  },
+  "thresholds": {
+    "statements": 80,
+    "branches": 70,
+    "functions": 80,
+    "lines": 80
+  },
+  "evaluation": {
+    "statements": {
+      "minimum": 80,
+      "actual": 89.93,
+      "ok": true
+    },
+    "branches": {
+      "minimum": 70,
+      "actual": 76.38,
+      "ok": true
+    },
+    "functions": {
+      "minimum": 80,
+      "actual": 92.85,
+      "ok": true
+    },
+    "lines": {
+      "minimum": 80,
+      "actual": 91.06,
+      "ok": true
+    }
+  },
+  "meetsThresholds": true
 }

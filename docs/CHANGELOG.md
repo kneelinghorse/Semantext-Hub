@@ -1,5 +1,51 @@
 # Change Log
 
+## 2025-10-26 – Sprint 22 Complete: Honest Telemetry & Storytelling
+
+**Sprint Goal**: Ensure every metric, gate, and narrative reflects live data—no seeded placeholders, no stale logs.
+
+### Truthful Performance Pipeline (S22.1)
+
+- **Removed Mock Seeding**: Deleted `seedMockPerfData()` entirely; all metrics come from real WSAP operations.
+- **Hard-Fail on Missing Logs**: `collectWorkspacePerfMetrics()` throws when logs are missing or empty (no fallback behavior).
+- **File Age Validation**: CI perf gates require logs <24 hours old to prevent running against stale data.
+- **Live CI Summaries**: GitHub Actions workflow shows live p95 values from JSONL logs in job summaries.
+- **Telemetry Documentation**: `artifacts/perf/README.md` documents JSONL format and field requirements.
+
+### Perf Snapshot CLI/Dashboard (S22.2)
+
+- **CLI Command**: `npm run cli -- perf:report` with `--format table|json` options.
+- **Percentile Metrics**: Displays p50/p95/p99 for discovery, MCP, and registry operations.
+- **Budget Compliance**: Shows pass/fail status against performance thresholds (discovery p95 < 1s, MCP p95 < 3s, registry p95 < 100ms).
+- **Exit Codes**: Returns exit code 1 on budget violations for CI integration.
+- **NPM Scripts**: Added `npm run perf:report` and `npm run perf:budget` shortcuts.
+- **Test Coverage**: 17 passing tests covering table/JSON formats, percentile calculations, and budget checks.
+
+### Workbench Narrative Update (S22.3)
+
+- **New Documentation**: Published [`docs/workbench-telemetry.md`](workbench-telemetry.md) explaining:
+  - Data flow from WSAP runs to JSONL logs to dashboards
+  - Truth guarantees (no mocks, fail-fast on staleness, budget enforcement)
+  - Integration with import → validate → visualize → document workflow
+  - Developer use cases and CI integration patterns
+- **README Updates**: Added telemetry reference in "Why Use OSSP-AGI" and documentation index.
+- **Roadmap Updates**: Marked Sprint 22 complete in [`cmos/docs/roadmap-sprint-21-25.md`](../cmos/docs/roadmap-sprint-21-25.md).
+- **CHANGELOG**: This entry captures Sprint 22 achievements.
+
+### Key Performance Targets
+
+- Discovery operations: p95 < 1000ms ✅
+- MCP operations: p95 < 3000ms ✅
+- Registry operations: p95 < 100ms ✅
+- CLI report generation: <200ms ✅
+- Test suite: 2000+ tests passing ✅
+
+### Breaking Changes
+
+None. Sprint 22 is additive: new CLI commands and docs enhance existing workflows without breaking changes.
+
+---
+
 ## 2025-10-24 – Sprint 21 Complete: Secure Workbench Baseline
 
 **Sprint Goal**: Land a "truthful by default" runtime and viewer surface so every demo starts from safe, realistic assumptions.

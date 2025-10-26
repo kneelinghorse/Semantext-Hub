@@ -21,6 +21,8 @@
     "test:deflake:report": "node tests/util/deflake-reporter.js",
     "check:boundaries": "node scripts/check-layer-boundaries.js",
     "check:cli-duplicates": "./scripts/ci/check-duplicate-commands.sh",
+    "perf:report": "node cli/index.js perf:report",
+    "perf:status": "node cli/index.js perf:status",
     "cli": "node ./packages/runtime/cli/index.js",
     "wsap": "node app/cli/wsap.mjs",
     "build": "echo 'No build step required for Node.js'",

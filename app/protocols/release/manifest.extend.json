@@ -2,15 +2,15 @@
   "annotations": {
     "canary": {
       "status": "canary-ok",
-      "ts": "2025-10-17T13:26:55.538Z",
-      "correlationId": "1de3af07-124e-436c-acc2-e84003c18e14",
-      "sessionId": "release-canary-20251017132645",
-      "attempts": 10,
-      "successes": 10,
+      "ts": "2025-10-26T21:33:38.084Z",
+      "correlationId": "3fc2c8f0-e7ac-41cc-9e0e-e3fea787995c",
+      "sessionId": "release-canary-20251026213323",
+      "attempts": 30,
+      "successes": 30,
       "failures": 0,
-      "p95": 6,
+      "p95": 5,
       "errorRate": 0,
-      "durationMs": 10013
+      "durationMs": 15059
     }
   },
   "audit": [

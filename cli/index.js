@@ -36,6 +36,23 @@ program
     });
   });
 
+program
+  .command('perf:report')
+  .alias('perf-report')
+  .description('Generate detailed performance report with percentile metrics (p50/p95/p99)')
+  .option('--workspace <path>', 'Workspace root', process.cwd())
+  .option('--verbose', 'Enable verbose logging with source log paths', false)
+  .option('--format <format>', 'Output format: table|json', 'table')
+  .action(async (options) => {
+    const { perfReportCommand } = await import('./commands/perf-report.js');
+
+    await perfReportCommand({
+      workspace: options.workspace,
+      verbose: Boolean(options.verbose),
+      format: options.format
+    });
+  });
+
 const catalog = program
   .command('catalog')
   .description('Catalog browsing and visualization commands');

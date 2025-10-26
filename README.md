@@ -318,10 +318,13 @@ For detailed security policies and best practices, see [`docs/security/SECURITY_
 ## ✅ Test Coverage
 
 <!-- TEST-COUNTS:BEGIN -->
-Suites: 133 passed / 0 failed / 134 total
-Tests: 2068 passed / 0 failed / 2070 total
-Coverage: statements 39.73% · functions 41.55% · branches 31.53% · lines 49.18%
-Thresholds met: false
+- Updated: 2025-10-26T19:42:47.835Z
+- Test suites: 158 total (passed 157, failed 0, pending 1)
+- Tests: 2432 total (passed 2430, failed 0, skipped 2, todo 0)
+- Coverage (statements): 89.9% (652/725)
+- Coverage (functions): 92.8% (91/98)
+- Coverage (branches): 76.4% (456/597)
+- Coverage (lines): 91.1% (622/683)
 <!-- TEST-COUNTS:END -->
 
 **Test Suite Status**: 

@@ -19,14 +19,15 @@
 
 ---
 
-## Sprint 22 — Honest Telemetry & Storytelling
+## Sprint 22 — Honest Telemetry & Storytelling ✅ **COMPLETED**
 **Goal:** Ensure every metric, gate, and narrative reflects live data.
 
-- Remove perf seeding; make budgets fail when logs are missing or stale; ship lightweight CLI/dashboard for p95 trends.
-- Update CI summaries to highlight real discovery/MCP numbers drawn from JSONL logs.
-- Capture a short “workbench narrative” doc showing how telemetry fits into the developer story.
+**Delivered:**
+- ✅ **S22.1**: Truthful Performance Pipeline — removed `seedMockPerfData()`; `collectWorkspacePerfMetrics()` throws on missing logs; perf-budget.js validates file age/content; CI summary displays live p95 values; artifacts/perf/README.md documents JSONL format.
+- ✅ **S22.2**: Perf Snapshot CLI/Dashboard — shipped `ossp perf:report` with table/JSON formats, p50/p95/p99 metrics, budget compliance checks, exit codes on violations, npm scripts, CLI usage docs, and 17 passing tests.
+- ✅ **S22.3**: Workbench Narrative Update — published [`docs/workbench-telemetry.md`](../../docs/workbench-telemetry.md) explaining data flow from WSAP runs to dashboards; updated README and roadmap with telemetry references; CHANGELOG captures Sprint 22 summary.
 
-**Success:** CI/perf gates turn red only on genuine regressions, and reviewers can point to a single source of truth for performance data.
+**Outcome:** CI/perf gates turn red only on genuine regressions. Developers and reviewers can point to a single source of truth (JSONL logs) for performance data. The workbench story now explicitly ties telemetry and guardrails to the import → validate → visualize → document lifecycle.
 
 ---
 
