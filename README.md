@@ -95,6 +95,12 @@ The workbench supports a complete protocol lifecycle:
    node app/examples/generate-governance.js   # Example usage (see docs/governance-generator.md)
    ```
 
+### Telemetry Guardrails
+
+- Run `npm run cli -- perf:report` (alias: `npm run perf:report`) to read live p50/p95/p99 metrics from `artifacts/perf/*.jsonl`; the command exits non-zero if telemetry is stale or budgets are breached.
+- CI jobs call `npm run perf:budget` to enforce the same thresholds before merge, ensuring regressions surface immediately.
+- Review the full narrative in `docs/workbench-telemetry.md` for data flow, guardrails, and dashboard integration.
+
 ### Supported Communication: Agent-to-Agent (A2A)
 
 **Status**: Production-ready for local agent communication
@@ -302,6 +308,7 @@ For detailed security policies and best practices, see [`docs/security/SECURITY_
 
 - **Getting Started**: [`docs/Getting_Started.md`](docs/Getting_Started.md) – Secure setup + reproducible walkthrough
 - **Quickstart Cheatsheet**: [`docs/quickstart.md`](docs/quickstart.md) – Command-forward summary
+- **Workbench Telemetry**: [`docs/workbench-telemetry.md`](docs/workbench-telemetry.md) – How metrics and guardrails keep manifests trustworthy
 - **Security Policies**: [`docs/security/SECURITY_POLICIES.md`](docs/security/SECURITY_POLICIES.md) – Required configuration and audit notes
 - **Trimmed Surfaces (S21.2)**: [`docs/SPRINT_21_SURFACE_CHANGES.md`](docs/SPRINT_21_SURFACE_CHANGES.md) – Runtime/viewer changes and disabled surfaces
 - **Adapter Development**: [`docs/dev/`](docs/dev/) – Build custom importers
@@ -481,7 +488,7 @@ MIT License - See LICENSE file for details
 - **Visual Exploration**: Web viewer for browsing catalogs and dependency graphs
 - **Governance Automation**: Generate compliance docs from imported specs
 - **Extensible**: Adapter system for custom import sources
-- **Truthful Telemetry**: Performance metrics from real operations (no seeded data)
+- **Truthful Telemetry**: Performance metrics from real operations (no seeded data) — see [`docs/workbench-telemetry.md`](docs/workbench-telemetry.md)
 
 ## 🔧 Runtime Integration
 
