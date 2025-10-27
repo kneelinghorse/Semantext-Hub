@@ -53,6 +53,23 @@ program
     });
   });
 
+program
+  .command('perf:gc')
+  .alias('perf-gc')
+  .description('Run garbage-collection on performance artifacts according to retention policy')
+  .option('--workspace <path>', 'Workspace root', process.cwd())
+  .option('--dry-run', 'Preview deletions without removing files', false)
+  .option('--json', 'Emit JSON summary instead of text output', false)
+  .action(async (options) => {
+    const { perfGcCommand } = await import('./commands/perf-gc.js');
+
+    await perfGcCommand({
+      workspace: options.workspace,
+      dryRun: Boolean(options.dryRun),
+      json: Boolean(options.json)
+    });
+  });
+
 const catalog = program
   .command('catalog')
   .description('Catalog browsing and visualization commands');

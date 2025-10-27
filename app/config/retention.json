@@ -1,0 +1,33 @@
+{
+  "defaults": {
+    "keepLatest": 5,
+    "maxAgeDays": 14,
+    "maxTotalSizeMB": 1024,
+    "protect": [
+      "README.md",
+      "latest.jsonl"
+    ]
+  },
+  "targets": [
+    {
+      "id": "wsap-perf-artifacts",
+      "path": "artifacts/perf",
+      "keepLatest": 8,
+      "maxAgeDays": 30,
+      "maxTotalSizeMB": 2048,
+      "protect": [
+        "README.md",
+        "latest.jsonl",
+        "MISSION_IM-01A_COMPLETE.md",
+        "MISSION_S20.3_COMPLETE.md"
+      ]
+    },
+    {
+      "id": "wsap-log-buffer",
+      "path": "var/logs/wsap",
+      "keepLatest": 4,
+      "maxAgeDays": 14,
+      "maxTotalSizeMB": 512
+    }
+  ]
+}
