@@ -24,6 +24,7 @@
     "perf:report": "node cli/index.js perf:report",
     "perf:status": "node cli/index.js perf:status",
     "demo:preflight": "node scripts/preflight/demo-preflight.mjs",
+    "release:bundle": "node scripts/release/create-launch-bundle.mjs",
     "cli": "node ./packages/runtime/cli/index.js",
     "wsap": "node app/cli/wsap.mjs",
     "build": "echo 'No build step required for Node.js'",

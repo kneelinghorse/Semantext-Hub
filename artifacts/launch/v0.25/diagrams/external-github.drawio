@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2025-10-27T18:48:19.000Z" agent="codex-cli" version="21.7.9" type="device">
+  <diagram id="external-github" name="GitHub External Integration">
+    <mxGraphModel dx="1024" dy="768" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="github-api" value="GitHub REST API" style="shape=rectangle;rounded=1;whiteSpace=wrap;fontSize=14;strokeColor=#0B7285;fillColor=#E6F4F1;align=center;verticalAlign=middle;spacing=12" vertex="1" parent="1">
+          <mxGeometry x="80" y="120" width="220" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="github-client" value="Workbench Adapter" style="shape=rectangle;rounded=1;whiteSpace=wrap;fontSize=14;strokeColor=#94A3B8;fillColor=#F8FAFC;align=center;verticalAlign=middle;spacing=12" vertex="1" parent="1">
+          <mxGeometry x="360" y="120" width="220" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="github-telemetry" value="Telemetry Snapshot" style="shape=rectangle;rounded=1;whiteSpace=wrap;fontSize=14;strokeColor=#0B7285;fillColor=#E0F2FE;align=center;verticalAlign=middle;spacing=12" vertex="1" parent="1">
+          <mxGeometry x="640" y="120" width="220" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="edge1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;jettySize=auto;orthogonalLoop=1;endArrow=block;endFill=1;strokeColor=#0B7285" edge="1" parent="1" source="github-api" target="github-client">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;jettySize=auto;orthogonalLoop=1;endArrow=block;endFill=1;strokeColor=#0B7285" edge="1" parent="1" source="github-client" target="github-telemetry">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

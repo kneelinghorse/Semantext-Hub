@@ -1,0 +1,22 @@
+{
+  "version": "v0.25",
+  "generated_at": "2025-10-27T19:15:40.800Z",
+  "providers": [
+    {
+      "id": "github",
+      "name": "GitHub REST API",
+      "manifest": "github/manifest.json",
+      "diagram": "diagrams/external-github.drawio",
+      "telemetry": "telemetry/external-github.jsonl",
+      "spec": "https://raw.githubusercontent.com/github/rest-api-description/main/descriptions/api.github.com/api.github.com.json"
+    },
+    {
+      "id": "stripe",
+      "name": "Stripe Payments API",
+      "manifest": "stripe/manifest.json",
+      "diagram": "diagrams/external-stripe.drawio",
+      "telemetry": "telemetry/external-stripe.jsonl",
+      "spec": "https://raw.githubusercontent.com/stripe/openapi/master/openapi/spec3.json"
+    }
+  ]
+}

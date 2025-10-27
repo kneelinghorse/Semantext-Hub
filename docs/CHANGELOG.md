@@ -1,5 +1,17 @@
 # Change Log
 
+## 2025-10-27 – Sprint 25 Release: Launch Bundle & Docs
+
+**Mission B25.2**: Package the v0.25 launch bundle with refreshed docs and release automation.
+
+- **README & Getting Started**: Updated to reference the launch bundle flow, preflight automation, and curated GitHub/Stripe showcase.
+- **CMOS Overview**: Added release section summarising scope, artifacts, validation, and next steps.
+- **Launch Bundle Directory**: Created `artifacts/launch/v0.25/` to hold manifests, diagrams, telemetry, and scripts sourced from Missions B24–B25.
+- **Release Script**: `scripts/release/create-launch-bundle.mjs` rebuilds the directory from approved assets.
+- **CHANGELOG**: Captures Sprint 25 highlights across missions B25.1–B25.2 and points at B25.3 for post-launch feedback work.
+
+---
+
 ## 2025-10-27 – Sprint 23 Demo Story Locked
 
 **Mission B23.3**: Capture a truthful, reproducible walkthrough for the curated order-fulfillment showcase.

@@ -1,6 +1,13 @@
 # OSSP-AGI — Protocol Discovery Workbench
 
-OSSP-AGI is a secure-by-default, local-first workbench for discovering, validating, and documenting protocol manifests sourced from real contracts. Sprint 21 hardened the runtime so newcomers always start from trustworthy defaults: explicit registry API keys, fail-closed IAM policies, and viewer/runtime surfaces that only expose supported workflows.
+OSSP-AGI is a secure-by-default, local-first workbench for discovering, validating, and documenting protocol manifests sourced from real contracts. The **v0.25 launch bundle** layers Sprint 21–24 hardening with the Sprint 25 external showcase so you can ship a truthful release package straight from the repository.
+
+## v0.25 Launch Highlights
+
+- **Release-ready artifacts**: `artifacts/launch/v0.25/` packages manifests, diagrams, telemetry, and demo scripts for GitHub distribution.
+- **Curated external specs**: GitHub and Stripe OpenAPI runs (Mission B25.1) are referenced across docs with regeneration instructions.
+- **Preflight automation**: `npm run demo:preflight` validates tooling, security posture, retention tasks, and produces the curated showcase.
+- **Docs refresh**: README, Getting Started, overview, and CHANGELOG point newcomers to the hardened defaults and launch bundle story.
 
 ## 🚀 What You Can Do
 
@@ -16,14 +23,16 @@ OSSP-AGI is a secure-by-default, local-first workbench for discovering, validati
 - **Trimmed runtime surfaces** – A2A communication remains production-ready, while MCP agent/workflow execution and viewer governance panes now return deterministic `501` responses with follow-up guidance.
 - **Startup checklist** – starting the registry via `node packages/runtime/registry/server.mjs` validates configuration so demos cannot proceed with permissive fallbacks.
 
-## ⚡ Quick Start (Secure Defaults)
+## ⚡ Quick Start (v0.25 Bundle)
 
-A reproducible, no-surprises walkthrough lives in [`docs/Getting_Started.md`](docs/Getting_Started.md). The short version:
+The reproducible walkthrough in [`docs/Getting_Started.md`](docs/Getting_Started.md) now targets the v0.25 release flow. The short version:
 
 ```bash
 git clone https://github.com/your-org/oss-protocols.git
 cd oss-protocols
 npm install
+
+npm run demo:preflight              # verifies toolchain, security defaults, curated showcase
 
 export REGISTRY_API_KEY=$(node -e "console.log(require('crypto').randomBytes(32).toString('hex'))")
 mkdir -p app/config/security
@@ -46,6 +55,12 @@ npm run cli -- ui
 ```
 
 Open `http://localhost:3456` to inspect manifests, catalog graphs, and validation status. Agent/workflow orchestration surfaces intentionally respond with `501` to keep the story truthful until future missions re-enable them.
+
+## 📦 Launch Bundle Artifacts
+
+- Browse curated assets in `artifacts/launch/v0.25/`; copy the directory when drafting the public release.
+- Regenerate the external showcase with `node scripts/demo/run-external.mjs` (see [`docs/demos/external-showcase.md`](docs/demos/external-showcase.md)).
+- Run `node scripts/release/create-launch-bundle.mjs` to rebuild the launch directory from approved manifests, diagrams, and telemetry.
 
 ## 🎬 Demo Showcase Walkthrough
 
