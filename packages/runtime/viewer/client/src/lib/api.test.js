@@ -332,17 +332,69 @@ describe('API Client', () => {
   });
 
   describe('getGovernance', () => {
-    it('throws a 501 ApiError with documentation pointers', async () => {
+    it('returns governance payload with summary metadata', async () => {
+      const governanceResponse = {
+        generated_at: '2025-10-27T14:05:00Z',
+        manifests: [
+          {
+            urn: 'urn:proto:api:demo.showcase/order-api@v1.0.0',
+            name: 'Demo Order Service API',
+            kind: 'api',
+            owner: 'demo.showcase',
+            visibility: 'internal',
+            classification: 'internal',
+            status: 'approved',
+            pii: false,
+            compliance: null,
+            tags: ['demo'],
+            source: 'openapi',
+            path: 'catalogs/showcase/order-api.json',
+            issues: []
+          }
+        ],
+        summary: {
+          total: 1,
+          withOwner: 1,
+          missingOwner: 0,
+          pii: 0,
+          byKind: { api: 1 },
+          byStatus: { approved: 1 },
+          byClassification: { internal: 1 },
+          owners: { 'demo.showcase': 1 },
+          alerts: []
+        },
+        artifacts: { scanned: 1, root: '/path/to/artifacts' }
+      };
+
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => governanceResponse,
+      });
+
+      const result = await api.getGovernance();
+
+      expect(fetchMock).toHaveBeenCalledWith('/api/governance', expect.any(Object));
+      expect(result).toMatchObject({
+        generatedAt: governanceResponse.generated_at,
+        summary: governanceResponse.summary,
+        manifests: governanceResponse.manifests,
+        alerts: governanceResponse.summary.alerts,
+        artifacts: governanceResponse.artifacts,
+        source: 'live'
+      });
+    });
+
+    it('throws 404 ApiError when no manifests available', async () => {
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({ generated_at: '2025-10-27T14:05:00Z', manifests: [] }),
+      });
+
       await expect(api.getGovernance()).rejects.toMatchObject({
         name: 'ApiError',
-        status: 501,
-        message: expect.stringContaining('disabled'),
-        data: expect.objectContaining({
-          documentation: expect.stringContaining('docs/SPRINT_21_SURFACE_CHANGES.md'),
-          guidance: expect.arrayContaining([
-            expect.stringContaining('viewer'),
-          ]),
-        }),
+        status: 404
       });
     });
   });

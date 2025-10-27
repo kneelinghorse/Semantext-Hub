@@ -206,24 +206,25 @@ export const api = {
     };
   },
 
-  /**
-   * Governance dashboard is not available in Sprint 21 builds.
-   * Calling this surface returns a structured 501 error so the UI can
-   * provide guidance without advertising placeholder data.
-   * @returns {Promise<never>}
-   */
   async getGovernance() {
-    throw new ApiError(
-      'Governance dashboard is disabled in Sprint 21 builds. See docs/SPRINT_21_SURFACE_CHANGES.md#viewer-changes for context.',
-      501,
-      {
-        documentation: 'docs/SPRINT_21_SURFACE_CHANGES.md#viewer-changes',
-        guidance: [
-          'The viewer focuses on health, manifests, validation, and graph exploration.',
-          'Use protocol_report_governance via the CLI to generate static governance reports.',
-          'Follow docs/runtime/runtime-usage-guide.md for supported runtime operations.'
-        ],
-      }
-    );
+    const response = await fetchApi('/governance');
+    const manifests = Array.isArray(response?.manifests) ? response.manifests : [];
+
+    if (manifests.length === 0) {
+      throw new ApiError(
+        'No governance data available.',
+        404,
+        response || null
+      );
+    }
+
+    return {
+      generatedAt: response.generated_at || response.generatedAt || null,
+      manifests,
+      summary: response.summary || { total: manifests.length },
+      alerts: response.summary?.alerts || response.alerts || [],
+      artifacts: response.artifacts || null,
+      source: 'live'
+    };
   }
 };

@@ -1,0 +1,66 @@
+{
+  "urn": "urn:proto:event:demo.showcase/order-placed@v1.0.0",
+  "metadata": {
+    "urn": "urn:proto:event:demo.showcase/order-placed@v1.0.0",
+    "name": "Demo Order Placed Event",
+    "kind": "event",
+    "version": "1.0.0",
+    "description": "Event emitted when the order service accepts a new order.",
+    "status": "approved",
+    "visibility": "internal",
+    "tags": ["demo", "showcase", "event"],
+    "created_at": "2025-10-01T00:00:00Z",
+    "updated_at": "2025-10-25T00:00:00Z",
+    "source": {
+      "type": "asyncapi",
+      "reference": "seeds/asyncapi/minimal.json",
+      "notes": "Channel definition adapted to align with order service semantics."
+    }
+  },
+  "event": {
+    "channels": [
+      {
+        "name": "order.placed",
+        "description": "Notifies downstream services that an order is ready for fulfillment.",
+        "message": {
+          "content_type": "application/json",
+          "schema": {
+            "type": "object",
+            "required": ["orderId", "customerId", "total"],
+            "properties": {
+              "orderId": {
+                "type": "string",
+                "description": "Primary identifier for the order."
+              },
+              "customerId": {
+                "type": "string",
+                "description": "Identifier of the customer that placed the order."
+              },
+              "total": {
+                "type": "number",
+                "format": "decimal",
+                "description": "Order total amount in USD."
+              },
+              "submittedAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        },
+        "delivery": {
+          "protocol": "sns",
+          "region": "us-east-1"
+        },
+        "publisher": "urn:proto:api:demo.showcase/order-api@v1.0.0"
+      }
+    ]
+  },
+  "relationships": {
+    "emitted_by": ["urn:proto:api:demo.showcase/order-api@v1.0.0"],
+    "consumed_by": [
+      "urn:proto:workflow:demo.showcase/order-fulfillment@v1.0.0",
+      "urn:proto:agent:demo.showcase/notification-agent@v1.0.0"
+    ]
+  }
+}

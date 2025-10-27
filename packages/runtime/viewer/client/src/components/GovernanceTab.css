@@ -1,0 +1,239 @@
+.governance-tab {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+  padding: var(--spacing-xl);
+}
+
+.governance-summary {
+  background-color: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: var(--spacing-xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.governance-summary-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-lg);
+}
+
+.governance-summary-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.governance-generated-at {
+  font-size: 0.875rem;
+  color: var(--color-text-tertiary);
+  font-family: var(--font-mono);
+}
+
+.governance-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.governance-stat-card {
+  background-color: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.governance-stat-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+
+.governance-stat-value {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.governance-breakdowns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.governance-breakdown {
+  background-color: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: var(--spacing-md);
+}
+
+.governance-breakdown h3 {
+  margin: 0 0 var(--spacing-sm) 0;
+  font-size: 1rem;
+  color: var(--color-text);
+}
+
+.governance-breakdown-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
+.governance-breakdown-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+}
+
+.governance-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: 999px;
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-secondary);
+}
+
+.governance-empty-breakdown {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--color-text-tertiary);
+}
+
+.governance-alerts {
+  background-color: rgba(255, 193, 7, 0.12);
+  border: 1px solid rgba(255, 193, 7, 0.35);
+  border-radius: 8px;
+  padding: var(--spacing-md);
+  color: var(--color-warning);
+  font-size: 0.875rem;
+}
+
+.governance-alerts ul {
+  margin: var(--spacing-sm) 0 0 1.25rem;
+  padding: 0;
+}
+
+.governance-alerts li {
+  margin-bottom: var(--spacing-xs);
+}
+
+.governance-alerts li:last-child {
+  margin-bottom: 0;
+}
+
+.governance-alerts .governance-urn {
+  display: block;
+  font-family: var(--font-mono);
+  color: var(--color-primary);
+}
+
+.governance-table-wrapper {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-bg-elevated);
+}
+
+.governance-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.governance-table th,
+.governance-table td {
+  padding: var(--spacing-md);
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: top;
+}
+
+.governance-table th {
+  background-color: var(--color-bg-secondary);
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-secondary);
+}
+
+.governance-table td {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
+.governance-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.governance-name {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.governance-urn {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-primary);
+  word-break: break-word;
+  margin-top: var(--spacing-xs);
+}
+
+.governance-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+}
+
+.governance-tag {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+}
+
+.governance-pii-flag {
+  font-weight: 600;
+  color: var(--color-warning);
+}
+
+.governance-pii-flag[data-state="true"] {
+  color: var(--color-danger);
+}
+
+@media (max-width: 768px) {
+  .governance-tab {
+    padding: var(--spacing-lg);
+  }
+
+  .governance-summary {
+    padding: var(--spacing-lg);
+  }
+
+  .governance-table th,
+  .governance-table td {
+    padding: var(--spacing-sm);
+  }
+}

@@ -122,6 +122,37 @@ const graphChunkPayload = {
   served_at: new Date().toISOString(),
 };
 
+const governancePayload = {
+  generated_at: new Date().toISOString(),
+  manifests: [
+    {
+      urn: 'urn:proto:api:demo.showcase/order-api@v1.0.0',
+      name: 'Demo Order Service API',
+      kind: 'api',
+      owner: 'demo.showcase',
+      classification: 'internal',
+      visibility: 'internal',
+      status: 'approved',
+      pii: false,
+      tags: ['demo', 'showcase'],
+      source: 'openapi',
+      issues: []
+    }
+  ],
+  summary: {
+    total: 1,
+    withOwner: 1,
+    missingOwner: 0,
+    pii: 0,
+    byKind: { api: 1 },
+    byStatus: { approved: 1 },
+    byClassification: { internal: 1 },
+    owners: { 'demo.showcase': 1 },
+    alerts: []
+  },
+  artifacts: { scanned: 3, root: '/artifacts' }
+};
+
 const jsonResponse = (data) => ({
   ok: true,
   status: 200,
@@ -158,6 +189,10 @@ const createFetchMock = () =>
 
     if (url.includes('/api/graph/part/')) {
       return Promise.resolve(jsonResponse(graphChunkPayload));
+    }
+
+    if (url.endsWith('/api/governance')) {
+      return Promise.resolve(jsonResponse(governancePayload));
     }
 
     return Promise.reject(new Error(`Unhandled fetch in test: ${url}`));
@@ -231,6 +266,28 @@ describe('App semantic instrumentation', () => {
     );
 
     expect(screen.getByTestId('registry-active-panels')).toHaveTextContent('validation');
+  });
+
+  it('loads governance data when governance tab is selected', async () => {
+    renderWithRegistry();
+
+    await screen.findByText('System Health');
+
+    const governanceTab = screen.getByRole('tab', { name: /governance/i });
+    fireEvent.click(governanceTab);
+
+    await screen.findByText('Governance Overview');
+    await screen.findByText('Demo Order Service API');
+
+    await waitFor(() =>
+      expect(screen.getByTestId('registry-active-tab')).toHaveTextContent('governance')
+    );
+
+    const tableRow = screen.getByText('Demo Order Service API').closest('tr');
+    expect(tableRow).toHaveAttribute(
+      'data-semantic-governance-row',
+      'urn:proto:api:demo.showcase/order-api@v1.0.0'
+    );
   });
 
   it('tracks manifest detail selection with semantic attributes', async () => {

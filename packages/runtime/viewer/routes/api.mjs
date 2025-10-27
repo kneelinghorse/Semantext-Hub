@@ -286,6 +286,210 @@ function chunkGraphData(nodes, edges, chunkSize = 50) {
   };
 }
 
+async function collectGovernanceManifestPaths(artifactsDir) {
+  const manifestPaths = new Set();
+
+  await walkManifestDir(artifactsDir, 0, 0, manifestPaths);
+
+  const scopedRoots = [
+    path.join(artifactsDir, 'catalogs'),
+    path.join(artifactsDir, 'catalogs', 'showcase'),
+    path.join(artifactsDir, 'manifests')
+  ];
+
+  for (const scopedRoot of scopedRoots) {
+    await walkManifestDir(scopedRoot, 0, 2, manifestPaths);
+  }
+
+  if (manifestPaths.size === 0) {
+    await walkManifestDir(artifactsDir, 0, 1, manifestPaths);
+  }
+
+  return Array.from(manifestPaths);
+}
+
+async function walkManifestDir(dir, depth, maxDepth, manifestPaths) {
+  if (!dir) return;
+
+  try {
+    const entries = await fs.readdir(dir, { withFileTypes: true });
+
+    for (const entry of entries) {
+      const entryPath = path.join(dir, entry.name);
+
+      if (entry.isFile() && entry.name.endsWith('.json')) {
+        manifestPaths.add(entryPath);
+        continue;
+      }
+
+      if (entry.isDirectory()) {
+        if (entry.name.startsWith('.')) continue;
+        if (depth >= maxDepth) continue;
+        await walkManifestDir(entryPath, depth + 1, maxDepth, manifestPaths);
+      }
+    }
+  } catch (error) {
+    if (error?.code === 'ENOENT' || error?.code === 'ENOTDIR') {
+      return;
+    }
+
+    /* istanbul ignore next -- surfaced via governance tests */
+    console.error(`[governance] Failed to read directory ${dir}:`, error);
+  }
+}
+
+async function loadGovernanceRecords(manifestPaths, artifactsDir) {
+  const records = [];
+
+  for (const manifestPath of manifestPaths) {
+    try {
+      const raw = await fs.readFile(manifestPath, 'utf-8');
+      const manifest = JSON.parse(raw);
+      const record = extractGovernanceRecord(manifest, manifestPath, artifactsDir);
+      if (record) {
+        records.push(record);
+      }
+    } catch (error) {
+      /* istanbul ignore next -- logged for operator awareness */
+      console.warn(`[governance] Skipping ${manifestPath}: ${error.message}`);
+    }
+  }
+
+  records.sort((a, b) => a.name.localeCompare(b.name));
+  return records;
+}
+
+function extractGovernanceRecord(manifest, filePath, artifactsDir) {
+  if (!manifest || typeof manifest !== 'object') return null;
+
+  const manifestRoot = manifest.manifest && typeof manifest.manifest === 'object'
+    ? manifest.manifest
+    : manifest;
+
+  const metadata = manifestRoot.metadata || {};
+  const governance = metadata.governance || manifestRoot.governance || {};
+  const policy = governance.policy || {};
+  const protocol =
+    manifestRoot.protocol ||
+    manifestRoot.event ||
+    manifestRoot.workflow ||
+    manifestRoot.data ||
+    manifestRoot.service ||
+    {};
+
+  const urn = manifestRoot.urn || metadata.urn || protocol.urn || null;
+  if (!urn) return null;
+
+  const kind = metadata.kind || manifestRoot.kind || protocol.kind || inferKindFromUrn(urn) || 'unknown';
+  const name = metadata.name || protocol.name || manifestRoot.name || urn.split(':').slice(-1)[0];
+  const owner = governance.owner || metadata.owner || inferOwnerFromUrn(urn);
+  const visibility = metadata.visibility || governance.visibility || null;
+  const classification = typeof policy.classification === 'string'
+    ? policy.classification
+    : visibility || 'unknown';
+  const status = metadata.status || governance.status || 'unknown';
+  const tags = Array.isArray(metadata.tags) ? metadata.tags : [];
+  const source = metadata.source?.type || null;
+  const normalizedTags = tags.map((tag) => (typeof tag === 'string' ? tag.toLowerCase() : String(tag)));
+  const hasPII = Boolean(
+    (typeof policy.classification === 'string' && policy.classification.toLowerCase() === 'pii') ||
+    governance.pii === true ||
+    normalizedTags.includes('pii') ||
+    detectPIISignal(manifestRoot)
+  );
+  const compliance = policy.legal_basis || governance.legal_basis || null;
+
+  const issues = [];
+  if (!owner) issues.push('missing_owner');
+  if (!visibility && (!classification || classification === 'unknown')) issues.push('missing_classification');
+
+  return {
+    urn,
+    name,
+    kind,
+    owner: owner || null,
+    visibility: visibility || null,
+    classification: classification || 'unknown',
+    status,
+    pii: hasPII,
+    compliance,
+    tags,
+    source,
+    path: path.relative(artifactsDir, filePath) || filePath,
+    issues
+  };
+}
+
+function inferKindFromUrn(urn) {
+  if (!urn || typeof urn !== 'string') return null;
+  const parts = urn.split(':');
+  if (parts.length < 3) return null;
+  return parts[2] || null;
+}
+
+function inferOwnerFromUrn(urn) {
+  if (!urn || typeof urn !== 'string') return null;
+  const parts = urn.split(':');
+  if (parts.length < 4) return null;
+  const namespaceSegment = parts[3] || '';
+  const [namespace] = namespaceSegment.split('/');
+  return namespace || null;
+}
+
+function detectPIISignal(manifest) {
+  try {
+    const serialized = JSON.stringify(manifest).toLowerCase();
+    return serialized.includes('"pii"') || serialized.includes('personal_data') || serialized.includes('ssn');
+  } catch {
+    return false;
+  }
+}
+
+function buildGovernanceSummary(records) {
+  const summary = {
+    total: records.length,
+    withOwner: 0,
+    missingOwner: 0,
+    pii: 0,
+    byKind: {},
+    byStatus: {},
+    byClassification: {},
+    owners: {},
+    alerts: []
+  };
+
+  for (const record of records) {
+    const kindKey = record.kind || 'unknown';
+    const statusKey = record.status || 'unknown';
+    const classificationKey = record.classification || 'unknown';
+
+    summary.byKind[kindKey] = (summary.byKind[kindKey] || 0) + 1;
+    summary.byStatus[statusKey] = (summary.byStatus[statusKey] || 0) + 1;
+    summary.byClassification[classificationKey] = (summary.byClassification[classificationKey] || 0) + 1;
+
+    if (record.owner) {
+      summary.withOwner += 1;
+      summary.owners[record.owner] = (summary.owners[record.owner] || 0) + 1;
+    }
+
+    if (record.pii) {
+      summary.pii += 1;
+    }
+
+    if (Array.isArray(record.issues) && record.issues.length > 0) {
+      summary.alerts.push({
+        urn: record.urn,
+        issues: record.issues
+      });
+    }
+  }
+
+  summary.missingOwner = summary.total - summary.withOwner;
+  summary.alerts.sort((a, b) => a.urn.localeCompare(b.urn));
+
+  return summary;
+}
+
 async function readManifestFile(artifactsDir, manifestName) {
   const filePath = safeJoin(artifactsDir, manifestName);
   const content = await fs.readFile(filePath, 'utf-8');
@@ -376,6 +580,43 @@ export function setupApiRoutes(app, artifactsDir) {
     } catch (err) {
       console.error('Failed to list manifests:', err);
       res.status(500).json({ error: 'Failed to list manifests' });
+    }
+  });
+
+  /**
+   * GET /api/governance
+   * Aggregate governance metadata derived from manifests.
+   */
+  app.get('/api/governance', async (req, res) => {
+    try {
+      const manifestPaths = await collectGovernanceManifestPaths(artifactsDir);
+      const governanceRecords = await loadGovernanceRecords(manifestPaths, artifactsDir);
+
+      if (governanceRecords.length === 0) {
+        return res.status(404).json({
+          error: 'No manifests available for governance reporting',
+          documentation: 'docs/demos/showcase.md',
+          guidance: [
+            'Run scripts/demo/run-showcase.mjs --overwrite to generate curated manifests.',
+            'Ensure artifacts/catalogs/showcase/*.json exists before opening the viewer.'
+          ]
+        });
+      }
+
+      const summary = buildGovernanceSummary(governanceRecords);
+
+      res.json({
+        generated_at: new Date().toISOString(),
+        manifests: governanceRecords,
+        summary,
+        artifacts: {
+          scanned: manifestPaths.length,
+          root: artifactsDir
+        }
+      });
+    } catch (error) {
+      console.error('Governance report generation failed:', error);
+      res.status(500).json({ error: 'Failed to build governance report' });
     }
   });
 

@@ -1,0 +1,283 @@
+{
+  "id": "demo-showcase-catalog",
+  "name": "Demo Showcase Catalog",
+  "description": "Curated order orchestration flow for Sprint 23 demo.",
+  "version": "1.0.0",
+  "generatedAt": "2025-10-27T14:40:44.339Z",
+  "nodes": [
+    {
+      "id": "916fdcf39877c622",
+      "label": "Demo Order Service API",
+      "type": "api",
+      "domain": "api",
+      "urn": "urn:proto:api:demo.showcase/order-api@v1.0.0",
+      "path": "artifacts/catalogs/showcase/order-api.json",
+      "metadata": {
+        "version": "1.0.0",
+        "kind": "api",
+        "domain": "api",
+        "description": "CRUD API for demo orders powering the curated showcase flow.",
+        "status": "approved",
+        "visibility": "internal",
+        "tags": [
+          "demo",
+          "showcase",
+          "api"
+        ]
+      }
+    },
+    {
+      "id": "1a9ca09b8de3bb27",
+      "label": "Demo Order Fulfillment Workflow",
+      "type": "workflow",
+      "domain": "workflow",
+      "urn": "urn:proto:workflow:demo.showcase/order-fulfillment@v1.0.0",
+      "path": "artifacts/catalogs/showcase/order-fulfillment-workflow.json",
+      "metadata": {
+        "version": "1.0.0",
+        "kind": "workflow",
+        "domain": "workflow",
+        "description": "Orchestrates downstream actions when an order is placed in the demo showcase.",
+        "status": "approved",
+        "visibility": "internal",
+        "tags": [
+          "demo",
+          "showcase",
+          "workflow"
+        ]
+      }
+    },
+    {
+      "id": "392b871c58672995",
+      "label": "Demo Order Placed Event",
+      "type": "event",
+      "domain": "event",
+      "urn": "urn:proto:event:demo.showcase/order-placed@v1.0.0",
+      "path": "artifacts/catalogs/showcase/order-placed-event.json",
+      "metadata": {
+        "version": "1.0.0",
+        "kind": "event",
+        "domain": "event",
+        "description": "Event emitted when the order service accepts a new order.",
+        "status": "approved",
+        "visibility": "internal",
+        "tags": [
+          "demo",
+          "showcase",
+          "event"
+        ]
+      }
+    },
+    {
+      "id": "32a6918251b6f714",
+      "label": "urn:proto:data:demo.showcase/order-db@v1.0.0",
+      "type": "external",
+      "domain": "external",
+      "urn": "urn:proto:data:demo.showcase/order-db@v1.0.0",
+      "path": null,
+      "metadata": {
+        "external": true,
+        "urn": "urn:proto:data:demo.showcase/order-db@v1.0.0"
+      }
+    },
+    {
+      "id": "3568b87ab7c1bb5e",
+      "label": "urn:proto:agent:demo.showcase/fulfillment-agent@v1.0.0",
+      "type": "external",
+      "domain": "external",
+      "urn": "urn:proto:agent:demo.showcase/fulfillment-agent@v1.0.0",
+      "path": null,
+      "metadata": {
+        "external": true,
+        "urn": "urn:proto:agent:demo.showcase/fulfillment-agent@v1.0.0"
+      }
+    },
+    {
+      "id": "688a3be9750e7145",
+      "label": "urn:proto:process:demo.showcase/order-fulfilled@v1.0.0",
+      "type": "external",
+      "domain": "external",
+      "urn": "urn:proto:process:demo.showcase/order-fulfilled@v1.0.0",
+      "path": null,
+      "metadata": {
+        "external": true,
+        "urn": "urn:proto:process:demo.showcase/order-fulfilled@v1.0.0"
+      }
+    },
+    {
+      "id": "c8c7f049c4b994c5",
+      "label": "urn:proto:agent:demo.showcase/notification-agent@v1.0.0",
+      "type": "external",
+      "domain": "external",
+      "urn": "urn:proto:agent:demo.showcase/notification-agent@v1.0.0",
+      "path": null,
+      "metadata": {
+        "external": true,
+        "urn": "urn:proto:agent:demo.showcase/notification-agent@v1.0.0"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "ec2871f9f16153ab",
+      "source": "916fdcf39877c622",
+      "target": "32a6918251b6f714",
+      "type": "depends_on",
+      "label": "Depends On",
+      "metadata": {
+        "relationship": "depends_on",
+        "sourceUrn": "urn:proto:api:demo.showcase/order-api@v1.0.0",
+        "targetUrn": "urn:proto:data:demo.showcase/order-db@v1.0.0",
+        "sourcePath": "artifacts/catalogs/showcase/order-api.json",
+        "targetPath": null
+      }
+    },
+    {
+      "id": "5c2f50d42f7fff1d",
+      "source": "916fdcf39877c622",
+      "target": "392b871c58672995",
+      "type": "produces",
+      "label": "Produces",
+      "metadata": {
+        "relationship": "produces",
+        "sourceUrn": "urn:proto:api:demo.showcase/order-api@v1.0.0",
+        "targetUrn": "urn:proto:event:demo.showcase/order-placed@v1.0.0",
+        "sourcePath": "artifacts/catalogs/showcase/order-api.json",
+        "targetPath": "artifacts/catalogs/showcase/order-placed-event.json"
+      }
+    },
+    {
+      "id": "032c4c3d594d1748",
+      "source": "1a9ca09b8de3bb27",
+      "target": "392b871c58672995",
+      "type": "depends_on",
+      "label": "Depends On",
+      "metadata": {
+        "relationship": "depends_on",
+        "sourceUrn": "urn:proto:workflow:demo.showcase/order-fulfillment@v1.0.0",
+        "targetUrn": "urn:proto:event:demo.showcase/order-placed@v1.0.0",
+        "sourcePath": "artifacts/catalogs/showcase/order-fulfillment-workflow.json",
+        "targetPath": "artifacts/catalogs/showcase/order-placed-event.json"
+      }
+    },
+    {
+      "id": "510ecb570428683c",
+      "source": "1a9ca09b8de3bb27",
+      "target": "916fdcf39877c622",
+      "type": "depends_on",
+      "label": "Depends On",
+      "metadata": {
+        "relationship": "depends_on",
+        "sourceUrn": "urn:proto:workflow:demo.showcase/order-fulfillment@v1.0.0",
+        "targetUrn": "urn:proto:api:demo.showcase/order-api@v1.0.0",
+        "sourcePath": "artifacts/catalogs/showcase/order-fulfillment-workflow.json",
+        "targetPath": "artifacts/catalogs/showcase/order-api.json"
+      }
+    },
+    {
+      "id": "f7d3931bde01cd51",
+      "source": "1a9ca09b8de3bb27",
+      "target": "3568b87ab7c1bb5e",
+      "type": "depends_on",
+      "label": "Depends On",
+      "metadata": {
+        "relationship": "depends_on",
+        "sourceUrn": "urn:proto:workflow:demo.showcase/order-fulfillment@v1.0.0",
+        "targetUrn": "urn:proto:agent:demo.showcase/fulfillment-agent@v1.0.0",
+        "sourcePath": "artifacts/catalogs/showcase/order-fulfillment-workflow.json",
+        "targetPath": null
+      }
+    },
+    {
+      "id": "8f1e0479eb7a9f3b",
+      "source": "1a9ca09b8de3bb27",
+      "target": "392b871c58672995",
+      "type": "consumes",
+      "label": "Consumes",
+      "metadata": {
+        "relationship": "consumes",
+        "sourceUrn": "urn:proto:workflow:demo.showcase/order-fulfillment@v1.0.0",
+        "targetUrn": "urn:proto:event:demo.showcase/order-placed@v1.0.0",
+        "sourcePath": "artifacts/catalogs/showcase/order-fulfillment-workflow.json",
+        "targetPath": "artifacts/catalogs/showcase/order-placed-event.json"
+      }
+    },
+    {
+      "id": "2b9da0559fd1bc30",
+      "source": "1a9ca09b8de3bb27",
+      "target": "688a3be9750e7145",
+      "type": "produces",
+      "label": "Produces",
+      "metadata": {
+        "relationship": "produces",
+        "sourceUrn": "urn:proto:workflow:demo.showcase/order-fulfillment@v1.0.0",
+        "targetUrn": "urn:proto:process:demo.showcase/order-fulfilled@v1.0.0",
+        "sourcePath": "artifacts/catalogs/showcase/order-fulfillment-workflow.json",
+        "targetPath": null
+      }
+    },
+    {
+      "id": "0b0c807a2255ab0d",
+      "source": "392b871c58672995",
+      "target": "916fdcf39877c622",
+      "type": "emitted_by",
+      "label": "Emitted By",
+      "metadata": {
+        "relationship": "emitted_by",
+        "sourceUrn": "urn:proto:event:demo.showcase/order-placed@v1.0.0",
+        "targetUrn": "urn:proto:api:demo.showcase/order-api@v1.0.0",
+        "sourcePath": "artifacts/catalogs/showcase/order-placed-event.json",
+        "targetPath": "artifacts/catalogs/showcase/order-api.json"
+      }
+    },
+    {
+      "id": "cc801a6c97b5df57",
+      "source": "392b871c58672995",
+      "target": "1a9ca09b8de3bb27",
+      "type": "consumed_by",
+      "label": "Consumed By",
+      "metadata": {
+        "relationship": "consumed_by",
+        "sourceUrn": "urn:proto:event:demo.showcase/order-placed@v1.0.0",
+        "targetUrn": "urn:proto:workflow:demo.showcase/order-fulfillment@v1.0.0",
+        "sourcePath": "artifacts/catalogs/showcase/order-placed-event.json",
+        "targetPath": "artifacts/catalogs/showcase/order-fulfillment-workflow.json"
+      }
+    },
+    {
+      "id": "3a4fbb0f2f08c32c",
+      "source": "392b871c58672995",
+      "target": "c8c7f049c4b994c5",
+      "type": "consumed_by",
+      "label": "Consumed By",
+      "metadata": {
+        "relationship": "consumed_by",
+        "sourceUrn": "urn:proto:event:demo.showcase/order-placed@v1.0.0",
+        "targetUrn": "urn:proto:agent:demo.showcase/notification-agent@v1.0.0",
+        "sourcePath": "artifacts/catalogs/showcase/order-placed-event.json",
+        "targetPath": null
+      }
+    }
+  ],
+  "metadata": {
+    "workspace": "/Users/d/portfolio/OSSP-AGI",
+    "inputs": [
+      "artifacts/catalogs/showcase/order-api.json",
+      "artifacts/catalogs/showcase/order-fulfillment-workflow.json",
+      "artifacts/catalogs/showcase/order-placed-event.json"
+    ],
+    "counts": {
+      "manifests": 3,
+      "nodes": 7,
+      "edges": 10
+    },
+    "filters": null,
+    "stats": {
+      "discarded": {
+        "nodes": 0
+      },
+      "externalNodes": 4,
+      "relationshipsProcessed": 10
+    }
+  }
+}

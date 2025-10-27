@@ -5,6 +5,7 @@ import { TabPanel } from './components/TabPanel.jsx';
 import { HealthTab } from './components/HealthTab.jsx';
 import { ManifestsTab } from './components/ManifestsTab.jsx';
 import { ValidationTab, GraphTab } from './components/PlaceholderTab.jsx';
+import { GovernanceTab } from './components/GovernanceTab.jsx';
 import { SemanticDebugPanel } from './components/SemanticDebugPanel.jsx';
 import { InspectionOverlay } from './components/InspectionOverlay.jsx';
 import { SemanticRegistryProvider, useSemanticRegistry } from './contexts/SemanticRegistry.jsx';
@@ -31,12 +32,14 @@ function AppInner() {
   const [manifestsData, setManifestsData] = useState(null);
   const [validationData, setValidationData] = useState(null);
   const [graphData, setGraphData] = useState(null);
+  const [governanceData, setGovernanceData] = useState(null);
 
   const [loading, setLoading] = useState({
     health: true,
     manifests: true,
     validation: false,
     graph: false,
+    governance: false,
   });
 
   const [errors, setErrors] = useState({
@@ -44,6 +47,7 @@ function AppInner() {
     manifests: null,
     validation: null,
     graph: null,
+    governance: null,
   });
 
   // Fetch health and manifests data on mount
@@ -56,6 +60,8 @@ function AppInner() {
   useEffect(() => {
     if (activeTab === 'validation' && !validationData && !loading.validation) {
       fetchValidation();
+    } else if (activeTab === 'governance' && !governanceData && !loading.governance) {
+      fetchGovernance();
     } else if (activeTab === 'graph' && !graphData && !loading.graph) {
       fetchGraph();
     }
@@ -177,10 +183,30 @@ function AppInner() {
     }
   };
 
+  const fetchGovernance = async () => {
+    try {
+      setLoading((prev) => ({ ...prev, governance: true }));
+      setErrors((prev) => ({ ...prev, governance: null }));
+
+      const data = await api.getGovernance();
+      setGovernanceData(data);
+    } catch (error) {
+      setErrors((prev) => ({ ...prev, governance: error }));
+      console.error('Failed to fetch governance:', error);
+    } finally {
+      setLoading((prev) => ({ ...prev, governance: false }));
+    }
+  };
+
   const tabs = [
     { id: 'health', label: 'Health', count: healthData ? 1 : undefined },
     { id: 'manifests', label: 'Manifests', count: manifestsData?.length || 0 },
     { id: 'validation', label: 'Validation' },
+    {
+      id: 'governance',
+      label: 'Governance',
+      count: governanceData ? governanceData.summary?.total || 0 : undefined
+    },
     { id: 'graph', label: 'Graph' },
   ];
 
@@ -221,6 +247,15 @@ function AppInner() {
         error={errors.validation}
       >
         <ValidationTab data={validationData} />
+      </TabPanel>
+
+      <TabPanel
+        tabId="governance"
+        active={activeTab === 'governance'}
+        loading={loading.governance}
+        error={errors.governance}
+      >
+        <GovernanceTab data={governanceData} />
       </TabPanel>
 
       <TabPanel
