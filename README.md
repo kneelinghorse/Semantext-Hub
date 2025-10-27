@@ -9,7 +9,7 @@ OSSP-AGI is a secure-by-default, local-first workbench for discovering, validati
 - **Explore catalogs** through the local viewer’s catalog + validation tabs (governance UI surfaces stay disabled until real data ships).
 - **Document outcomes** using the governance generator library and curated artifacts inside `artifacts/` (no placeholder TODO scaffolds).
 
-## 🛡️ Sprint 21 Hardened Defaults
+## 🛡️ Hardened Defaults
 
 - **Registry API key required** – services abort when `REGISTRY_API_KEY` is missing or empty.
 - **IAM delegation enforced** – `OSSP_IAM_POLICY` (or the default policy path) must resolve to an explicit policy; everything else fails closed with `403` and is logged.
@@ -46,6 +46,10 @@ npm run cli -- ui
 ```
 
 Open `http://localhost:3456` to inspect manifests, catalog graphs, and validation status. Agent/workflow orchestration surfaces intentionally respond with `501` to keep the story truthful until future missions re-enable them.
+
+## 🎬 Demo Showcase Walkthrough
+
+Recreate the curated story with the reproducible guide in [`docs/demos/showcase.md`](docs/demos/showcase.md). Pair it with the narration outline in [`docs/demos/showcase-script.md`](docs/demos/showcase-script.md) when recording or presenting the flow.
 
 ## 📦 Supported Import Sources
 
@@ -216,7 +220,7 @@ npm test -- tests/integration/agent-full-suite.test.js
 
 ## 🔒 Security Setup (Required)
 
-**Starting with Sprint 21**, OSSP-AGI enforces **secure-by-default** behavior. Services will not start without proper configuration.
+OSSP-AGI enforces **secure-by-default** behavior. Services will not start without proper configuration.
 
 ### Registry API Key (Required)
 

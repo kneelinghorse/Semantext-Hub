@@ -1,5 +1,14 @@
 # Change Log
 
+## 2025-10-27 – Sprint 23 Demo Story Locked
+
+**Mission B23.3**: Capture a truthful, reproducible walkthrough for the curated order-fulfillment showcase.
+
+- **Guided Walkthrough**: [`docs/demos/showcase.md`](demos/showcase.md) now documents exact commands, expected console output, guardrail warnings, and troubleshooting notes for the demo pipeline.
+- **Narration Outline**: Added [`docs/demos/showcase-script.md`](demos/showcase-script.md) to script a 5–7 minute presentation of the showcase story.
+- **Visual Asset**: Committed `docs/demos/assets/showcase-pipeline.png` for decks and documentation previews.
+- **Surface Entry Point**: `README.md` links directly to the walkthrough so newcomers discover the demo path without digging.
+
 ## 2025-10-26 – Sprint 22 Complete: Honest Telemetry & Storytelling
 
 **Sprint Goal**: Ensure every metric, gate, and narrative reflects live data—no seeded placeholders, no stale logs.
