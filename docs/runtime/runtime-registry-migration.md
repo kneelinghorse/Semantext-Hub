@@ -88,13 +88,22 @@ GET /health
   "registry": {
     "driver": "sqlite",
     "wal": true,
+    "journal_mode": "wal",
     "schema_version": 1,
-    "records": 42
+    "expected_schema_version": 1,
+    "records": 42,
+    "disk": {
+      "freeMegabytes": 1024,
+      "thresholdBytes": 268435456,
+      "healthy": true
+    }
   },
   "rateLimit": {
     "windowMs": 60000,
     "max": 1000
-  }
+  },
+  "warnings": [],
+  "errors": []
 }
 ```
 

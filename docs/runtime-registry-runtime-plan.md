@@ -480,7 +480,14 @@ Opens a SQLite database connection with WAL mode enabled.
 
 Returns database health metadata.
 
-**Returns:** Object with `driver`, `wal`, `path`, `schemaVersion`.
+**Returns:** Object with registry health metrics:
+- `driver` – storage backend identifier (`sqlite`).
+- `wal` – boolean indicating whether WAL mode is active.
+- `journalMode` – SQLite journal_mode string.
+- `schemaVersion` / `expectedSchemaVersion` – current vs. expected schema.
+- `disk` – optional `{ path, freeBytes, freeMegabytes, thresholdBytes, healthy }`.
+- `warnings` / `errors` – arrays capturing degradations or critical failures.
+- `status` – derived summary (`ok`, `warn`, `critical`).
 
 ## OpenAPI Specification Equality
 
@@ -610,4 +617,3 @@ SELECT * FROM capabilities WHERE urn = 'urn:agent:...';
 **Delivered:** 2025-10-23  
 **Mission ID:** IM-01A-20251101  
 **Status:** Complete
-

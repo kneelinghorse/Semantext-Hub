@@ -180,6 +180,23 @@ export async function createServer(options = {}) {
     };
   }
   const db = await openDb(registryConfig);
+  const healthConfig = registryConfig.health || {};
+  const candidateMinFree = Number(healthConfig.minFreeBytes);
+  const minFreeBytes =
+    Number.isFinite(candidateMinFree) && candidateMinFree >= 0
+      ? candidateMinFree
+      : undefined;
+  const startupHealth = await getHealth(db, { minFreeBytes });
+  if (startupHealth.errors.length > 0) {
+    throw new Error(
+      `Registry startup health check failed: ${startupHealth.errors.join('; ')}`,
+    );
+  }
+  if (startupHealth.warnings.length > 0) {
+    for (const warning of startupHealth.warnings) {
+      console.warn(`[registry] Startup health warning: ${warning}`);
+    }
+  }
 
   const rateLimitConfigFromFile = await loadRateLimitConfig(rateLimitConfigPath);
   const rateLimitConfig = {
@@ -210,6 +227,7 @@ export async function createServer(options = {}) {
   app.set('rateLimiter', limiter);
   app.set('rateLimitConfig', limiterConfig);
   app.set('rateLimitConfigRaw', rateLimitConfigFromFile || {});
+  app.set('healthConfig', { minFreeBytes: minFreeBytes ?? null });
   app.set('provenanceVerifier', provenanceVerifier);
   app.set('provenanceRequired', requireProvenance !== false);
   app.set('registryApiKey', resolvedApiKey);
@@ -261,16 +279,26 @@ export async function createServer(options = {}) {
 
   app.get('/health', async (request, response, next) => {
     try {
-      const health = await getHealth(db);
+      const health = await getHealth(db, {
+        minFreeBytes: app.get('healthConfig')?.minFreeBytes ?? undefined,
+      });
       const count = (await db.get("SELECT COUNT(*) as count FROM manifests"))?.count || 0;
+      const status =
+        health.errors.length > 0 ? 'error' : health.warnings.length > 0 ? 'warn' : 'ok';
       response.json({
-        status: 'ok',
+        status,
         registry: {
           driver: health.driver,
           wal: health.wal,
+          journal_mode: health.journalMode,
           schema_version: health.schemaVersion,
+          expected_schema_version: health.expectedSchemaVersion,
+          path: health.path,
+          disk: health.disk,
           records: count,
         },
+        warnings: health.warnings,
+        errors: health.errors,
         rateLimit: limiterConfig,
       });
     } catch (error) {

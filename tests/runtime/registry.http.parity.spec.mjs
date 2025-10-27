@@ -120,16 +120,23 @@ describe('Runtime Registry HTTP Parity', () => {
         .expect(200)
         .expect('Content-Type', /json/);
 
-      expect(response.body).toEqual({
-        status: 'ok',
-        registry: expect.objectContaining({
-          driver: 'sqlite',
-          wal: expect.any(Boolean),
-          schema_version: expect.any(Number),
-          records: expect.any(Number),
+      expect(response.body).toEqual(
+        expect.objectContaining({
+          status: expect.stringMatching(/^(ok|warn|error)$/),
+          registry: expect.objectContaining({
+            driver: 'sqlite',
+            wal: expect.any(Boolean),
+            journal_mode: expect.anything(),
+            schema_version: expect.any(Number),
+            expected_schema_version: expect.any(Number),
+            records: expect.any(Number),
+          }),
+          warnings: expect.any(Array),
+          errors: expect.any(Array),
+          rateLimit: expect.any(Object),
         }),
-        rateLimit: expect.any(Object),
-      });
+      );
+      expect(response.body.errors).toHaveLength(0);
     });
 
     it('should report correct record count', async () => {
