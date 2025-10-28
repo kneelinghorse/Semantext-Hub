@@ -106,6 +106,16 @@ const tools = [
       try {
         const importer = new OpenAPIImporter({ generateURNs: true, inferPatterns: true });
         const manifest = await importer.import(url);
+
+        if (manifest?.metadata?.status === 'error') {
+          return {
+            success: false,
+            error: manifest.metadata?.error?.message || 'Discovery failed',
+            url,
+            manifest
+          };
+        }
+
         if (manifest) {
           return {
             success: true,
@@ -113,6 +123,7 @@ const tools = [
             message: `Successfully discovered API from ${url}`
           };
         }
+
         return {
           success: false,
           error: 'Discovery failed - no manifest returned',
@@ -144,6 +155,16 @@ const tools = [
         const fullPath = safe(file_path);
         const importer = new OpenAPIImporter({ generateURNs: true, inferPatterns: true });
         const manifest = await importer.import(fullPath);
+
+        if (manifest?.metadata?.status === 'error') {
+          return {
+            success: false,
+            error: manifest.metadata?.error?.message || 'Discovery failed',
+            file_path,
+            manifest
+          };
+        }
+
         if (manifest) {
           return {
             success: true,
@@ -151,6 +172,7 @@ const tools = [
             message: `Successfully discovered API from local file ${file_path}`
           };
         }
+
         return {
           success: false,
           error: 'Discovery failed - no manifest returned',

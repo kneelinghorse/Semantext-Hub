@@ -21,6 +21,7 @@ export class PerformanceMetrics extends EventEmitter {
   constructor(options = {}) {
     super();
     this.enableLogging = options.enableLogging !== false;
+    this.memoryMonitorInterval = options.memoryMonitorInterval ?? 5000;
     this.metrics = {
       requests: {
         total: 0,
@@ -68,7 +69,11 @@ export class PerformanceMetrics extends EventEmitter {
     };
     
     this.startTime = Date.now();
-    this.updateInterval = setInterval(() => this.updateMemoryMetrics(), 5000);
+    if (this.memoryMonitorInterval > 0) {
+      this.updateInterval = setInterval(() => this.updateMemoryMetrics(), this.memoryMonitorInterval);
+    } else {
+      this.updateInterval = null;
+    }
   }
 
   /**
@@ -239,6 +244,7 @@ export class PerformanceMetrics extends EventEmitter {
   destroy() {
     if (this.updateInterval) {
       clearInterval(this.updateInterval);
+      this.updateInterval = null;
     }
   }
 }
@@ -251,15 +257,20 @@ export class OptimizedURNResolver {
     this.cacheTtl = options.cacheTtl || 300000; // 5 minutes
     this.maxCacheSize = options.maxCacheSize || 1000;
     this.enableLogging = options.enableLogging !== false;
+    this.baseResolverOptions = this._buildBaseResolverOptions(options);
     
     // Enhanced caching with TTL and LRU eviction
     this.cache = new Map();
     this.cacheTimestamps = new Map();
     this.cacheAccessOrder = new Map();
     this.accessCounter = 0;
+    this.baseResolverPromise = null;
     
     // Performance metrics
-    this.metrics = new PerformanceMetrics({ enableLogging: this.enableLogging });
+    this.metrics = new PerformanceMetrics({ 
+      enableLogging: this.enableLogging,
+      memoryMonitorInterval: options.memoryMonitorInterval
+    });
     
     // Pre-warm cache with common URNs
     this.preWarmCache();
@@ -275,16 +286,42 @@ export class OptimizedURNResolver {
       'urn:agent:system:validation@1.0.0'
     ];
     
-    commonURNs.forEach(urn => {
-      this.cache.set(urn, {
-        metadata: { urn, name: urn.split(':')[3], version: '1.0.0' },
-        capabilities: {},
-        cached: true,
-        resolvedAt: new Date().toISOString()
+    for (const urn of commonURNs) {
+      this.resolveAgentUrn(urn).catch(error => {
+        if (this.enableLogging) {
+          console.debug(`[OptimizedURNResolver] Pre-warm failed for ${urn}: ${error.message}`);
+        }
       });
-      this.cacheTimestamps.set(urn, Date.now());
-      this.cacheAccessOrder.set(urn, this.accessCounter++);
-    });
+    }
+  }
+
+  /**
+   * Build configuration for the underlying resolver
+   * @param {Object} options
+   * @returns {Object}
+   */
+  _buildBaseResolverOptions(options = {}) {
+    const resolverOptions = { enableLogging: options.enableLogging !== false };
+    const passthrough = ['cacheTtl', 'maxRetries', 'retryDelay', 'retryBackoff'];
+    for (const key of passthrough) {
+      if (options[key] !== undefined) {
+        resolverOptions[key] = options[key];
+      }
+    }
+    return resolverOptions;
+  }
+
+  /**
+   * Lazily load the full URN resolver used for capability enrichment
+   * @returns {Promise<import('../../runtime/urn-resolver.js').URNResolver>}
+   */
+  async _getBaseResolver() {
+    if (!this.baseResolverPromise) {
+      this.baseResolverPromise = import('../../runtime/urn-resolver.js').then(({ createURNResolver }) =>
+        createURNResolver(this.baseResolverOptions)
+      );
+    }
+    return this.baseResolverPromise;
   }
 
   /**
@@ -400,13 +437,11 @@ export class OptimizedURNResolver {
    * @returns {Promise<Object>} Resolution result
    */
   async resolveWithRetry(urn) {
-    // Simplified resolution for performance optimization
-    // In a real implementation, this would call the actual URN resolver
+    const resolver = await this._getBaseResolver();
+    const result = await resolver.resolveAgentUrn(urn, { useCache: false });
     return {
-      metadata: { urn, name: urn.split(':')[3] || 'unknown', version: '1.0.0' },
-      capabilities: {},
-      cached: false,
-      resolvedAt: new Date().toISOString()
+      ...result,
+      cached: false
     };
   }
 
