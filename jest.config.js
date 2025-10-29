@@ -13,17 +13,27 @@ const BASE_IGNORE_PATTERNS = [
   'cli/commands/dist/',
 ];
 
-// Mission S19.2: Focus on critical surfaces only
 const COVERAGE_TARGETS = [
-  // Critical surfaces explicitly tested in this mission
-  '<rootDir>/packages/runtime/viewer/routes/**/*.{js,mjs}',
-  '<rootDir>/packages/runtime/registry/**/*.{js,mjs}',
-  '<rootDir>/app/ui/authoring/**/*.{js,mjs}',
-  '<rootDir>/app/libs/signing/**/*.{js,mjs}',
-  '<rootDir>/tests/api/helpers/**/*.{js,mjs}',
+  // Mission GTC.1: broaden coverage to all critical runtime + CLI paths
+  '<rootDir>/app/cli/**/*.{js,mjs,cjs}',
+  '<rootDir>/app/services/**/*.{js,mjs,cjs}',
+  '<rootDir>/app/adapters/**/*.{js,mjs,cjs}',
+  '<rootDir>/app/importers/**/*.{js,mjs,cjs}',
+  '<rootDir>/packages/runtime/cli/**/*.{js,mjs,cjs}',
+  '<rootDir>/packages/runtime/services/**/*.{js,mjs,cjs}',
+  '<rootDir>/packages/runtime/runtime/**/*.{js,mjs,cjs}',
+  '<rootDir>/packages/runtime/workflow/**/*.{js,mjs,cjs}',
+  '<rootDir>/packages/runtime/importers/**/*.{js,mjs,cjs}',
+  '<rootDir>/packages/runtime/adapters/**/*.{js,mjs,cjs}',
+  '<rootDir>/packages/runtime/viewer/routes/**/*.{js,mjs,cjs}',
+  '<rootDir>/packages/runtime/registry/**/*.{js,mjs,cjs}',
+  '<rootDir>/app/ui/authoring/**/*.{js,mjs,cjs}',
+  '<rootDir>/app/libs/signing/**/*.{js,mjs,cjs}',
+  '<rootDir>/tests/api/helpers/**/*.{js,mjs,cjs}',
 ];
 
 const COVERAGE_EXCLUDES = [
+  // Non production code paths + generated artifacts that should not count toward coverage
   '!**/*.d.ts',
   '!**/*.test.*',
   '!**/*.spec.*',
@@ -39,10 +49,10 @@ const COVERAGE_EXCLUDES = [
   '!**/examples/**',
   '!**/templates/**',
   '!**/scripts/**',
-  '!**/tests/**',
   '!**/seeds/**',
   '!**/dist/**',
   '!**/build/**',
+  // Explicit exclusions for startup glue + pre-built web bundles
   '!<rootDir>/packages/runtime/registry/start.mjs',
   '!<rootDir>/app/ui/authoring/web/**',
 ];

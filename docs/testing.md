@@ -25,6 +25,25 @@ npm --prefix app test tests/e2e/openapi-workflow.test.js
 - Keep governance generation under 100 ms for 100 protocols.
 - Ensure new features land with focused unit tests and, when applicable, workflow tests.
 
+## Coverage Reporting
+Mission GTC.1 expands Jest `collectCoverageFrom` targets beyond the original 5 directories. The coverage configuration in `jest.config.js` now tracks:
+- `app/cli/**/*.{js,mjs,cjs}` and `app/services/**/*.{js,mjs,cjs}` for all CLI entry points and supporting services.
+- `app/adapters/**/*.{js,mjs,cjs}` and `app/importers/**/*.{js,mjs,cjs}` to follow runtime integrations owned by the app package.
+- `packages/runtime/{cli,services,runtime,workflow,importers,adapters}/**/*.{js,mjs,cjs}` to measure coverage across runtime orchestration, pipelines, and adapters.
+- Existing mission surfaces such as `packages/runtime/viewer/routes`, `packages/runtime/registry`, `app/ui/authoring`, `app/libs/signing`, and shared test helpers.
+
+Generated assets and scaffolding remain excluded to keep the signal focused:
+- `examples/`, `templates/`, `scripts/`, `seeds/`, `dist/`, `build/`, and coverage/artifact directories are tooling outputs.
+- `__tests__`, `__mocks__`, `__fixtures__`, and `__generated__` directories contain harness code or generated data.
+- `packages/runtime/registry/start.mjs` is a bootstrap shim duplicated by CLI flows.
+- `app/ui/authoring/web/**` ships prebuilt frontend bundles that are not instrumented.
+
+Run coverage locally with:
+```bash
+npm test -- --coverage --maxWorkers=2
+```
+Coverage may dip while teams backfill tests for the newly tracked surfaces; that is expected and informs follow-up missions.
+
 ## Troubleshooting
 - Use `--runInBand` for verbose output on flaky suites.
 - Clear Jest cache with `npm --prefix app test -- --clearCache` if snapshot mismatches persist.
