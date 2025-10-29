@@ -670,4 +670,67 @@ describe('OpenAPIImporter', () => {
       expect(manifest.provenance.spec_hash).toMatch(/^[a-f0-9]{64}$/);
     });
   });
+
+  describe('Strict mode and metadata', () => {
+    test('throws when strictMode is enabled and parsing fails', async () => {
+      const error = new Error('Invalid spec');
+      SwaggerParser.dereference.mockRejectedValue(error);
+      SwaggerParser.parse.mockRejectedValue(new Error('Parse fallback failed'));
+      const strictImporter = new OpenAPIImporter({ strictMode: true });
+
+      await expect(strictImporter.import('invalid-spec.yaml')).rejects.toThrow(
+        /Failed to parse OpenAPI spec/,
+      );
+      expect(SwaggerParser.parse).not.toHaveBeenCalled();
+    });
+
+    test('records input source metadata for URLs, file paths, and objects', async () => {
+      const spec = {
+        openapi: '3.0.0',
+        info: { title: 'Meta API', version: '1.0.0' },
+        paths: {
+          '/users': {
+            get: {
+              responses: {
+                '200': { description: 'OK' }
+              }
+            }
+          }
+        }
+      };
+
+      const createStubImporter = () => {
+        const instance = new OpenAPIImporter();
+        jest.spyOn(instance, '_parseSpec').mockResolvedValue(spec);
+        jest.spyOn(instance, '_validateOpenAPIVersion').mockImplementation(() => {});
+        jest.spyOn(instance, '_convertToManifest').mockResolvedValue({ service: { name: 'Meta API' } });
+        return instance;
+      };
+
+      const manifestFromUrl = await createStubImporter().import('https://api.example.com/openapi.json');
+      expect(manifestFromUrl.metadata).toBeDefined();
+      expect(manifestFromUrl.metadata).toMatchObject({
+        status: 'draft',
+        source: expect.objectContaining({
+          input_type: 'url',
+          reference: 'https://api.example.com/openapi.json',
+          original_url: 'https://api.example.com/openapi.json'
+        })
+      });
+
+      const manifestFromPath = await createStubImporter().import('./local-spec.yaml');
+      expect(manifestFromPath.metadata).toBeDefined();
+      expect(manifestFromPath.metadata.source).toMatchObject({
+        input_type: 'string'
+      });
+      expect(manifestFromPath.metadata.source.original_url).toBeUndefined();
+
+      const manifestFromObject = await createStubImporter().import(spec);
+      expect(manifestFromObject.metadata).toBeDefined();
+      expect(manifestFromObject.metadata.source).toMatchObject({
+        input_type: 'object'
+      });
+      expect(manifestFromObject.metadata.source.reference).toBeUndefined();
+    });
+  });
 });

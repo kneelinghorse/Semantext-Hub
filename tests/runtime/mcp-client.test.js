@@ -172,6 +172,17 @@ describe('MCPClient', () => {
       expect(badClient.isConnected()).toBe(false);
     });
 
+    test('should reject open when already connected', async () => {
+      const connectedClient = new MCPClient({
+        endpoint: 'node',
+        enableLogging: false
+      });
+      connectedClient.state.connected = true;
+
+      await expect(connectedClient.open()).rejects.toThrow(MCPConnectionError);
+      expect(connectedClient.isConnected()).toBe(true);
+    });
+
     test('should prevent operations when not connected', async () => {
       await expect(client.listTools()).rejects.toThrow(MCPConnectionError);
       await expect(client.getToolSchema('test')).rejects.toThrow(MCPConnectionError);
