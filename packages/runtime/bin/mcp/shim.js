@@ -9,6 +9,50 @@ import { EventEmitter } from 'events';
 import readline from 'readline';
 
 /**
+ * Attempt to recover the request id from malformed JSON input.
+ * This is a best-effort extraction so we only use the recovered id
+ * when it can be interpreted as a valid JSON-RPC identifier.
+ *
+ * @param {string} rawLine - The raw line read from stdin
+ * @returns {string|number|null|undefined} The recovered id or undefined if it could not be extracted
+ */
+function extractRequestId(rawLine) {
+  if (typeof rawLine !== 'string') {
+    return undefined;
+  }
+
+  const doubleQuoteMatch = rawLine.match(/"id"\s*:\s*(null|"((?:\\.|[^"\\])*)"|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)/);
+  const singleQuoteMatch = rawLine.match(/'id'\s*:\s*(null|'((?:\\.|[^'\\])*)'|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)/);
+  const match = doubleQuoteMatch ?? singleQuoteMatch;
+
+  if (!match) {
+    return undefined;
+  }
+
+  const rawValue = match[1];
+
+  if (rawValue === 'null') {
+    return null;
+  }
+
+  if (rawValue.startsWith('"')) {
+    try {
+      return JSON.parse(rawValue);
+    } catch {
+      return undefined;
+    }
+  }
+
+  if (rawValue.startsWith("'")) {
+    const inner = rawValue.slice(1, -1).replace(/\\'/g, "'");
+    return inner;
+  }
+
+  const asNumber = Number(rawValue);
+  return Number.isFinite(asNumber) ? asNumber : undefined;
+}
+
+/**
  * Creates a stdio-based MCP server
  * @param {Object} config - Server configuration
  * @param {string} config.name - Server name
@@ -50,15 +94,38 @@ export function createStdioServer(config) {
           return;
         }
         
+        let request;
         try {
-          const request = JSON.parse(line);
-          
-          // Handle notifications (no id field means it's a notification)
-          if (request.id === undefined || request.id === null) {
-            // Don't respond to notifications
-            return;
+          request = JSON.parse(line);
+        } catch (parseError) {
+          const recoveredId = extractRequestId(line);
+          logger?.error('Error parsing request', { error: parseError, requestId: recoveredId });
+          const errorResponse = {
+            jsonrpc: '2.0',
+            error: {
+              code: -32700,
+              message: parseError.message
+            },
+            id: recoveredId !== undefined ? recoveredId : null
+          };
+          try {
+            process.stdout.write(JSON.stringify(errorResponse) + '\n');
+          } catch (writeError) {
+            if (writeError.code === 'EPIPE') {
+              process.exit(0);
+            }
+            throw writeError;
           }
-          
+          return;
+        }
+        
+        // Handle notifications (no id field means it's a notification)
+        if (request.id === undefined || request.id === null) {
+          // Don't respond to notifications
+          return;
+        }
+        
+        try {
           const response = await this.handleRequest(request);
           if (response) {
             try {
@@ -72,14 +139,14 @@ export function createStdioServer(config) {
             }
           }
         } catch (error) {
-          logger?.error('Error handling request', { error });
+          logger?.error('Error handling request', { error, requestId: request.id });
           const errorResponse = {
             jsonrpc: '2.0',
             error: {
               code: -32603,
               message: error.message
             },
-            id: null
+            id: request.id ?? null
           };
           try {
             process.stdout.write(JSON.stringify(errorResponse) + '\n');
@@ -274,3 +341,7 @@ export function createStdioServer(config) {
   
   return new MCPServer();
 }
+
+export const __testUtils = {
+  extractRequestId,
+};
