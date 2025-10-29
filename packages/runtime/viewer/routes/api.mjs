@@ -445,7 +445,7 @@ function detectPIISignal(manifest) {
   }
 }
 
-function buildGovernanceSummary(records) {
+export function buildGovernanceSummary(records) {
   const summary = {
     total: records.length,
     withOwner: 0,
@@ -490,7 +490,7 @@ function buildGovernanceSummary(records) {
   return summary;
 }
 
-async function readManifestFile(artifactsDir, manifestName) {
+export async function readManifestFile(artifactsDir, manifestName) {
   const filePath = safeJoin(artifactsDir, manifestName);
   const content = await fs.readFile(filePath, 'utf-8');
   return JSON.parse(content);
@@ -971,3 +971,13 @@ export function setupApiRoutes(app, artifactsDir) {
     }
   });
 }
+
+export const __test__ = {
+  collectGovernanceManifestPaths,
+  walkManifestDir,
+  loadGovernanceRecords,
+  extractGovernanceRecord,
+  buildGovernanceSummary,
+  detectPIISignal,
+  readManifestFile,
+};

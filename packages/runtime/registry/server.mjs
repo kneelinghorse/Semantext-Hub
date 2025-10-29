@@ -1,6 +1,6 @@
 import express from 'express';
 import rateLimit from 'express-rate-limit';
-import { openDb, getHealth } from './db.mjs';
+import { openDb, getHealth, ensureSchema, DEFAULT_SCHEMA_PATH } from './db.mjs';
 import { upsertManifest, getManifest, queryByCapability, resolve, listManifests } from './repository.mjs';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
@@ -148,6 +148,8 @@ export async function createServer(options = {}) {
     provenanceAlgorithm = 'Ed25519',
     provenanceKeyId = null,
     requireProvenance = true,
+    schemaPath,
+    autoMigrate = true,
   } = options;
 
   const envApiKey =
@@ -180,6 +182,27 @@ export async function createServer(options = {}) {
     };
   }
   const db = await openDb(registryConfig);
+
+  if (autoMigrate !== false) {
+    const migrationSchemaPath =
+      schemaPath ??
+      registryConfig.schemaPath ??
+      DEFAULT_SCHEMA_PATH;
+
+    try {
+      const { applied, version } = await ensureSchema(db, {
+        schemaPath: migrationSchemaPath,
+      });
+      if (applied) {
+        console.log(
+          `[registry] Applied schema version ${version} from ${migrationSchemaPath}`,
+        );
+      }
+    } catch (error) {
+      throw new Error(`Registry schema migration failed: ${error.message}`);
+    }
+  }
+
   const healthConfig = registryConfig.health || {};
   const candidateMinFree = Number(healthConfig.minFreeBytes);
   const minFreeBytes =

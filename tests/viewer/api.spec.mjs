@@ -6,13 +6,16 @@
  * Ensures stable JSON shapes, error handling, and chunking behavior
  */
 
-import { describe, expect, it, beforeAll, jest } from '@jest/globals';
+import { describe, expect, it, beforeAll, beforeEach, afterEach, jest } from '@jest/globals';
 import request from 'supertest';
 import express from 'express';
-import { setupApiRoutes } from '../../packages/runtime/viewer/routes/api.mjs';
+import * as viewerApi from '../../packages/runtime/viewer/routes/api.mjs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs/promises';
+import os from 'os';
+
+const { setupApiRoutes, __test__ } = viewerApi;
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const FIXTURES_DIR = path.join(__dirname, '../fixtures/manifests');
@@ -220,6 +223,7 @@ describe('Viewer API - /api/validate', () => {
       expect(response.body.summary.total).toBe(2);
       expect(response.body.manifests).toHaveLength(2);
     });
+
   });
 
   describe('Validation warnings vs errors', () => {
@@ -496,6 +500,15 @@ describe('Viewer API - /api/graph', () => {
 
       expect(response.status).toBe(400);
     });
+
+    it('rejects manifests filtered out by safety checks', async () => {
+      const response = await request(app)
+        .post('/api/graph')
+        .send({ manifests: ['../outside.json'] });
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toContain('No valid manifests');
+    });
   });
 
   describe('Graph chunk retrieval', () => {
@@ -681,6 +694,101 @@ describe('Viewer API - /api/graph', () => {
       expect(response.body.index.depth).toBeGreaterThanOrEqual(1);
       expect(response.body.index.depth).toBeLessThanOrEqual(6); // Capped at 6
     });
+  });
+});
+
+describe('Governance utilities', () => {
+  const { detectPIISignal, buildGovernanceSummary } = __test__;
+
+  it('detectPIISignal returns false when serialization fails', () => {
+    const circular = {};
+    circular.self = circular;
+    expect(detectPIISignal(circular)).toBe(false);
+  });
+
+  it('buildGovernanceSummary counts PII records and alerts', () => {
+    const summary = buildGovernanceSummary([
+      {
+        urn: 'urn:proto:test:one',
+        kind: null,
+        status: null,
+        classification: null,
+        owner: null,
+        pii: true,
+        issues: ['missing_owner']
+      },
+      {
+        urn: 'urn:proto:test:two',
+        kind: 'api',
+        status: 'active',
+        classification: 'internal',
+        owner: 'team.demo',
+        pii: false,
+        issues: []
+      }
+    ]);
+
+    expect(summary.pii).toBe(1);
+    expect(summary.alerts).toHaveLength(1);
+    expect(summary.missingOwner).toBe(1);
+  });
+});
+
+describe('Governance helpers', () => {
+  const { collectGovernanceManifestPaths, loadGovernanceRecords, buildGovernanceSummary } = __test__;
+  let workspace;
+
+  beforeEach(async () => {
+    workspace = await fs.mkdtemp(path.join(os.tmpdir(), 'governance-helpers-'));
+  });
+
+  afterEach(async () => {
+    await fs.rm(workspace, { recursive: true, force: true });
+  });
+
+  it('falls back to scanning root when scoped directories are empty', async () => {
+    const paths = await collectGovernanceManifestPaths(workspace);
+    expect(Array.isArray(paths)).toBe(true);
+    expect(paths).toHaveLength(0);
+  });
+
+  it('collects nested manifests and produces governance summaries', async () => {
+    const nestedDir = path.join(workspace, 'catalogs', 'showcase');
+    await fs.mkdir(nestedDir, { recursive: true });
+
+    const manifest = {
+      manifest: {
+        urn: 'urn:proto:api:nested.demo',
+        protocol: {
+          urn: 'urn:proto:api:nested.demo',
+          kind: 'api',
+          name: 'Nested Demo'
+        },
+        metadata: {
+          tags: ['PII'],
+          governance: {
+            owner: 'team.nested',
+            visibility: 'internal',
+            policy: {
+              classification: 'PII'
+            }
+          }
+        }
+      }
+    };
+
+    const manifestPath = path.join(nestedDir, 'nested-demo.json');
+    await fs.writeFile(manifestPath, JSON.stringify(manifest, null, 2));
+
+    const manifestPaths = await collectGovernanceManifestPaths(workspace);
+    expect(manifestPaths.some((p) => p.endsWith('nested-demo.json'))).toBe(true);
+
+    const records = await loadGovernanceRecords(manifestPaths, workspace);
+    const summary = buildGovernanceSummary(records);
+
+    expect(summary.total).toBe(1);
+    expect(summary.pii).toBe(1);
+    expect(summary.owners['team.nested']).toBe(1);
   });
 });
 

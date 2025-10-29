@@ -21,7 +21,8 @@ npm --prefix app test tests/e2e/openapi-workflow.test.js
 ```
 
 ## Quality Gates
-- Maintain ≥90% coverage for critical modules (protocol graph, validators, overrides).
+- Enforced coverage thresholds in CI: global (branches ≥60%, functions ≥70%, lines ≥70%, statements ≥70%) plus critical-path minimums for `packages/runtime/viewer/routes/api.mjs`, `packages/runtime/registry/server.mjs`, and `app/ui/authoring/server.mjs`.
+- `npm run test:ci` runs with coverage and fails the build if these thresholds regress; `npm run verify:coverage` can be used locally to inspect stored coverage summaries.
 - Keep governance generation under 100 ms for 100 protocols.
 - Ensure new features land with focused unit tests and, when applicable, workflow tests.
 
@@ -37,12 +38,20 @@ Generated assets and scaffolding remain excluded to keep the signal focused:
 - `__tests__`, `__mocks__`, `__fixtures__`, and `__generated__` directories contain harness code or generated data.
 - `packages/runtime/registry/start.mjs` is a bootstrap shim duplicated by CLI flows.
 - `app/ui/authoring/web/**` ships prebuilt frontend bundles that are not instrumented.
+- `app/cli/**` and `packages/runtime/cli/**` entrypoints execute via spawned Node processes; coverage gates instead track the underlying services and libraries they call.
+- `packages/runtime/services/mcp-server/performance-optimizations.js` focuses on runtime tuning toggles that are exercised via dedicated perf harnesses.
 
 Run coverage locally with:
 ```bash
 npm test -- --coverage --maxWorkers=2
 ```
 Coverage may dip while teams backfill tests for the newly tracked surfaces; that is expected and informs follow-up missions.
+
+After a coverage run, validate the stored report with:
+```bash
+npm run verify:coverage
+```
+This mirrors the CI quality-gate step and prints a concise summary of any failing thresholds.
 
 ## Troubleshooting
 - Use `--runInBand` for verbose output on flaky suites.

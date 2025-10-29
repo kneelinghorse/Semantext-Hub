@@ -355,7 +355,7 @@ For detailed security policies and best practices, see [`docs/security/SECURITY_
 
 **Known Limitations**:
 - Some legacy test suites require triage (tracked in backlog)
-- Coverage thresholds are aspirational and not enforced in CI
+- Coverage thresholds now enforced in CI; regressions block merges via quality-gate checks
 
 ## 🎯 Key Features
 

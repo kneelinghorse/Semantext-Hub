@@ -178,7 +178,7 @@ describe('OpenAPI discover → review → approve workflow', () => {
     });
 
     expect(manifest).toBeTruthy();
-    expect(process.exitCode).toBeUndefined();
+    expect([undefined, 0]).toContain(process.exitCode);
     expect(runImporterMock).toHaveBeenCalledWith('openapi', PETSTORE_SPEC, expect.any(Object));
     expect(runImporterMock).toHaveBeenCalledTimes(1);
 

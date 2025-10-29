@@ -193,7 +193,6 @@ async function runParityTests() {
       {
         cwd: ROOT,
         stdio: 'inherit',
-        env: { ...process.env, JEST_SKIP_THRESHOLDS: '1' },
       }
     );
     
@@ -273,4 +272,3 @@ main().catch((err) => {
   console.error('❌ Unexpected error:', err);
   process.exit(1);
 });
-

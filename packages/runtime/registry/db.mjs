@@ -2,10 +2,14 @@ import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
 import fs from 'node:fs';
 import path from 'node:path';
-import { statfs } from 'node:fs/promises';
+import { statfs, readFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
 
 export const REGISTRY_SCHEMA_VERSION = 1;
 const DEFAULT_MIN_FREE_BYTES = 256 * 1024 * 1024; // 256 MB
+export const DEFAULT_SCHEMA_PATH = fileURLToPath(
+  new URL('../../../scripts/db/schema.sql', import.meta.url),
+);
 
 function toBigInt(value) {
   if (typeof value === 'bigint') {
@@ -52,6 +56,65 @@ export async function openDb(cfg = {}) {
     }
   }
   return db;
+}
+
+export async function ensureSchema(db, options = {}) {
+  const {
+    schemaPath = DEFAULT_SCHEMA_PATH,
+    allowMigration = true,
+  } = options;
+
+  const versionRow = await db.get("PRAGMA user_version;");
+  const currentVersion = versionRow?.user_version ?? 0;
+
+  if (currentVersion === REGISTRY_SCHEMA_VERSION || allowMigration === false) {
+    return {
+      applied: false,
+      before: currentVersion,
+      version: currentVersion,
+    };
+  }
+
+  if (!schemaPath) {
+    throw new Error(
+      `Registry schema version ${currentVersion} does not match expected ${REGISTRY_SCHEMA_VERSION}, but no schema path was provided for migration.`,
+    );
+  }
+
+  const resolvedSchemaPath = path.isAbsolute(schemaPath)
+    ? schemaPath
+    : path.resolve(process.cwd(), schemaPath);
+
+  let schemaSql;
+  try {
+    schemaSql = await readFile(resolvedSchemaPath, 'utf8');
+  } catch (error) {
+    throw new Error(
+      `Unable to read registry schema at ${resolvedSchemaPath}: ${error.message}`,
+    );
+  }
+
+  try {
+    await db.exec(schemaSql);
+  } catch (error) {
+    throw new Error(`Failed to apply registry schema: ${error.message}`);
+  }
+
+  const appliedVersionRow = await db.get("PRAGMA user_version;");
+  const appliedVersion = appliedVersionRow?.user_version ?? null;
+
+  if (appliedVersion !== REGISTRY_SCHEMA_VERSION) {
+    throw new Error(
+      `Registry schema migration expected version ${REGISTRY_SCHEMA_VERSION} but found ${appliedVersion ?? 'null'} after applying migrations.`,
+    );
+  }
+
+  return {
+    applied: true,
+    before: currentVersion,
+    version: appliedVersion,
+    schemaPath: resolvedSchemaPath,
+  };
 }
 
 export async function getHealth(db, options = {}) {
@@ -117,8 +180,6 @@ export async function getHealth(db, options = {}) {
     disk: diskInfo,
   };
 }
-
-
 
 
 
