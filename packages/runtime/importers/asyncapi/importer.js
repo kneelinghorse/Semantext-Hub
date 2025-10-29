@@ -26,6 +26,7 @@ async function getParser() {
  */
 async function importAsyncAPI(specUrlOrPath, options = {}) {
   const start = performance.now();
+  const logger = options.logger || null;
 
   // Lazy load parser (dynamic import)
   const ParserClass = await getParser();
@@ -62,6 +63,7 @@ async function importAsyncAPI(specUrlOrPath, options = {}) {
   // Extract version-agnostic data
   const info = document.info();
   const manifests = [];
+  const warnings = [];
 
   for (const channel of channelsArray) {
     try {
@@ -103,20 +105,37 @@ async function importAsyncAPI(specUrlOrPath, options = {}) {
 
       manifests.push(manifest);
     } catch (error) {
-      console.warn(`Warning: Failed to process channel ${channel.id()}: ${error.message}`);
+      const channelId =
+        channel && typeof channel.id === 'function' ? channel.id() : undefined;
+      if (logger && typeof logger.warn === 'function') {
+        logger.warn('AsyncAPI channel processing failed', {
+          channelId: channelId || null,
+          error
+        });
+      } else {
+        warnings.push(
+          `Failed to process channel ${channelId || '<unknown>'}: ${error.message}`
+        );
+      }
     }
+  }
+
+  const metadata = {
+    source_url: specUrlOrPath,
+    asyncapi_version: document.version(),
+    parse_time_ms: parseTime,
+    total_time_ms: performance.now() - start,
+    channel_count: channelsArray.length,
+    message_count: countMessages(channelsArray)
+  };
+
+  if (warnings.length > 0) {
+    metadata.warnings = warnings;
   }
 
   return {
     manifests,
-    metadata: {
-      source_url: specUrlOrPath,
-      asyncapi_version: document.version(),
-      parse_time_ms: parseTime,
-      total_time_ms: performance.now() - start,
-      channel_count: channelsArray.length,
-      message_count: countMessages(channelsArray)
-    }
+    metadata
   };
 }
 

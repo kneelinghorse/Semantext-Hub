@@ -20,6 +20,36 @@ import {
   printError
 } from '../utils/output.js';
 
+function createLoggerAdapter(logger) {
+  if (logger) {
+    const target =
+      typeof logger.child === 'function' ? logger.child('governance') : logger;
+
+    const invoke = (level, message, context) => {
+      if (typeof target[level] === 'function') {
+        target[level](message, context);
+      } else if (typeof target.log === 'function') {
+        target.log(level, message, context);
+      }
+    };
+
+    return {
+      info: (message, context) => invoke('info', message, context),
+      warn: (message, context) => invoke('warn', message, context),
+      error: (message, context) => invoke('error', message, context),
+      success: (message, context) =>
+        invoke('info', message, { ...(context || {}), outcome: 'success' })
+    };
+  }
+
+  return {
+    info: message => printInfo(message),
+    warn: message => printWarning(message),
+    error: message => printError(message),
+    success: message => printSuccess(message)
+  };
+}
+
 function resolveSections(sectionOption) {
   if (!sectionOption) {
     return ['all'];
@@ -39,7 +69,7 @@ function resolveSections(sectionOption) {
   return ['all'];
 }
 
-async function loadWorkspaceGraph(manifestDir) {
+async function loadWorkspaceGraph(manifestDir, log) {
   if (!manifestDir) {
     return {
       graph: new ProtocolGraph(),
@@ -49,7 +79,7 @@ async function loadWorkspaceGraph(manifestDir) {
 
   const exists = await fs.pathExists(manifestDir);
   if (!exists) {
-    printWarning(`Manifest directory not found: ${manifestDir}`);
+    log.warn(`Manifest directory not found: ${manifestDir}`);
     return {
       graph: new ProtocolGraph(),
       manifests: []
@@ -60,22 +90,22 @@ async function loadWorkspaceGraph(manifestDir) {
   const validManifests = entries.filter(entry => entry.manifest);
 
   if (validManifests.length === 0) {
-    printWarning(`No manifest files with URNs detected in ${manifestDir}`);
+    log.warn(`No manifest files with URNs detected in ${manifestDir}`);
     return {
       graph: new ProtocolGraph(),
       manifests: []
     };
   }
 
-  printInfo(`Loaded ${validManifests.length} manifest(s) from ${manifestDir}`);
+  log.info(`Loaded ${validManifests.length} manifest(s) from ${manifestDir}`);
 
   const { graph, stats } = buildGraph(validManifests);
 
   if (stats.duplicateURNs.length > 0) {
-    printWarning(`Duplicate URNs detected: ${stats.duplicateURNs.join(', ')}`);
+    log.warn(`Duplicate URNs detected: ${stats.duplicateURNs.join(', ')}`);
   }
   if (stats.unresolvedEdges.length > 0) {
-    printWarning(`Unresolved dependencies: ${stats.unresolvedEdges.length}`);
+    log.warn(`Unresolved dependencies: ${stats.unresolvedEdges.length}`);
   }
 
   return {
@@ -85,7 +115,11 @@ async function loadWorkspaceGraph(manifestDir) {
 }
 
 async function governanceCommand(options = {}) {
+  const log = createLoggerAdapter(options.logger);
+  const usingConsole = !options.logger;
+
   try {
+
     const cwd = process.cwd();
     const outputPath = path.resolve(options.output || 'GOVERNANCE.md');
     const manifestDir = options.manifests
@@ -101,8 +135,8 @@ async function governanceCommand(options = {}) {
       includeMetrics: options.metrics !== false
     };
 
-    printInfo('Initializing governance generator...');
-    const { graph, manifests } = await loadWorkspaceGraph(manifestDir);
+    log.info('Initializing governance generator...');
+    const { graph, manifests } = await loadWorkspaceGraph(manifestDir, log);
 
     // Try to use full GovernanceGenerator; fall back to a lightweight generator if unavailable
     try {
@@ -116,18 +150,21 @@ async function governanceCommand(options = {}) {
 
       let result;
       if (options.update) {
-        printInfo(`Updating governance documentation at ${outputPath}`);
+        log.info(`Updating governance documentation at ${outputPath}`);
         result = await generator.update(outputPath, generatorOptions);
       } else {
-        printInfo(`Generating governance documentation at ${outputPath}`);
+        log.info(`Generating governance documentation at ${outputPath}`);
         result = await generator.generateToFile(outputPath, generatorOptions);
       }
 
-      printSuccess(`GOVERNANCE.md ${options.update ? 'updated' : 'generated'} (${result.size} bytes)`);
+      log.success(
+        `GOVERNANCE.md ${options.update ? 'updated' : 'generated'} (${result.size} bytes)`,
+        { outputPath }
+      );
       return result;
     } catch (e) {
       // Lightweight fallback
-      printWarning('Full governance generator unavailable; using lightweight fallback');
+      log.warn('Full governance generator unavailable; using lightweight fallback');
 
       const summary = [];
       summary.push('# Protocol Governance');
@@ -150,12 +187,14 @@ async function governanceCommand(options = {}) {
 
       await fs.outputFile(outputPath, summary.join('\n'));
       const size = (await fs.stat(outputPath)).size;
-      printSuccess(`GOVERNANCE.md generated (${size} bytes)`);
+      log.success(`GOVERNANCE.md generated (${size} bytes)`, { outputPath });
       return { size, path: outputPath };
     }
   } catch (error) {
-    printError(`Governance generation failed: ${error.message}`);
-    process.exitCode = 1;
+    log.error(`Governance generation failed: ${error.message}`, { error });
+    if (usingConsole) {
+      process.exitCode = 1;
+    }
     return null;
   }
 }

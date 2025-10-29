@@ -52,6 +52,7 @@ export class URNResolver {
     this.maxRetries = options.maxRetries || DEFAULT_CONFIG.maxRetries;
     this.retryDelay = options.retryDelay || DEFAULT_CONFIG.retryDelay;
     this.retryBackoff = options.retryBackoff || DEFAULT_CONFIG.retryBackoff;
+    this.logger = options.logger ?? null;
     
     // In-memory cache
     this.cache = new Map();
@@ -69,13 +70,10 @@ export class URNResolver {
     const useCache = options.useCache !== false;
     
     try {
-      if (this.enableLogging) {
-        const logEntry = createLogEntry(reqId, 'urn_resolution_start', {
-          urn,
-          useCache
-        });
-        console.debug('[URN Resolver]', logEntry);
-      }
+      this._log('debug', reqId, 'urn_resolution_start', {
+        urn,
+        useCache
+      });
 
       // Validate URN format
       this._validateUrnFormat(urn);
@@ -84,12 +82,9 @@ export class URNResolver {
       if (useCache) {
         const cached = this._getCachedResult(urn);
         if (cached) {
-          if (this.enableLogging) {
-            const logEntry = createLogEntry(reqId, 'urn_resolution_cached', {
-              urn
-            });
-            console.debug('[URN Resolver]', logEntry);
-          }
+          this._log('debug', reqId, 'urn_resolution_cached', {
+            urn
+          });
           return cached;
         }
       }
@@ -102,24 +97,18 @@ export class URNResolver {
         this._cacheResult(urn, result);
       }
 
-      if (this.enableLogging) {
-        const logEntry = createLogEntry(reqId, 'urn_resolution_success', {
-          urn,
-          agentName: result.metadata.name,
-          capabilitiesCount: Object.keys(result.capabilities).length
-        });
-        console.debug('[URN Resolver]', logEntry);
-      }
+      this._log('debug', reqId, 'urn_resolution_success', {
+        urn,
+        agentName: result.metadata.name,
+        capabilitiesCount: Object.keys(result.capabilities).length
+      });
 
       return result;
     } catch (error) {
-      if (this.enableLogging) {
-        const logEntry = createLogEntry(reqId, 'urn_resolution_failed', {
-          urn,
-          error: error.message
-        });
-        console.error('[URN Resolver]', logEntry);
-      }
+      this._log('error', reqId, 'urn_resolution_failed', {
+        urn,
+        error: error.message
+      });
 
       if (error instanceof URNError) {
         throw error;
@@ -143,34 +132,25 @@ export class URNResolver {
     const reqId = generateRequestId();
     
     try {
-      if (this.enableLogging) {
-        const logEntry = createLogEntry(reqId, 'capability_discovery_start', {
-          domain
-        });
-        console.debug('[URN Resolver]', logEntry);
-      }
+      this._log('debug', reqId, 'capability_discovery_start', {
+        domain
+      });
 
       // For now, return mock data based on domain
       // In a real implementation, this would query a registry service
       const agents = await this._discoverAgentsByDomain(domain);
 
-      if (this.enableLogging) {
-        const logEntry = createLogEntry(reqId, 'capability_discovery_success', {
-          domain,
-          agentsCount: agents.length
-        });
-        console.debug('[URN Resolver]', logEntry);
-      }
+      this._log('debug', reqId, 'capability_discovery_success', {
+        domain,
+        agentsCount: agents.length
+      });
 
       return agents;
     } catch (error) {
-      if (this.enableLogging) {
-        const logEntry = createLogEntry(reqId, 'capability_discovery_failed', {
-          domain,
-          error: error.message
-        });
-        console.error('[URN Resolver]', logEntry);
-      }
+      this._log('error', reqId, 'capability_discovery_failed', {
+        domain,
+        error: error.message
+      });
 
       throw new URNResolutionError(
         `Failed to discover capabilities for domain ${domain}: ${error.message}`,
@@ -260,16 +240,13 @@ export class URNResolver {
         // Calculate delay and retry
         const delay = calculateRetryDelay(attempt, this.retryDelay, this.retryBackoff);
         
-        if (this.enableLogging) {
-          const logEntry = createLogEntry(reqId, 'urn_resolution_retry', {
-            urn,
-            attempt: attempt + 1,
-            maxRetries: this.maxRetries,
-            delay,
-            error: error.message
-          });
-          console.warn('[URN Resolver]', logEntry);
-        }
+        this._log('warn', reqId, 'urn_resolution_retry', {
+          urn,
+          attempt: attempt + 1,
+          maxRetries: this.maxRetries,
+          delay,
+          error: error.message
+        });
 
         await this._sleep(delay);
       }
@@ -453,6 +430,24 @@ export class URNResolver {
       return null;
     }
     return Math.max(...this.cacheTimestamps.values());
+  }
+
+  /**
+   * Write structured log entry when logger is available
+   * @private
+   * @param {('debug'|'info'|'warn'|'error')} level - Log level
+   * @param {string} reqId - Request identifier
+   * @param {string} operation - Operation name
+   * @param {Object} data - Additional context
+   */
+  _log(level, reqId, operation, data = {}) {
+    if (!this.enableLogging || !this.logger || typeof this.logger[level] !== 'function') {
+      return;
+    }
+
+    const logEntry = createLogEntry(reqId, operation, data);
+    const { operation: _operation, ...context } = logEntry;
+    this.logger[level](operation, context);
   }
 
   /**

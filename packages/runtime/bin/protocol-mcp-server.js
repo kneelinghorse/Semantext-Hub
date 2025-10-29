@@ -47,6 +47,7 @@ const lifecycleLogger = logger.child('lifecycle');
 const performanceLogger = logger.child('performance');
 const metricsLogger = logger.child('metrics');
 const toolLogger = logger.child('tool');
+const governanceLogger = logger.child('governance');
 
 // Initialize performance optimizations
 const performanceOptimizer = new PerformanceOptimizer({
@@ -384,7 +385,8 @@ const tools = [
           sections: ['all'],
           diagrams: true,
           pii: true,
-          metrics: true
+          metrics: true,
+          logger: governanceLogger
         });
         return {
           success: true,

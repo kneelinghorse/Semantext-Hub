@@ -316,6 +316,9 @@ export class OptimizedURNResolver {
         resolverOptions[key] = options[key];
       }
     }
+    if (options.logger) {
+      resolverOptions.logger = options.logger;
+    }
     return resolverOptions;
   }
 
