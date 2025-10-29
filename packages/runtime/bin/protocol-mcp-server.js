@@ -44,6 +44,7 @@ const logger = createStructuredLogger({
 });
 
 const lifecycleLogger = logger.child('lifecycle');
+const shutdownLogger = lifecycleLogger.child('shutdown');
 const performanceLogger = logger.child('performance');
 const metricsLogger = logger.child('metrics');
 const toolLogger = logger.child('tool');
@@ -60,6 +61,53 @@ const metricsEndpoint = createMetricsEndpoint({
   logger: metricsLogger
 });
 
+const DEFAULT_METRICS_LOG_FILE = path.join(ROOT, 'var', 'log', 'mcp', 'performance-metrics.jsonl');
+const metricsLogMode = (process.env.MCP_METRICS_LOG_MODE || 'file').trim().toLowerCase();
+const metricsLogIntervalEnv = process.env.MCP_METRICS_LOG_INTERVAL_MS;
+const parsedMetricsLogInterval = metricsLogIntervalEnv !== undefined
+  ? Number.parseInt(metricsLogIntervalEnv, 10)
+  : Number.NaN;
+const metricsLogIntervalMs = Number.isFinite(parsedMetricsLogInterval) && parsedMetricsLogInterval >= 0
+  ? parsedMetricsLogInterval
+  : 300000;
+const metricsLogFileSetting = process.env.MCP_METRICS_LOG_FILE;
+const metricsLogFile = metricsLogFileSetting
+  ? (path.isAbsolute(metricsLogFileSetting) ? metricsLogFileSetting : path.join(ROOT, metricsLogFileSetting))
+  : DEFAULT_METRICS_LOG_FILE;
+
+let stopMetricsSummaryWriter = null;
+let shutdownInProgress = false;
+
+if (metricsLogIntervalMs === 0 || metricsLogMode === 'off') {
+  metricsLogger.debug('Periodic performance metrics logging disabled', {
+    mode: metricsLogMode || 'file',
+    intervalMs: metricsLogIntervalMs
+  });
+} else if (metricsLogMode === 'stdout') {
+  stopMetricsSummaryWriter = startMetricsStdoutWriter({
+    metricsEndpoint,
+    metricsLogger,
+    intervalMs: metricsLogIntervalMs
+  });
+} else if (metricsLogMode === 'file' || metricsLogMode === '') {
+  stopMetricsSummaryWriter = startMetricsFileWriter({
+    metricsEndpoint,
+    metricsLogger,
+    filePath: metricsLogFile,
+    intervalMs: metricsLogIntervalMs
+  });
+} else {
+  metricsLogger.warn('Unknown MCP_METRICS_LOG_MODE value, defaulting to file logging', {
+    mode: metricsLogMode
+  });
+  stopMetricsSummaryWriter = startMetricsFileWriter({
+    metricsEndpoint,
+    metricsLogger,
+    filePath: metricsLogFile,
+    intervalMs: metricsLogIntervalMs
+  });
+}
+
 // Path safety check
 const safe = (p) => {
   const abs = path.resolve(ROOT, p);
@@ -68,6 +116,90 @@ const safe = (p) => {
   }
   return abs;
 };
+
+function startMetricsFileWriter({ metricsEndpoint, metricsLogger, filePath, intervalMs }) {
+  let writing = false;
+  let pendingFlush = false;
+  let stopped = false;
+
+  const queueWrite = () => {
+    if (stopped) {
+      return;
+    }
+    if (writing) {
+      pendingFlush = true;
+      return;
+    }
+    writing = true;
+    void (async () => {
+      try {
+        const summary = metricsEndpoint.getSummary();
+        const entry = JSON.stringify({
+          timestamp: new Date().toISOString(),
+          summary
+        });
+        await fs.mkdir(path.dirname(filePath), { recursive: true });
+        await fs.appendFile(filePath, `${entry}\n`, 'utf8');
+      } catch (error) {
+        metricsLogger.error('Failed to write performance metrics summary to file', {
+          error,
+          filePath
+        });
+      } finally {
+        writing = false;
+        if (pendingFlush) {
+          pendingFlush = false;
+          queueWrite();
+        }
+      }
+    })();
+  };
+
+  queueWrite();
+  const timer = setInterval(queueWrite, intervalMs);
+  if (typeof timer.unref === 'function') {
+    timer.unref();
+  }
+
+  metricsLogger.debug('Performance metrics file logging enabled', {
+    filePath,
+    intervalMs
+  });
+
+  return () => {
+    if (stopped) {
+      return;
+    }
+    stopped = true;
+    clearInterval(timer);
+  };
+}
+
+function startMetricsStdoutWriter({ metricsEndpoint, metricsLogger, intervalMs }) {
+  const emitSummary = () => {
+    const summary = metricsEndpoint.getSummary();
+    metricsLogger.info('Performance summary', {
+      uptimeSeconds: Math.round(summary.uptime),
+      totalRequests: summary.requests.total,
+      successRate: summary.requests.successRate,
+      latency: summary.latency,
+      memoryMB: summary.memory.heapUsedMB,
+      compliance: summary.compliance
+    });
+  };
+
+  emitSummary();
+  const timer = setInterval(emitSummary, intervalMs);
+  if (typeof timer.unref === 'function') {
+    timer.unref();
+  }
+
+  metricsLogger.debug('Performance metrics stdout logging enabled', {
+    intervalMs
+  });
+
+  return () => clearInterval(timer);
+}
 
 // Performance wrapper for tool handlers
 const withPerformanceTracking = (toolName, operation, handler) => {
@@ -614,11 +746,82 @@ const server = createStdioServer({
   logger
 });
 
+// Cleanup utilities
+function cleanup() {
+  let encounteredError = null;
+
+  if (stopMetricsSummaryWriter) {
+    try {
+      stopMetricsSummaryWriter();
+      shutdownLogger.debug('Stopped metrics summary writer');
+    } catch (error) {
+      shutdownLogger.error('Failed to stop metrics summary writer', { error });
+      encounteredError ??= error;
+    } finally {
+      stopMetricsSummaryWriter = null;
+    }
+  }
+
+  try {
+    performanceOptimizer.destroy();
+    shutdownLogger.debug('Performance optimizer destroyed');
+  } catch (error) {
+    shutdownLogger.error('Failed to destroy performance optimizer', { error });
+    encounteredError ??= error;
+  }
+
+  try {
+    metricsEndpoint.destroy();
+    shutdownLogger.debug('Metrics endpoint destroyed');
+  } catch (error) {
+    shutdownLogger.error('Failed to destroy metrics endpoint', { error });
+    encounteredError ??= error;
+  }
+
+  if (encounteredError) {
+    throw encounteredError;
+  }
+}
+
+function requestShutdown({ signal, reason, exitCode = 0 } = {}) {
+  const context = {};
+  if (signal) {
+    context.signal = signal;
+  }
+  if (reason) {
+    context.reason = reason;
+  }
+
+  if (shutdownInProgress) {
+    shutdownLogger.debug('Shutdown already in progress', context);
+    return;
+  }
+
+  shutdownInProgress = true;
+
+  const startMessage = signal ? 'Shutdown signal received' : 'Shutdown requested';
+  shutdownLogger.info(startMessage, context);
+
+  let finalExitCode = exitCode;
+
+  try {
+    cleanup();
+    shutdownLogger.info('Shutdown cleanup completed', context);
+  } catch (error) {
+    shutdownLogger.error('Shutdown cleanup failed', { ...context, error });
+    if (finalExitCode === 0) {
+      finalExitCode = 1;
+    }
+  }
+
+  shutdownLogger.info('Process exiting', { ...context, exitCode: finalExitCode });
+  process.exit(finalExitCode);
+}
+
 // Add error handling
 process.on('uncaughtException', (error) => {
   lifecycleLogger.fatal('Uncaught exception', { error });
-  cleanup();
-  process.exit(1);
+  requestShutdown({ reason: 'uncaughtException', exitCode: 1 });
 });
 
 process.on('unhandledRejection', (reason, promise) => {
@@ -626,33 +829,17 @@ process.on('unhandledRejection', (reason, promise) => {
     reason,
     promiseType: promise?.constructor?.name
   });
-  cleanup();
-  process.exit(1);
+  requestShutdown({ reason: 'unhandledRejection', exitCode: 1 });
 });
 
 // Graceful shutdown
-process.on('SIGINT', () => {
-  lifecycleLogger.info('Received SIGINT, shutting down gracefully');
-  cleanup();
-  process.exit(0);
+process.once('SIGINT', () => {
+  requestShutdown({ signal: 'SIGINT', exitCode: 0 });
 });
 
-process.on('SIGTERM', () => {
-  lifecycleLogger.info('Received SIGTERM, shutting down gracefully');
-  cleanup();
-  process.exit(0);
+process.once('SIGTERM', () => {
+  requestShutdown({ signal: 'SIGTERM', exitCode: 0 });
 });
-
-// Cleanup function
-function cleanup() {
-  try {
-    performanceOptimizer.destroy();
-    metricsEndpoint.destroy();
-    lifecycleLogger.info('Performance optimizations cleaned up');
-  } catch (error) {
-    lifecycleLogger.error('Error during cleanup', { error });
-  }
-}
 
 // Log performance metrics on startup
 lifecycleLogger.info('MCP Server starting with performance optimizations enabled', {
@@ -665,22 +852,3 @@ lifecycleLogger.info('MCP Server starting with performance optimizations enabled
 
 // Start server
 server.listen();
-
-// Log metrics every 5 minutes in development
-if (process.env.NODE_ENV !== 'production') {
-  setInterval(() => {
-    const summary = metricsEndpoint.getSummary();
-    metricsLogger.info('Performance summary', {
-      uptimeSeconds: Math.round(summary.uptime),
-      totalRequests: summary.requests.total,
-      successRate: summary.requests.successRate,
-      latency: {
-        p50: summary.latency.p50,
-        p95: summary.latency.p95,
-        p99: summary.latency.p99
-      },
-      memoryMB: summary.memory.heapUsedMB,
-      compliance: summary.compliance
-    });
-  }, 300000); // 5 minutes
-}

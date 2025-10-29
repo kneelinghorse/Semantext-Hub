@@ -1,63 +1,10 @@
 {
-  "version": 2,
   "mode": "enforce",
-  "exemptions": [
-    "seeds/**"
-  ],
   "agents": {
-    "mcp:codex": {
-      "allow": [
-        "registry:read",
-        "registry:write",
-        "resolve:read",
-        "execute"
-      ],
-      "resources": [
-        "urn:protocol:*",
-        "urn:agent:*"
-      ]
-    },
-    "cli:local": {
-      "allow": [
-        "registry:read",
-        "resolve:read"
-      ],
-      "resources": [
-        "urn:protocol:*"
-      ]
-    },
-    "ci:builder": {
-      "allow": [
-        "registry:read",
-        "registry:write",
-        "resolve:read",
-        "catalog:build"
-      ],
-      "resources": [
-        "urn:protocol:*"
-      ]
-    },
-    "system:admin": {
-      "allow": [
-        "registry:read",
-        "registry:write",
-        "registry:delete",
-        "resolve:read",
-        "catalog:build",
-        "policy:update"
-      ],
-      "resources": [
-        "*"
-      ]
+    "urn:agent:runtime:workflow-executor": {
+      "allow": ["execute_workflow", "read_manifest"],
+      "resources": ["approved/*", "drafts/*"]
     }
   },
-  "resources": [
-    "urn:protocol:api:*",
-    "urn:protocol:event:*",
-    "urn:protocol:data:*"
-  ],
-  "audit": {
-    "logAllRequests": true,
-    "logDenialsOnly": false
-  }
+  "exemptions": ["public/*"]
 }

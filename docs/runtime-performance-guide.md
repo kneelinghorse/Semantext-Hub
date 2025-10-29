@@ -1447,6 +1447,14 @@ setInterval(() => {
 
 ### Performance Metrics Collection
 
+#### Server Metrics Output
+- Periodic summaries are written to `var/log/mcp/performance-metrics.jsonl` by default.
+- Configure behavior with environment variables:
+  - `MCP_METRICS_LOG_MODE` (`file` default, supports `stdout` and `off`)
+  - `MCP_METRICS_LOG_FILE` to point at a custom JSONL path
+  - `MCP_METRICS_LOG_INTERVAL_MS` to adjust the write cadence (default `300000`)
+- The MCP resource `metrics://performance` remains available for on-demand snapshots.
+
 Implement comprehensive performance metrics collection:
 
 ```javascript

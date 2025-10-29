@@ -1,0 +1,48 @@
+{
+  "urn": "urn:api:external:github-rest:v2025-10-27",
+  "type": "api",
+  "metadata": {
+    "status": "approved",
+    "provider": "GitHub",
+    "source": {
+      "type": "openapi",
+      "reference": "https://raw.githubusercontent.com/github/rest-api-description/main/descriptions/api.github.com/api.github.com.json"
+    },
+    "discovered_at": "2025-10-27T18:30:00Z",
+    "approved_at": "2025-10-27T18:48:19Z",
+    "reviewed_by": "codex-cli",
+    "name": "GitHub REST API",
+    "description": "Imported GitHub REST API reference for Sprint 25 external validation run."
+  },
+  "catalog": {
+    "type": "api",
+    "version": "2023-10-01",
+    "environment": "production",
+    "endpoints": [
+      {
+        "method": "GET",
+        "path": "/user",
+        "summary": "Retrieve authenticated user metadata"
+      },
+      {
+        "method": "GET",
+        "path": "/repos/{owner}/{repo}",
+        "summary": "Fetch repository details"
+      },
+      {
+        "method": "POST",
+        "path": "/repos/{owner}/{repo}/issues",
+        "summary": "Create an issue in a repository"
+      }
+    ]
+  },
+  "governance": {
+    "security": {
+      "auth": "oauth2",
+      "rate_limits": "Dependent on GitHub account tier"
+    },
+    "compliance": [
+      "public_usage"
+    ]
+  }
+}

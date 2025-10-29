@@ -79,6 +79,14 @@ Monitor compliance against targets:
 - MCP p95 < 3000ms
 - Heap usage < 100MB
 
+### Metrics Logging Configuration
+- Performance summaries persist to `var/log/mcp/performance-metrics.jsonl` by default.
+- Control behavior with environment variables:
+  - `MCP_METRICS_LOG_MODE`: `file` (default), `stdout`, or `off`
+  - `MCP_METRICS_LOG_FILE`: override summary file location
+  - `MCP_METRICS_LOG_INTERVAL_MS`: summary interval in milliseconds (default `300000`)
+- Use `tail -f var/log/mcp/performance-metrics.jsonl` during development instead of relying on stdout logs.
+
 ## Memory Management
 
 ### Heap Size Limits

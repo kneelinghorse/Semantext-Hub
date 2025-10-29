@@ -8,10 +8,10 @@
       "reference": "https://raw.githubusercontent.com/github/rest-api-description/main/descriptions/api.github.com/api.github.com.json"
     },
     "discovered_at": "2025-10-06T00:00:00Z",
-    "approved_at": "2025-10-06T00:05:00Z",
-    "approved_by": "claude-demo",
     "name": "GitHub REST API",
-    "description": "Official GitHub REST API for repository, issue, and user management"
+    "description": "Official GitHub REST API for repository, issue, and user management",
+    "approved_at": "2025-10-28T18:00:26.576Z",
+    "approved_by": "mcp-test-user"
   },
   "catalog": {
     "type": "api",
