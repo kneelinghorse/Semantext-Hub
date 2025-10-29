@@ -17,7 +17,8 @@ import readline from 'readline';
  * @returns {Object} Server instance
  */
 export function createStdioServer(config) {
-  const { name, tools = [], resources = [] } = config;
+  const { name, tools = [], resources = [], logger: providedLogger = null } = config;
+  const logger = providedLogger ? providedLogger.child('stdio-server') : null;
   
   class MCPServer extends EventEmitter {
     constructor() {
@@ -71,7 +72,7 @@ export function createStdioServer(config) {
             }
           }
         } catch (error) {
-          console.error('Error handling request:', error);
+          logger?.error('Error handling request', { error });
           const errorResponse = {
             jsonrpc: '2.0',
             error: {
@@ -93,13 +94,13 @@ export function createStdioServer(config) {
       
       // Handle close event
       rl.on('close', () => {
-        try { console.error('[mcp-shim] stdin closed'); } catch {}
+        logger?.warn('stdin closed');
         process.exit(0);
       });
       
       // Handle process signals
-      process.on('SIGINT', () => { try { console.error('[mcp-shim] SIGINT'); } catch {}; process.exit(0); });
-      process.on('SIGTERM', () => { try { console.error('[mcp-shim] SIGTERM'); } catch {}; process.exit(0); });
+      process.on('SIGINT', () => { logger?.info('SIGINT received'); process.exit(0); });
+      process.on('SIGTERM', () => { logger?.info('SIGTERM received'); process.exit(0); });
       
       // Keep process alive
       process.stdin.resume();

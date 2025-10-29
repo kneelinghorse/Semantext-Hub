@@ -23,6 +23,7 @@ import { runTool, runWorkflow } from '../src/agents/runtime.js';
 // Import performance optimizations
 import { PerformanceOptimizer } from '../services/mcp-server/performance-optimizations.js';
 import { createMetricsEndpoint } from '../services/mcp-server/metrics-endpoint.js';
+import { createStructuredLogger } from '../services/mcp-server/logger.js';
 
 // Dynamic imports for CommonJS modules
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -33,13 +34,29 @@ const { OpenAPIImporter } = require('../importers/openapi/importer.js');
 
 const ROOT = process.env.PROTOCOL_ROOT || process.cwd();
 
+// Initialize structured logging
+const logger = createStructuredLogger({
+  serviceContext: {
+    service: 'protocol-mcp-server',
+    environment: process.env.NODE_ENV || 'development',
+    root: ROOT
+  }
+});
+
+const lifecycleLogger = logger.child('lifecycle');
+const performanceLogger = logger.child('performance');
+const metricsLogger = logger.child('metrics');
+const toolLogger = logger.child('tool');
+
 // Initialize performance optimizations
 const performanceOptimizer = new PerformanceOptimizer({
-  enableLogging: process.env.NODE_ENV !== 'production'
+  enableLogging: process.env.NODE_ENV !== 'production',
+  logger: performanceLogger
 });
 
 const metricsEndpoint = createMetricsEndpoint({
-  enableLogging: process.env.NODE_ENV !== 'production'
+  enableLogging: process.env.NODE_ENV !== 'production',
+  logger: metricsLogger
 });
 
 // Path safety check
@@ -53,6 +70,7 @@ const safe = (p) => {
 
 // Performance wrapper for tool handlers
 const withPerformanceTracking = (toolName, operation, handler) => {
+  const toolLog = toolLogger.child(toolName);
   return async (args) => {
     const startTime = performance.now();
     let success = false;
@@ -64,10 +82,21 @@ const withPerformanceTracking = (toolName, operation, handler) => {
       return result;
     } catch (error) {
       success = false;
+      toolLog.error('Handler failed', {
+        operation,
+        argKeys: args && typeof args === 'object' ? Object.keys(args) : [],
+        error
+      });
       throw error;
     } finally {
       const latency = performance.now() - startTime;
       metricsEndpoint.recordRequest(toolName, operation, latency, success, cached);
+      if (success) {
+        toolLog.debug('Handler completed', {
+          operation,
+          latency
+        });
+      }
     }
   };
 };
@@ -579,31 +608,35 @@ const resources = [
 const server = createStdioServer({
   name: 'system-protocols-mcp',
   tools,
-  resources
+  resources,
+  logger
 });
 
 // Add error handling
 process.on('uncaughtException', (error) => {
-  console.error('Uncaught Exception:', error);
+  lifecycleLogger.fatal('Uncaught exception', { error });
   cleanup();
   process.exit(1);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  lifecycleLogger.fatal('Unhandled rejection', {
+    reason,
+    promiseType: promise?.constructor?.name
+  });
   cleanup();
   process.exit(1);
 });
 
 // Graceful shutdown
 process.on('SIGINT', () => {
-  console.log('Received SIGINT, shutting down gracefully...');
+  lifecycleLogger.info('Received SIGINT, shutting down gracefully');
   cleanup();
   process.exit(0);
 });
 
 process.on('SIGTERM', () => {
-  console.log('Received SIGTERM, shutting down gracefully...');
+  lifecycleLogger.info('Received SIGTERM, shutting down gracefully');
   cleanup();
   process.exit(0);
 });
@@ -613,15 +646,20 @@ function cleanup() {
   try {
     performanceOptimizer.destroy();
     metricsEndpoint.destroy();
-    console.log('Performance optimizations cleaned up');
+    lifecycleLogger.info('Performance optimizations cleaned up');
   } catch (error) {
-    console.error('Error during cleanup:', error);
+    lifecycleLogger.error('Error during cleanup', { error });
   }
 }
 
 // Log performance metrics on startup
-console.log('MCP Server starting with performance optimizations enabled');
-console.log('Performance targets: Discovery p95 < 1s, MCP p95 < 3s, Heap < 100MB');
+lifecycleLogger.info('MCP Server starting with performance optimizations enabled', {
+  targets: {
+    discoveryP95: '1s',
+    mcpP95: '3s',
+    heap: '100MB'
+  }
+});
 
 // Start server
 server.listen();
@@ -630,16 +668,16 @@ server.listen();
 if (process.env.NODE_ENV !== 'production') {
   setInterval(() => {
     const summary = metricsEndpoint.getSummary();
-    console.log('[Performance Summary]', {
-      uptime: `${Math.round(summary.uptime)}s`,
-      requests: summary.requests.total,
-      successRate: `${(summary.requests.successRate * 100).toFixed(1)}%`,
+    metricsLogger.info('Performance summary', {
+      uptimeSeconds: Math.round(summary.uptime),
+      totalRequests: summary.requests.total,
+      successRate: summary.requests.successRate,
       latency: {
-        p50: `${summary.latency.p50.toFixed(1)}ms`,
-        p95: `${summary.latency.p95.toFixed(1)}ms`,
-        p99: `${summary.latency.p99.toFixed(1)}ms`
+        p50: summary.latency.p50,
+        p95: summary.latency.p95,
+        p99: summary.latency.p99
       },
-      memory: `${summary.memory.heapUsedMB.toFixed(1)}MB`,
+      memoryMB: summary.memory.heapUsedMB,
       compliance: summary.compliance
     });
   }, 300000); // 5 minutes

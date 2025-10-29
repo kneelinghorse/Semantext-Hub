@@ -18,6 +18,7 @@ export class MetricsEndpoint extends EventEmitter {
     this.enableLogging = options.enableLogging !== false;
     this.enableMetrics = options.enableMetrics !== false;
     this.metricsPath = options.metricsPath || '/metrics';
+    this.logger = options.logger || null;
     
     // Metrics storage
     this.metrics = {
@@ -136,14 +137,16 @@ export class MetricsEndpoint extends EventEmitter {
       response.end(JSON.stringify(metricsData, null, 2));
       
       if (this.enableLogging) {
-        console.debug('[MetricsEndpoint] Served metrics');
+        this.logger?.debug('Served metrics', {
+          totalRequests: this.metrics.server.requests.total
+        });
       }
     } catch (error) {
       response.writeHead(500, { 'Content-Type': 'application/json' });
       response.end(JSON.stringify({ error: 'Internal server error' }));
       
       if (this.enableLogging) {
-        console.error('[MetricsEndpoint] Error serving metrics:', error);
+        this.logger?.error('Error serving metrics', { error });
       }
     }
   }

@@ -22,6 +22,7 @@ export class PerformanceMetrics extends EventEmitter {
     super();
     this.enableLogging = options.enableLogging !== false;
     this.memoryMonitorInterval = options.memoryMonitorInterval ?? 5000;
+    this.logger = options.logger || null;
     this.metrics = {
       requests: {
         total: 0,
@@ -117,8 +118,13 @@ export class PerformanceMetrics extends EventEmitter {
       this.updatePercentiles(this.metrics.mcp.latency);
     }
 
-    if (this.enableLogging) {
-      console.debug(`[Performance] ${operation}: ${latency}ms ${success ? 'success' : 'failed'} ${cached ? 'cached' : ''}`);
+    if (this.enableLogging && this.logger) {
+      this.logger.debug('Recorded request sample', {
+        operation,
+        latency,
+        success,
+        cached
+      });
     }
   }
 
@@ -257,6 +263,7 @@ export class OptimizedURNResolver {
     this.cacheTtl = options.cacheTtl || 300000; // 5 minutes
     this.maxCacheSize = options.maxCacheSize || 1000;
     this.enableLogging = options.enableLogging !== false;
+    this.logger = options.logger || null;
     this.baseResolverOptions = this._buildBaseResolverOptions(options);
     
     // Enhanced caching with TTL and LRU eviction
@@ -269,7 +276,8 @@ export class OptimizedURNResolver {
     // Performance metrics
     this.metrics = new PerformanceMetrics({ 
       enableLogging: this.enableLogging,
-      memoryMonitorInterval: options.memoryMonitorInterval
+      memoryMonitorInterval: options.memoryMonitorInterval,
+      logger: this.logger ? this.logger.child('metrics') : null
     });
     
     // Pre-warm cache with common URNs
@@ -288,8 +296,8 @@ export class OptimizedURNResolver {
     
     for (const urn of commonURNs) {
       this.resolveAgentUrn(urn).catch(error => {
-        if (this.enableLogging) {
-          console.debug(`[OptimizedURNResolver] Pre-warm failed for ${urn}: ${error.message}`);
+        if (this.enableLogging && this.logger) {
+          this.logger.warn('Pre-warm failed', { urn, error });
         }
       });
     }
@@ -474,13 +482,17 @@ export class OptimizedProtocolGraph {
   constructor(options = {}) {
     this.cacheSize = options.cacheSize || 1000;
     this.enableLogging = options.enableLogging !== false;
+    this.logger = options.logger || null;
     
     // Enhanced caching
     this.cache = new Map();
     this.cacheTimestamps = new Map();
     
     // Performance metrics
-    this.metrics = new PerformanceMetrics({ enableLogging: this.enableLogging });
+    this.metrics = new PerformanceMetrics({ 
+      enableLogging: this.enableLogging,
+      logger: this.logger ? this.logger.child('metrics') : null
+    });
     
     // Graph data structures
     this.nodes = new Map();
@@ -516,8 +528,12 @@ export class OptimizedProtocolGraph {
     const latency = performance.now() - startTime;
     this.metrics.recordRequest('mcp', latency, true, false);
 
-    if (this.enableLogging) {
-      console.debug(`[ProtocolGraph] Batch added ${results.added} nodes in ${latency.toFixed(2)}ms`);
+    if (this.enableLogging && this.logger) {
+      this.logger.debug('Batch add nodes completed', {
+        added: results.added,
+        skipped: results.skipped,
+        latency
+      });
     }
 
     return results;
@@ -619,6 +635,7 @@ export class RequestBatcher {
     this.batchSize = options.batchSize || 10;
     this.batchTimeout = options.batchTimeout || 100; // 100ms
     this.enableLogging = options.enableLogging !== false;
+    this.logger = options.logger || null;
     
     this.pendingRequests = new Map();
     this.batchTimer = null;
@@ -675,8 +692,11 @@ export class RequestBatcher {
       });
 
       const latency = performance.now() - startTime;
-      if (this.enableLogging) {
-        console.debug(`[RequestBatcher] Processed ${requests.length} requests in ${latency.toFixed(2)}ms`);
+      if (this.enableLogging && this.logger) {
+        this.logger.debug('Processed request batch', {
+          size: requests.length,
+          latency
+        });
       }
     } catch (error) {
       // Reject all pending requests
@@ -693,6 +713,7 @@ export class MemoryOptimizer {
     this.maxHeapMB = options.maxHeapMB || 100;
     this.gcThreshold = options.gcThreshold || 0.8; // 80% of max
     this.enableLogging = options.enableLogging !== false;
+    this.logger = options.logger || null;
     
     this.monitorInterval = setInterval(() => this.monitorMemory(), 10000); // Every 10s
   }
@@ -705,8 +726,11 @@ export class MemoryOptimizer {
     const heapMB = memUsage.heapUsed / 1024 / 1024;
     
     if (heapMB > this.maxHeapMB * this.gcThreshold) {
-      if (this.enableLogging) {
-        console.warn(`[MemoryOptimizer] High memory usage: ${heapMB.toFixed(2)}MB (threshold: ${this.maxHeapMB * this.gcThreshold}MB)`);
+      if (this.enableLogging && this.logger) {
+        this.logger.warn('High memory usage detected', {
+          heapMB,
+          threshold: this.maxHeapMB * this.gcThreshold
+        });
       }
       
       // Force garbage collection if available
@@ -715,8 +739,10 @@ export class MemoryOptimizer {
         const newMemUsage = process.memoryUsage();
         const newHeapMB = newMemUsage.heapUsed / 1024 / 1024;
         
-        if (this.enableLogging) {
-          console.info(`[MemoryOptimizer] GC freed ${(heapMB - newHeapMB).toFixed(2)}MB`);
+        if (this.enableLogging && this.logger) {
+          this.logger.info('Garbage collection freed memory', {
+            freedMB: heapMB - newHeapMB
+          });
         }
       }
     }
@@ -756,13 +782,39 @@ export class MemoryOptimizer {
 export class PerformanceOptimizer {
   constructor(options = {}) {
     this.enableLogging = options.enableLogging !== false;
+    this.logger = options.logger || null;
+    const baseOptions = { ...options };
     
     // Initialize optimization components
-    this.urnResolver = new OptimizedURNResolver(options);
-    this.protocolGraph = new OptimizedProtocolGraph(options);
-    this.requestBatcher = new RequestBatcher(options);
-    this.memoryOptimizer = new MemoryOptimizer(options);
-    this.metrics = new PerformanceMetrics(options);
+    const urnResolverOptions = { ...baseOptions };
+    if (this.logger) {
+      urnResolverOptions.logger = this.logger.child('urn-resolver');
+    }
+    this.urnResolver = new OptimizedURNResolver(urnResolverOptions);
+
+    const protocolGraphOptions = { ...baseOptions };
+    if (this.logger) {
+      protocolGraphOptions.logger = this.logger.child('protocol-graph');
+    }
+    this.protocolGraph = new OptimizedProtocolGraph(protocolGraphOptions);
+
+    const batcherOptions = { ...baseOptions };
+    if (this.logger) {
+      batcherOptions.logger = this.logger.child('request-batcher');
+    }
+    this.requestBatcher = new RequestBatcher(batcherOptions);
+
+    const memoryOptimizerOptions = { ...baseOptions };
+    if (this.logger) {
+      memoryOptimizerOptions.logger = this.logger.child('memory');
+    }
+    this.memoryOptimizer = new MemoryOptimizer(memoryOptimizerOptions);
+
+    const metricsOptions = { ...baseOptions };
+    if (this.logger) {
+      metricsOptions.logger = this.logger.child('metrics');
+    }
+    this.metrics = new PerformanceMetrics(metricsOptions);
     
     // Performance targets
     this.targets = {
