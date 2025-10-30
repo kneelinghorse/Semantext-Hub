@@ -12,7 +12,15 @@ function parseMCPContent(result: any): any {
 
 describe('MCP E2E smoke path', () => {
   test('list_test_files → discover_local → docs_mermaid; agent_run + workflow_run return 501 guidance', async () => {
-    const { client, stop } = await spawnMCPWithA2AStub({ enableLogging: true });
+    const pgMockPath = path.join(process.cwd(), 'tests', '_helpers', 'pg-mock.cjs');
+    const nodeOptions = [process.env.NODE_OPTIONS, `--require ${pgMockPath}`].filter(Boolean).join(' ');
+
+    const { client, stop } = await spawnMCPWithA2AStub({
+      enableLogging: true,
+      env: {
+        NODE_OPTIONS: nodeOptions
+      }
+    });
     try {
       // 1) Ensure required tools exposed
       const tools = await client.listTools();
@@ -21,6 +29,7 @@ describe('MCP E2E smoke path', () => {
         'protocol_list_test_files',
         'protocol_discover_local',
         'protocol_discover_asyncapi',
+        'protocol_discover_data',
         'docs_mermaid',
       ]));
 
@@ -73,6 +82,33 @@ describe('MCP E2E smoke path', () => {
         expect(asyncUrlObj.metadata?.parse_time_ms).toBeGreaterThanOrEqual(0);
       } finally {
         server.close();
+      }
+
+      // 3c) Discover Postgres data via connection string
+      const pgConnection = 'postgresql://analytics:supersecret@localhost:5432/mcp';
+      const pgRes = await client.executeTool('protocol_discover_data', {
+        connection_string: pgConnection,
+        target_schema: 'public'
+      });
+      const pgObj = parseMCPContent(pgRes);
+      expect(pgObj.success).toBe(true);
+      expect(pgObj.connection).toBe('postgresql://***:***@localhost:5432/mcp');
+      expect(pgObj.target_schema).toBe('public');
+      expect(pgObj.manifest?.catalog?.platform).toBe('postgresql');
+      expect(Array.isArray(pgObj.manifest?.datasets)).toBe(true);
+      expect(pgObj.manifest?.datasets?.length).toBeGreaterThan(0);
+
+      // 3d) Handle Postgres connection failures with sanitized output
+      const failingConnection = 'postgresql://analytics:supersecret@localhost:5432/fail-connect';
+      const pgFailRes = await client.executeTool('protocol_discover_data', {
+        connection_string: failingConnection
+      });
+      const pgFailObj = parseMCPContent(pgFailRes);
+      expect(pgFailObj.success).toBe(false);
+      expect(pgFailObj.connection).toBe('postgresql://***:***@localhost:5432/fail-connect');
+      expect(pgFailObj.error).not.toContain('supersecret');
+      if (pgFailObj.details) {
+        expect(pgFailObj.details).not.toContain('supersecret');
       }
 
       // 4) Call docs_mermaid on a known catalog dir with .json manifests (approved)

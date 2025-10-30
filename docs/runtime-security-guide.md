@@ -486,6 +486,12 @@ const registeredAgent = await dataEncryption.secureRegisterAgent(agentData);
 const retrievedAgent = await dataEncryption.secureGetAgent('urn:agent:ai:ml-agent@1.0.0');
 ```
 
+### MCP Data Discovery Safeguards
+
+- `protocol_discover_data` executes introspection through the `PostgresImporter`, which issues `BEGIN READ ONLY` transactions and enforces 30s connection / 5s query timeouts to prevent accidental writes or long-running scans.
+- Connection strings are sanitized before being logged or returned to MCP clients (credentials and sensitive query parameters are replaced with `***`). Operators should verify that downstream runbooks and observability tooling consume only the sanitized value.
+- Provide the tool with least-privilege credentials (read-only role limited to the target schema) and rotate them regularly; the importer never persists the raw connection string once the session terminates.
+
 ## Network Security
 
 ### TLS Configuration

@@ -31,6 +31,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
 const { OpenAPIImporter } = require('../importers/openapi/importer.js');
 const { importAsyncAPI } = require('../importers/asyncapi/importer.js');
+const { PostgresImporter } = require('../importers/postgres/importer.js');
 
 // Implementations use real importers/validators/graph
 
@@ -118,6 +119,43 @@ const safe = (p) => {
   }
   return abs;
 };
+
+const SENSITIVE_QUERY_KEYS = new Set(['password', 'pass', 'pwd', 'secret', 'access_token', 'auth', 'key']);
+
+function sanitizeConnectionString(connectionString) {
+  if (typeof connectionString !== 'string') {
+    return '';
+  }
+
+  const trimmed = connectionString.trim();
+  if (trimmed === '') {
+    return '';
+  }
+
+  try {
+    const parsed = new URL(trimmed);
+    parsed.username = parsed.username ? '***' : '';
+    parsed.password = parsed.password ? '***' : '';
+
+    for (const key of Array.from(parsed.searchParams.keys())) {
+      if (SENSITIVE_QUERY_KEYS.has(key.toLowerCase())) {
+        parsed.searchParams.set(key, '***');
+      }
+    }
+
+    return parsed.toString();
+  } catch {
+    return trimmed.replace(/\/\/([^/@:]+)(?::[^@/?#]*)?@/, '//***@');
+  }
+}
+
+function sanitizeSensitiveValue(value, original, sanitized) {
+  if (typeof value !== 'string' || !original) {
+    return value;
+  }
+
+  return value.split(original).join(sanitized);
+}
 
 function startMetricsFileWriter({ metricsEndpoint, metricsLogger, filePath, intervalMs }) {
   let writing = false;
@@ -504,6 +542,99 @@ const tools = [
         if (cleanupPath) {
           await fs.unlink(cleanupPath).catch(() => {});
         }
+      }
+    })
+  },
+
+  {
+    name: 'protocol_discover_data',
+    description: 'Discover and import Data Protocol manifests from PostgreSQL schemas',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        connection_string: {
+          type: 'string',
+          description: 'PostgreSQL connection string (postgresql://user:pass@host:port/db)'
+        },
+        target_schema: {
+          type: 'string',
+          description: 'Optional schema name to restrict discovery'
+        }
+      },
+      required: ['connection_string'],
+      additionalProperties: false
+    },
+    handler: withPerformanceTracking('protocol_discover_data', 'discovery', async ({ connection_string, target_schema }) => {
+      const rawConnection = typeof connection_string === 'string' ? connection_string.trim() : '';
+      const rawSchema = typeof target_schema === 'string' ? target_schema.trim() : '';
+
+      if (!rawConnection) {
+        return {
+          success: false,
+          error: 'connection_string is required'
+        };
+      }
+
+      const sanitizedConnection = sanitizeConnectionString(rawConnection);
+      const schemaContext = rawSchema ? { target_schema: rawSchema } : {};
+
+      try {
+        const importer = new PostgresImporter({
+          readOnly: true,
+          sampleData: true,
+          includePerformance: true,
+          generateURNs: true
+        });
+
+        const manifest = await importer.import(rawConnection, rawSchema || undefined);
+
+        if (!manifest) {
+          return {
+            success: false,
+            error: 'Discovery failed - no manifest returned',
+            connection: sanitizedConnection,
+            ...schemaContext
+          };
+        }
+
+        if (manifest?.metadata?.status === 'error') {
+          return {
+            success: false,
+            error: manifest.metadata?.error?.message || 'Discovery failed',
+            connection: sanitizedConnection,
+            manifest,
+            ...schemaContext
+          };
+        }
+
+        return {
+          success: true,
+          manifest,
+          connection: sanitizedConnection,
+          message: rawSchema
+            ? `Successfully discovered schema '${rawSchema}' from PostgreSQL connection`
+            : 'Successfully discovered PostgreSQL database schema',
+          ...schemaContext
+        };
+      } catch (error) {
+        const sanitizedMessage = sanitizeSensitiveValue(
+          error?.message || 'PostgreSQL discovery failed',
+          rawConnection,
+          sanitizedConnection
+        );
+        const sanitizedDetails = sanitizeSensitiveValue(
+          error?.stack,
+          rawConnection,
+          sanitizedConnection
+        );
+
+        return {
+          success: false,
+          error: sanitizedMessage,
+          connection: sanitizedConnection,
+          ...schemaContext,
+          ...(sanitizedDetails ? { details: sanitizedDetails } : {})
+        };
       }
     })
   },

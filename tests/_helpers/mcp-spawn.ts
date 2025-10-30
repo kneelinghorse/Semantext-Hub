@@ -10,12 +10,13 @@ type SpawnResult = {
 
 // Spawns the MCP server via stdio, with an ephemeral local A2A stub.
 // Returns an open MCP client and a stop() method to teardown both.
-export async function spawnMCPWithA2AStub(opts: { protocolRoot?: string, enableLogging?: boolean } = {}): Promise<SpawnResult> {
+export async function spawnMCPWithA2AStub(opts: { protocolRoot?: string, enableLogging?: boolean, env?: Record<string, string> } = {}): Promise<SpawnResult> {
   const stub = await startA2AStub();
 
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const appRoot = opts.protocolRoot || path.resolve(__dirname, '../../');
   const registryApiKey = 'mcp-e2e-test-key';
+  const envOverrides = opts.env || {};
 
   const client = createMCPClient({
     endpoint: {
@@ -25,7 +26,8 @@ export async function spawnMCPWithA2AStub(opts: { protocolRoot?: string, enableL
         PROTOCOL_ROOT: appRoot,
         A2A_BASE_URL: stub.url,
         A2A_ENABLE_LOGGING: 'false',
-        OSSP_REGISTRY_API_KEY: registryApiKey
+        OSSP_REGISTRY_API_KEY: registryApiKey,
+        ...envOverrides
       }
     },
     timeout: 5000,

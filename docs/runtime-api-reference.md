@@ -212,6 +212,7 @@ The Protocol MCP server surfaces discovery and governance tooling for MCP-compat
 - `protocol_discover_api`: Accepts a `url` to an OpenAPI specification and returns an API protocol manifest with inferred URNs, endpoints, and schemas.
 - `protocol_discover_local`: Accepts a local OpenAPI `file_path` (resolved relative to `PROTOCOL_ROOT`) and produces the same manifest format as the remote variant.
 - `protocol_discover_asyncapi`: Accepts either `file_path` or HTTP(S) `url` inputs for AsyncAPI specifications and returns an event protocol manifest with channel counts, delivery bindings, and PII detection metadata aligned with the CLI discovery output.
+- `protocol_discover_data`: Accepts a PostgreSQL `connection_string` (with optional `target_schema`) and produces a Data Protocol manifest identical to the CLI importer output while redacting credentials from the surfaced connection metadata.
 - `protocol_list_test_files`: Returns the curated OpenAPI seed specifications bundled with the runtime for quick smoke tests.
 
 All discovery handlers share structured error responses and performance tracking metrics to simplify automation.
