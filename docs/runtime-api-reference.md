@@ -205,6 +205,17 @@ const result = await client.executeTool('read_file', {
 console.log('Tool result:', result);
 ```
 
+#### Protocol MCP Tools
+
+The Protocol MCP server surfaces discovery and governance tooling for MCP-compatible clients. Discovery tools include:
+
+- `protocol_discover_api`: Accepts a `url` to an OpenAPI specification and returns an API protocol manifest with inferred URNs, endpoints, and schemas.
+- `protocol_discover_local`: Accepts a local OpenAPI `file_path` (resolved relative to `PROTOCOL_ROOT`) and produces the same manifest format as the remote variant.
+- `protocol_discover_asyncapi`: Accepts either `file_path` or HTTP(S) `url` inputs for AsyncAPI specifications and returns an event protocol manifest with channel counts, delivery bindings, and PII detection metadata aligned with the CLI discovery output.
+- `protocol_list_test_files`: Returns the curated OpenAPI seed specifications bundled with the runtime for quick smoke tests.
+
+All discovery handlers share structured error responses and performance tracking metrics to simplify automation.
+
 ##### getState()
 
 Get connection state.

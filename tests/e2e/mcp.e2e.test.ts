@@ -1,5 +1,6 @@
 import path from 'path';
 import fs from 'fs/promises';
+import { createServer } from 'http';
 import { spawnMCPWithA2AStub } from '../_helpers/mcp-spawn';
 
 function parseMCPContent(result: any): any {
@@ -19,6 +20,7 @@ describe('MCP E2E smoke path', () => {
       expect(toolNames).toEqual(expect.arrayContaining([
         'protocol_list_test_files',
         'protocol_discover_local',
+        'protocol_discover_asyncapi',
         'docs_mermaid',
       ]));
 
@@ -36,6 +38,42 @@ describe('MCP E2E smoke path', () => {
       const discObj = parseMCPContent(discRes);
       expect(discObj.success).toBe(true);
       expect(typeof discObj.manifest).toBe('object');
+
+      // 3a) Discover AsyncAPI via file path
+      const asyncSpecRelativePath = path.join('seeds', 'asyncapi', 'minimal.json');
+      const asyncFileRes = await client.executeTool('protocol_discover_asyncapi', { file_path: asyncSpecRelativePath });
+      const asyncFileObj = parseMCPContent(asyncFileRes);
+      expect(asyncFileObj.success).toBe(true);
+      expect(asyncFileObj.manifest?.protocol).toBe('event-protocol/v1');
+      expect(asyncFileObj.metadata?.channel_count).toBeGreaterThanOrEqual(0);
+
+      // 3b) Discover AsyncAPI via HTTP URL
+      const asyncSpecFullPath = path.join(process.cwd(), asyncSpecRelativePath);
+      const asyncSpecContent = await fs.readFile(asyncSpecFullPath, 'utf-8');
+      const server = createServer((req, res) => {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(asyncSpecContent);
+      });
+
+      try {
+        await new Promise<void>((resolve, reject) => {
+          server.once('error', reject);
+          server.listen(0, '127.0.0.1', () => resolve());
+        });
+        const address = server.address();
+        if (!address || typeof address === 'string') {
+          throw new Error('Failed to bind AsyncAPI fixture server');
+        }
+        const asyncUrl = `http://127.0.0.1:${address.port}/asyncapi.json`;
+        const asyncUrlRes = await client.executeTool('protocol_discover_asyncapi', { url: asyncUrl });
+        const asyncUrlObj = parseMCPContent(asyncUrlRes);
+        expect(asyncUrlObj.success).toBe(true);
+        expect(asyncUrlObj.manifest?.protocol).toBe('event-protocol/v1');
+        expect(asyncUrlObj.metadata?.channel_count).toBeGreaterThanOrEqual(0);
+        expect(asyncUrlObj.metadata?.parse_time_ms).toBeGreaterThanOrEqual(0);
+      } finally {
+        server.close();
+      }
 
       // 4) Call docs_mermaid on a known catalog dir with .json manifests (approved)
       const mermaidRes = await client.executeTool('docs_mermaid', { manifest_dir: 'approved' });

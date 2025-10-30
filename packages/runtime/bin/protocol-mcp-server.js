@@ -13,6 +13,7 @@ import { fileURLToPath } from 'url';
 import { createRequire } from 'module';
 import { createStdioServer } from './mcp/shim.js';
 import { performance } from 'perf_hooks';
+import { randomUUID } from 'crypto';
 
 // Import ES modules
 import { runTool, runWorkflow } from '../src/agents/runtime.js';
@@ -29,6 +30,7 @@ import { createStructuredLogger } from '../services/mcp-server/logger.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
 const { OpenAPIImporter } = require('../importers/openapi/importer.js');
+const { importAsyncAPI } = require('../importers/asyncapi/importer.js');
 
 // Implementations use real importers/validators/graph
 
@@ -347,6 +349,161 @@ const tools = [
           file_path,
           details: error.stack
         };
+      }
+    })
+  },
+
+  {
+    name: 'protocol_discover_asyncapi',
+    description: 'Discover and import Event Protocol manifests from AsyncAPI specifications',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        file_path: {
+          type: 'string',
+          description: 'Path to local AsyncAPI specification file (JSON or YAML)'
+        },
+        url: {
+          type: 'string',
+          format: 'uri',
+          description: 'HTTP(S) URL to AsyncAPI specification'
+        }
+      },
+      anyOf: [
+        { required: ['file_path'] },
+        { required: ['url'] }
+      ],
+      additionalProperties: false
+    },
+    handler: withPerformanceTracking('protocol_discover_asyncapi', 'discovery', async ({ file_path, url }) => {
+      const targetUrl = typeof url === 'string' ? url.trim() : '';
+      const targetPath = typeof file_path === 'string' ? file_path.trim() : '';
+
+      if (!targetUrl && !targetPath) {
+        return {
+          success: false,
+          error: 'Either url or file_path is required'
+        };
+      }
+
+      if (targetUrl && targetPath) {
+        return {
+          success: false,
+          error: 'Provide only one of url or file_path'
+        };
+      }
+
+      const location = targetUrl ? { url: targetUrl } : { file_path: targetPath };
+      const locationLabel = targetUrl || targetPath;
+      let sourceToImport;
+      let cleanupPath = null;
+
+      if (targetUrl) {
+        const fetchFn = globalThis.fetch;
+        if (typeof fetchFn !== 'function') {
+          return {
+            success: false,
+            error: 'Fetch API not available to retrieve AsyncAPI specification',
+            ...location
+          };
+        }
+        try {
+          const response = await fetchFn(targetUrl);
+          if (!response.ok) {
+            return {
+              success: false,
+              error: `Failed to fetch AsyncAPI specification (status ${response.status})`,
+              status: response.status,
+              ...location
+            };
+          }
+          const body = await response.text();
+          const remoteDir = path.join(ROOT, '.tmp', 'asyncapi-cache');
+          await fs.mkdir(remoteDir, { recursive: true });
+
+          let extension = '.yaml';
+          try {
+            const pathname = new URL(targetUrl).pathname.toLowerCase();
+            if (pathname.endsWith('.json')) {
+              extension = '.json';
+            } else if (pathname.endsWith('.yml') || pathname.endsWith('.yaml')) {
+              extension = '.yaml';
+            }
+          } catch {
+            // Ignore URL parsing issues; fall back to content-type detection
+          }
+          const contentType = response.headers.get('content-type') || '';
+          if (contentType.includes('json')) {
+            extension = '.json';
+          }
+
+          const tempPath = path.join(remoteDir, `${randomUUID()}${extension}`);
+          await fs.writeFile(tempPath, body, 'utf8');
+          sourceToImport = tempPath;
+          cleanupPath = tempPath;
+        } catch (error) {
+          return {
+            success: false,
+            error: `Failed to fetch AsyncAPI specification: ${error.message}`,
+            ...location,
+            details: error.stack
+          };
+        }
+      } else {
+        sourceToImport = safe(targetPath);
+      }
+
+      try {
+        const { manifests, metadata } = await importAsyncAPI(sourceToImport, {
+          timeout: 30000,
+          logger: toolLogger.child('protocol_discover_asyncapi')
+        });
+
+        if (!manifests || manifests.length === 0) {
+          return {
+            success: false,
+            error: 'Discovery failed - no event manifests returned',
+            metadata,
+            ...location
+          };
+        }
+
+        const manifest = { ...manifests[0] };
+        manifest.metadata = {
+          ...(manifest.metadata || {}),
+          channel_count: metadata?.channel_count,
+          message_count: metadata?.message_count,
+          parse_time_ms: metadata?.parse_time_ms
+        };
+
+        if (manifest.metadata?.status === 'error') {
+          return {
+            success: false,
+            error: manifest.metadata?.error?.message || 'Discovery failed',
+            manifest,
+            metadata,
+            ...location
+          };
+        }
+
+        return {
+          success: true,
+          manifest,
+          metadata,
+          message: `Successfully discovered AsyncAPI from ${locationLabel}`,
+          ...location
+        };
+      } catch (error) {
+        return {
+          success: false,
+          error: error.message,
+          ...location,
+          details: error.stack
+        };
+      } finally {
+        if (cleanupPath) {
+          await fs.unlink(cleanupPath).catch(() => {});
+        }
       }
     })
   },
