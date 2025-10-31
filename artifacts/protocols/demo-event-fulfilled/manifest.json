@@ -1,0 +1,50 @@
+{
+  "urn": "urn:proto:event:demo.showcase/order-fulfilled@v1.0.0",
+  "metadata": {
+    "urn": "urn:proto:event:demo.showcase/order-fulfilled@v1.0.0",
+    "name": "Demo Order Fulfilled Event",
+    "kind": "event",
+    "version": "1.0.0",
+    "description": "Emitted when the fulfillment workflow completes packing for an order.",
+    "status": "approved",
+    "visibility": "internal",
+    "tags": ["demo", "showcase", "event"],
+    "created_at": "2025-10-01T00:00:00Z",
+    "updated_at": "2025-10-25T00:00:00Z",
+    "source": {
+      "type": "asyncapi",
+      "reference": "seeds/asyncapi/order-fulfilled.json",
+      "notes": "Synthesized payload for internal event propagation."
+    }
+  },
+  "event": {
+    "channels": [
+      {
+        "name": "order.fulfilled",
+        "description": "Signals downstream systems that an order is ready for shipment.",
+        "message": {
+          "content_type": "application/json",
+          "schema": {
+            "type": "object",
+            "required": ["orderId", "fulfilledAt"],
+            "properties": {
+              "orderId": { "type": "string" },
+              "fulfilledAt": { "type": "string", "format": "date-time" },
+              "status": { "type": "string" },
+              "carrier": { "type": "string" }
+            }
+          }
+        },
+        "delivery": {
+          "protocol": "sns",
+          "region": "us-east-1"
+        },
+        "publisher": "urn:proto:workflow:demo.showcase/order-fulfillment@v1.0.0"
+      }
+    ]
+  },
+  "relationships": {
+    "emitted_by": ["urn:proto:workflow:demo.showcase/order-fulfillment@v1.0.0"],
+    "consumed_by": ["urn:proto:agent:demo.showcase/fulfillment-agent@v1.0.0"]
+  }
+}

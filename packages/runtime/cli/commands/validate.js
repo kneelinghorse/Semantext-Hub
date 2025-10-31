@@ -9,8 +9,7 @@ import path from 'path';
 import chalk from 'chalk';
 import { performance } from 'perf_hooks';
 import { loadManifestsFromDirectory, buildGraph } from '../../workflow/graph-builder.js';
-import { CrossValidator } from '../../validation/cross-validator.js';
-import { validateManifest } from '../../workflow/validator.js';
+import { CrossValidator } from '../../../protocols/validation/cross-validator.js';
 
 /**
  * Ecosystem validation command
@@ -21,22 +20,30 @@ export async function validateCommand(options = {}) {
   try {
     if (!options.ecosystem) {
       console.log(chalk.red('Error: --ecosystem flag is required'));
-      console.log(chalk.gray('Usage: ossp validate --ecosystem [options]'));
+      console.log(chalk.gray('Usage: sch protocol validate --ecosystem [options]'));
       process.exit(1);
     }
 
     console.log(chalk.blue('\n🔍 Ecosystem Validation Engine\n'));
-    console.log(chalk.gray(`Manifests directory: ${options.manifests}`));
+    const manifestsDir = path.resolve(options.manifests);
+    console.log(chalk.gray(`Manifests directory: ${manifestsDir}`));
     console.log(chalk.gray(`Output format: ${options.format}`));
     if (options.output) {
       console.log(chalk.gray(`Output file: ${options.output}`));
     }
     console.log('');
 
+    try {
+      await fs.access(manifestsDir);
+    } catch (error) {
+      console.log(chalk.red(`❌ Manifests directory not found: ${manifestsDir}`));
+      process.exit(1);
+    }
+
     // Load all manifests from directory
     console.log(chalk.blue('📦 Loading manifests...'));
     const loadStart = performance.now();
-    const entries = await loadManifestsFromDirectory(options.manifests);
+    const entries = await loadManifestsFromDirectory(manifestsDir);
     const loadTime = performance.now() - loadStart;
     
     const validManifests = entries.filter(e => e.manifest);

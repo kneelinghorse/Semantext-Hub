@@ -1,0 +1,43 @@
+{
+  "urn": "urn:proto:agent:demo.showcase/fulfillment-agent@v1.0.0",
+  "metadata": {
+    "urn": "urn:proto:agent:demo.showcase/fulfillment-agent@v1.0.0",
+    "name": "Demo Fulfillment Agent",
+    "kind": "agent",
+    "version": "1.0.0",
+    "description": "Virtual agent that coordinates packing and shipment for demo orders.",
+    "status": "approved",
+    "visibility": "internal",
+    "tags": ["demo", "showcase", "agent"],
+    "created_at": "2025-10-01T00:00:00Z",
+    "updated_at": "2025-10-25T00:00:00Z",
+    "source": {
+      "type": "playbook",
+      "reference": "docs/demos/fulfillment-agent.md",
+      "notes": "Baseline operating procedures for the fulfillment assistant."
+    }
+  },
+  "agent": {
+    "capabilities": [
+      {
+        "name": "queue-order",
+        "description": "Queue incoming orders for physical packing.",
+        "triggers": ["urn:proto:event:demo.showcase/order-placed@v1.0.0"]
+      },
+      {
+        "name": "update-status",
+        "description": "Update the order record when packing completes.",
+        "uses": ["urn:proto:api:demo.showcase/order-api@v1.0.0"]
+      }
+    ],
+    "interface": {
+      "type": "webhook",
+      "endpoint": "https://ops.demo.showcase/internal/fulfillment"
+    }
+  },
+  "relationships": {
+    "depends_on": ["urn:proto:api:demo.showcase/order-api@v1.0.0"],
+    "consumes": ["urn:proto:event:demo.showcase/order-placed@v1.0.0"],
+    "produces": ["urn:proto:event:demo.showcase/order-fulfilled@v1.0.0"]
+  }
+}

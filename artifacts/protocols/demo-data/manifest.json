@@ -1,0 +1,44 @@
+{
+  "urn": "urn:proto:data:demo.showcase/order-db@v1.0.0",
+  "metadata": {
+    "urn": "urn:proto:data:demo.showcase/order-db@v1.0.0",
+    "name": "Demo Order Database",
+    "kind": "data",
+    "version": "1.0.0",
+    "description": "Operational data store holding order records for the demo showcase.",
+    "status": "approved",
+    "visibility": "internal",
+    "tags": ["demo", "showcase", "data"],
+    "created_at": "2025-10-01T00:00:00Z",
+    "updated_at": "2025-10-25T00:00:00Z",
+    "source": {
+      "type": "ddl",
+      "reference": "seeds/sql/demo-orders.sql",
+      "notes": "Represents the logical model for persisted orders."
+    }
+  },
+  "service": {
+    "type": "database",
+    "engine": "postgresql",
+    "entities": [
+      {
+        "name": "orders",
+        "schema": {
+          "type": "object",
+          "required": ["order_id", "customer_id", "status", "total"],
+          "properties": {
+            "order_id": { "type": "string", "description": "Primary key for the order." },
+            "customer_id": { "type": "string", "description": "Customer placing the order." },
+            "status": { "type": "string", "description": "Current processing state." },
+            "total": { "type": "number", "description": "Order total in USD." },
+            "created_at": { "type": "string", "format": "date-time" },
+            "updated_at": { "type": "string", "format": "date-time" }
+          }
+        }
+      }
+    ]
+  },
+  "relationships": {
+    "supports": ["urn:proto:workflow:demo.showcase/order-fulfillment@v1.0.0"]
+  }
+}

@@ -6,6 +6,8 @@ node_modules/
 coverage/
 var/
 artifacts/
+!artifacts/protocols/
+!artifacts/protocols/**
 tests/security/_tmp/
 tests/_tmp/
 cli/commands/dist/

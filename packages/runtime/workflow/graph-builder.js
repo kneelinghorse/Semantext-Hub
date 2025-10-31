@@ -29,27 +29,68 @@ const RELATION_FIELDS = {
  * @returns {Promise<Array<{ path: string, manifest: Object }>>}
  */
 async function loadManifestsFromDirectory(baseDir) {
-  const entries = await fs.readdir(baseDir);
   const manifests = [];
 
-  for (const entry of entries) {
-    if (!entry.endsWith('.json')) continue;
-
-    const fullPath = path.join(baseDir, entry);
+  async function walkDirectory(dir) {
+    let dirEntries;
     try {
-      const data = await fs.readJson(fullPath);
-      if (data && data.metadata && typeof data.metadata.urn === 'string') {
-        manifests.push({ path: fullPath, manifest: data });
-      }
+      dirEntries = await fs.readdir(dir, { withFileTypes: true });
     } catch (error) {
       manifests.push({
-        path: fullPath,
+        path: dir,
         manifest: null,
         error
       });
+      return;
+    }
+
+    for (const entry of dirEntries) {
+      const fullPath = path.join(dir, entry.name);
+
+      if (entry.isDirectory()) {
+        await walkDirectory(fullPath);
+        continue;
+      }
+
+      if (!entry.isFile() || !entry.name.endsWith('.json')) {
+        continue;
+      }
+
+      try {
+        const data = await fs.readJson(fullPath);
+        const urn =
+          (data && data.metadata && typeof data.metadata.urn === 'string'
+            ? data.metadata.urn
+            : data && typeof data.urn === 'string'
+              ? data.urn
+              : null);
+
+        if (urn) {
+          if (!data.metadata || typeof data.metadata !== 'object') {
+            data.metadata = {};
+          }
+          if (typeof data.metadata.urn !== 'string') {
+            data.metadata.urn = urn;
+          }
+          manifests.push({ path: fullPath, manifest: data });
+        } else {
+          manifests.push({
+            path: fullPath,
+            manifest: null,
+            error: new Error('Missing metadata.urn or top-level urn')
+          });
+        }
+      } catch (error) {
+        manifests.push({
+          path: fullPath,
+          manifest: null,
+          error
+        });
+      }
     }
   }
 
+  await walkDirectory(baseDir);
   return manifests;
 }
 
@@ -135,11 +176,26 @@ function buildGraph(manifests) {
 
   for (const entry of manifests) {
     const manifest = entry.manifest;
-    if (!manifest || !manifest.metadata || typeof manifest.metadata.urn !== 'string') {
+    if (!manifest) {
       continue;
     }
 
-    const urn = manifest.metadata.urn;
+    const urn =
+      (manifest.metadata && typeof manifest.metadata.urn === 'string'
+        ? manifest.metadata.urn
+        : typeof manifest.urn === 'string'
+          ? manifest.urn
+          : null);
+
+    if (!urn) {
+      continue;
+    }
+
+    if (!manifest.metadata || typeof manifest.metadata !== 'object') {
+      manifest.metadata = { urn };
+    } else if (typeof manifest.metadata.urn !== 'string') {
+      manifest.metadata.urn = urn;
+    }
     const kind = inferNodeKind(manifest);
 
     const added = graph.addNode(urn, kind, manifest);
