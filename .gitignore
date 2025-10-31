@@ -5,7 +5,8 @@ cmos/
 node_modules/
 coverage/
 var/
-artifacts/security/*.jsonl
+artifacts/
 tests/security/_tmp/
+tests/_tmp/
 cli/commands/dist/
 app/cli/dist/

@@ -1,1 +1,0 @@
-{"apiVersion":"v1","kind":"Workflow","spec":{"nodes":[{"id":"n1","type":"agent","agent":{"protocol":"a2a","discoveryUri":"http://localhost:0","skill":"echo","inputMapping":{"message":"hello"},"outputMapping":{"result":"workflow.outputs.result"}}}]}}

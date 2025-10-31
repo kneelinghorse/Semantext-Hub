@@ -1,3 +1,0 @@
-{"ts":"2025-10-27T18:40:05.100Z","sessionId":"external-github-20251027","tool":"adapter:openapi","step":"download","ms":842,"ok":true,"target":"https://api.github.com"}
-{"ts":"2025-10-27T18:40:05.950Z","sessionId":"external-github-20251027","tool":"adapter:openapi","step":"normalize","ms":612,"ok":true,"resources":2543}
-{"ts":"2025-10-27T18:40:07.220Z","sessionId":"external-github-20251027","tool":"governance:validate","step":"security-budget","ms":214,"ok":true,"score":0.92}

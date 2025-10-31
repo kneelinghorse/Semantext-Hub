@@ -1,2 +1,0 @@
-{"timestamp":1761323177380,"event":"TEST_START","manifestId":"concurrent-strict-001","mode":"strict"}
-{"timestamp":1761323177427,"event":"STRICT_MODE_COMPLETED","manifestId":"concurrent-strict-001","successCount":5,"errorCount":0,"errorMessages":[]}

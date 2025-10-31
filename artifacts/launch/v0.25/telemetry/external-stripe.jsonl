@@ -1,3 +1,0 @@
-{"ts":"2025-10-27T18:43:11.002Z","sessionId":"external-stripe-20251027","tool":"adapter:openapi","step":"download","ms":463,"ok":true,"target":"https://api.stripe.com"}
-{"ts":"2025-10-27T18:43:11.820Z","sessionId":"external-stripe-20251027","tool":"adapter:openapi","step":"normalize","ms":705,"ok":true,"resources":1876}
-{"ts":"2025-10-27T18:43:13.064Z","sessionId":"external-stripe-20251027","tool":"governance:validate","step":"pci-budget","ms":298,"ok":true,"score":0.88}
