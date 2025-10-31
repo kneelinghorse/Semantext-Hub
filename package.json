@@ -1,9 +1,13 @@
 {
-  "name": "oss-protocols",
+  "name": "semantext-hub",
   "version": "0.1.0",
   "type": "module",
   "private": true,
-  "description": "Protocol-Driven Discovery tooling and missions",
+  "description": "Semantext Hub mission orchestration and local-first context tooling",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kneelinghorse/Semantext-Hub.git"
+  },
   "bin": {
     "sch": "./cli/index.js",
     "sch-cli": "./cli/index.js",
