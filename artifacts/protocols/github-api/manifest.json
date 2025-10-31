@@ -1,0 +1,34 @@
+{
+  "urn": "urn:proto:api:integrations/github-rest@v1.0.0",
+  "metadata": {
+    "urn": "urn:proto:api:integrations/github-rest@v1.0.0",
+    "name": "GitHub REST API",
+    "kind": "api",
+    "version": "1.0.0",
+    "description": "Official GitHub REST API for repository, issue, and user management",
+    "status": "approved",
+    "source": {
+      "type": "openapi",
+      "reference": "https://raw.githubusercontent.com/github/rest-api-description/main/descriptions/api.github.com/api.github.com.json"
+    },
+    "approved_at": "2025-10-28T18:00:26.576Z",
+    "approved_by": "mcp-test-user"
+  },
+  "catalog": {
+    "type": "api",
+    "endpoints": [
+      {
+        "path": "/api/v1",
+        "method": "GET",
+        "description": "API endpoint discovered from GitHub REST API OpenAPI specification",
+        "responseSchema": {
+          "type": "object",
+          "properties": {
+            "status": { "type": "string" },
+            "rateLimit": { "type": "integer" }
+          }
+        }
+      }
+    ]
+  }
+}

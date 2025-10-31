@@ -1,0 +1,113 @@
+{
+  "urn": "urn:proto:api:demo.showcase/order-api@v1.0.0",
+  "metadata": {
+    "urn": "urn:proto:api:demo.showcase/order-api@v1.0.0",
+    "name": "Demo Order Service API",
+    "kind": "api",
+    "version": "1.0.0",
+    "description": "CRUD API for demo orders powering the curated showcase flow.",
+    "status": "approved",
+    "visibility": "internal",
+    "tags": ["demo", "showcase", "api"],
+    "created_at": "2025-10-01T00:00:00Z",
+    "updated_at": "2025-10-25T00:00:00Z",
+    "source": {
+      "type": "openapi",
+      "reference": "seeds/openapi/petstore/spec.json",
+      "notes": "Curated subset with order model renamed for showcase consistency."
+    }
+  },
+  "catalog": {
+    "endpoints": [
+      {
+        "path": "/orders",
+        "method": "POST",
+        "summary": "Create a new order and emit an order.placed event.",
+        "reads_from": ["urn:proto:data:demo.showcase/order-db@v1.0.0"],
+        "produces": ["urn:proto:event:demo.showcase/order-placed@v1.0.0"],
+        "requestSchema": {
+          "type": "object",
+          "required": ["orderId", "customerId", "items"],
+          "properties": {
+            "orderId": { "type": "string" },
+            "customerId": { "type": "string" },
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["sku", "quantity"],
+                "properties": {
+                  "sku": { "type": "string" },
+                  "quantity": { "type": "integer", "minimum": 1 }
+                }
+              }
+            },
+            "total": { "type": "number" }
+          }
+        },
+        "responseSchema": {
+          "type": "object",
+          "required": ["orderId", "status"],
+          "properties": {
+            "orderId": { "type": "string" },
+            "status": { "type": "string" },
+            "createdAt": { "type": "string", "format": "date-time" }
+          }
+        }
+      },
+      {
+        "path": "/orders/{orderId}",
+        "method": "GET",
+        "summary": "Retrieve a specific order by identifier.",
+        "reads_from": ["urn:proto:data:demo.showcase/order-db@v1.0.0"],
+        "responseSchema": {
+          "type": "object",
+          "required": ["orderId", "status"],
+          "properties": {
+            "orderId": { "type": "string" },
+            "status": { "type": "string" },
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "sku": { "type": "string" },
+                  "quantity": { "type": "integer" }
+                }
+              }
+            },
+            "total": { "type": "number" }
+          }
+        }
+      },
+      {
+        "path": "/orders/search",
+        "method": "GET",
+        "summary": "List existing orders with pagination support.",
+        "reads_from": ["urn:proto:data:demo.showcase/order-db@v1.0.0"],
+        "responseSchema": {
+          "type": "object",
+          "required": ["items"],
+          "properties": {
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "orderId": { "type": "string" },
+                  "status": { "type": "string" },
+                  "total": { "type": "number" }
+                }
+              }
+            },
+            "nextCursor": { "type": "string" }
+          }
+        }
+      }
+    ]
+  },
+  "relationships": {
+    "depends_on": ["urn:proto:data:demo.showcase/order-db@v1.0.0"],
+    "produces": ["urn:proto:event:demo.showcase/order-placed@v1.0.0"]
+  }
+}

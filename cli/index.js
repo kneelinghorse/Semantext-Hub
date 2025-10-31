@@ -234,7 +234,7 @@ function registerProtocolCommands(root) {
 function configureProtocolValidateOptions(command) {
   return command
     .option('--ecosystem', 'Validate the entire workspace ecosystem', false)
-    .option('--manifests <path>', 'Directory containing manifests', 'protocols')
+    .option('--manifests <path>', 'Directory containing manifests', 'artifacts/protocols')
     .option('--output <file>', 'Write validation report to file')
     .option('--format <format>', 'Output format (summary|json)', 'summary')
     .option('--verbose', 'Show detailed validation output', false);

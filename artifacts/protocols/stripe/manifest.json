@@ -1,0 +1,32 @@
+{
+  "urn": "urn:proto:api:integrations/stripe@v1.0.0",
+  "metadata": {
+    "urn": "urn:proto:api:integrations/stripe@v1.0.0",
+    "name": "Stripe Payments API",
+    "kind": "api",
+    "version": "1.0.0",
+    "description": "API surface generated from the Stripe reference specification for demo ingestion tests.",
+    "status": "approved",
+    "source": {
+      "type": "openapi",
+      "reference": "/Users/d/portfolio/Semantext Hub/app/seeds/openapi/stripe/spec.json"
+    }
+  },
+  "catalog": {
+    "type": "api",
+    "endpoints": [
+      {
+        "path": "/api/v1",
+        "method": "GET",
+        "description": "API endpoint discovered from /Users/d/portfolio/Semantext Hub/app/seeds/openapi/stripe/spec.json",
+        "responseSchema": {
+          "type": "object",
+          "properties": {
+            "status": { "type": "string" },
+            "message": { "type": "string" }
+          }
+        }
+      }
+    ]
+  }
+}
