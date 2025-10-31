@@ -154,9 +154,17 @@ async function ensureDir(p) {
   await fs.mkdir(p, { recursive: true }).catch(() => {});
 }
 
+function resolveMetricsDir() {
+  const override = process.env.UI_PREVIEW_METRICS_DIR;
+  if (override && override.trim().length > 0) {
+    return path.isAbsolute(override) ? override : path.resolve(process.cwd(), override);
+  }
+  return path.resolve(process.cwd(), 'artifacts/perf');
+}
+
 async function recordPreviewLatency(kind, tookMs) {
   try {
-    const dir = path.resolve(process.cwd(), 'artifacts/perf');
+    const dir = resolveMetricsDir();
     await ensureDir(dir);
     const file = path.join(dir, 'ui-preview.jsonl');
     const line = JSON.stringify({ ts: new Date().toISOString(), kind, took_ms: tookMs });

@@ -15,6 +15,15 @@ jest.setTimeout(60000);
 const screenshotDir = path.resolve(process.cwd(), 'artifacts/ui/screenshots');
 ensureDirSync(screenshotDir);
 
+const configuredMetricsDir = (process.env.UI_PREVIEW_METRICS_DIR || '').trim();
+const metricsDirSetting = configuredMetricsDir.length > 0 ? configuredMetricsDir : 'tests/_tmp/perf';
+process.env.UI_PREVIEW_METRICS_DIR = metricsDirSetting;
+const perfMetricsDir = path.isAbsolute(metricsDirSetting)
+  ? metricsDirSetting
+  : path.resolve(process.cwd(), metricsDirSetting);
+ensureDirSync(perfMetricsDir);
+const perfMetricsFile = path.join(perfMetricsDir, 'ui-preview.jsonl');
+
 function computeP95(latencies) {
   if (latencies.length === 0) return 0;
   const sorted = [...latencies].sort((a, b) => a - b);
@@ -23,9 +32,8 @@ function computeP95(latencies) {
 }
 
 async function recordLatency(kind, took_ms) {
-  const dir = path.resolve(process.cwd(), 'artifacts/perf');
-  ensureDirSync(dir);
-  const file = path.join(dir, 'ui-preview.jsonl');
+  ensureDirSync(perfMetricsDir);
+  const file = perfMetricsFile;
   const line = JSON.stringify({ ts: new Date().toISOString(), kind, took_ms });
   await fs.appendFile(file, line + '\n');
 }
@@ -35,7 +43,8 @@ describe('Authoring UI E2E Flows (Mission S19.2)', () => {
   let app;
   let api;
 
-  beforeAll(() => {
+  beforeAll(async () => {
+    await fs.rm(perfMetricsFile, { force: true }).catch(() => {});
     ensureDirSync(tmpDir);
     app = createApp({ baseDir: tmpDir });
     api = request.agent(app);
@@ -496,5 +505,11 @@ describe('Authoring UI E2E Flows (Mission S19.2)', () => {
         await page.close();
       });
     });
+  });
+
+  afterAll(async () => {
+    await fs.rm(perfMetricsFile, { force: true }).catch(() => {});
+    await fs.rm(perfMetricsDir, { recursive: true, force: true }).catch(() => {});
+    await fs.rm(tmpDir, { recursive: true, force: true }).catch(() => {});
   });
 });
