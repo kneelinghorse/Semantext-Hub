@@ -19,6 +19,7 @@ describe('app/services/registry/start.mjs', () => {
     originalProcessOn = process.on;
     tempRoot = await mkdtemp(path.join(tmpdir(), 'registry-start-'));
     delete process.env.REGISTRY_API_KEY;
+    delete process.env.REGISTRY_DB_PATH;
     delete process.env.OSSP_IAM_POLICY;
     delete process.env.OSSP_IAM_AUDIT_LOG;
     delete process.env.OSSP_AGI_SILENCE_REGISTRY_DEPRECATION;
@@ -29,6 +30,7 @@ describe('app/services/registry/start.mjs', () => {
     jest.restoreAllMocks();
     await rm(tempRoot, { recursive: true, force: true });
     delete process.env.REGISTRY_API_KEY;
+    delete process.env.REGISTRY_DB_PATH;
     delete process.env.OSSP_IAM_POLICY;
     delete process.env.OSSP_IAM_AUDIT_LOG;
     delete process.env.OSSP_AGI_SILENCE_REGISTRY_DEPRECATION;
@@ -59,6 +61,19 @@ describe('app/services/registry/start.mjs', () => {
     process.env.OSSP_IAM_AUDIT_LOG = customAudit;
     const resolvedAudit = resolveIamAuditPath();
     expect(resolvedAudit).toBe(path.resolve(process.cwd(), customAudit));
+  });
+
+  test('resolveRegistryDbPath respects overrides and defaults', async () => {
+    process.env.OSSP_AGI_SILENCE_REGISTRY_DEPRECATION = '1';
+    const { resolveRegistryDbPath } = await importStartModule();
+
+    const defaultPath = resolveRegistryDbPath();
+    expect(defaultPath).toBe(path.resolve(process.cwd(), 'var/registry.sqlite'));
+
+    const customDb = path.join(tempRoot, 'registry.sqlite');
+    process.env.REGISTRY_DB_PATH = customDb;
+    const overriddenPath = resolveRegistryDbPath();
+    expect(overriddenPath).toBe(path.resolve(process.cwd(), customDb));
   });
 
   test('emitStartupChecklist logs warnings when prerequisites are missing', async () => {
@@ -154,10 +169,12 @@ describe('app/services/registry/start.mjs', () => {
 
     await main();
 
-    expect(startServerMock).toHaveBeenCalledWith({
+    expect(startServerMock).toHaveBeenCalledWith(expect.objectContaining({
       port: 3000,
-      apiKey: 'super-secure-api-key'
-    });
+      host: '0.0.0.0',
+      apiKey: 'super-secure-api-key',
+      dbPath: path.resolve(process.cwd(), 'var/registry.sqlite')
+    }));
     expect(processOnSpy).toHaveBeenCalledWith('SIGTERM', expect.any(Function));
     expect(processOnSpy).toHaveBeenCalledWith('SIGINT', expect.any(Function));
     expect(errorSpy).not.toHaveBeenCalled();

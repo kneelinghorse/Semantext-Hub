@@ -154,6 +154,24 @@ function registerRegistryCommands(root) {
       open: Boolean(options.open)
     });
   });
+
+  configureRegistryLoadOptions(
+    registry
+      .command('load')
+      .description('Load semantic protocol manifests into the local registry store')
+  ).action(async (options) => {
+    const { registryLoadCommand } = await import('./commands/registry-load.js');
+    await registryLoadCommand({
+      workspace: options.workspace,
+      directory: options.directory,
+      db: options.db,
+      lancedb: options.lancedb,
+      collection: options.collection,
+      batchSize: options.batchSize,
+      dryRun: Boolean(options.dryRun),
+      json: Boolean(options.json)
+    });
+  });
 }
 
 function configureRegistryListOptions(command) {
@@ -176,6 +194,18 @@ function configureRegistryDiagramOptions(command) {
     .option('--theme <name>', 'Theme identifier to apply')
     .option('--overwrite', 'Allow overwriting the output file', false)
     .option('--open', 'Open the generated diagram when interactive', false);
+}
+
+function configureRegistryLoadOptions(command) {
+  return command
+    .option('--workspace <path>', 'Workspace root', process.cwd())
+    .option('--directory <path>', 'Directory containing manifest JSON files', 'artifacts/protocols')
+    .option('--db <path>', 'Path to SQLite registry database', 'var/registry.sqlite')
+    .option('--lancedb <path>', 'Directory for LanceDB vector store', 'data/lancedb')
+    .option('--collection <name>', 'LanceDB collection name', 'protocol_registry_vectors')
+    .option('--batch-size <number>', 'Embedding batch size', '32')
+    .option('--dry-run', 'Inspect manifests without writing to disk', false)
+    .option('--json', 'Emit JSON summary instead of human-readable output', false);
 }
 
 function registerProtocolCommands(root) {
