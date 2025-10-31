@@ -36,7 +36,7 @@ describe('sch CLI smoke tests', () => {
   test('prints top-level help', async () => {
     const result = await runCli(['--help']);
     expect(result.code).toBe(0);
-    expect(result.stdout).toContain('Semantic Context Hub CLI');
+    expect(result.stdout).toContain('Semantext Hub CLI');
     expect(result.stdout).toContain('protocol');
   });
 

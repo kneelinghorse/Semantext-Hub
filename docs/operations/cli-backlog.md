@@ -1,6 +1,6 @@
 # SCH CLI Backlog
 
-This backlog captures follow-up work required to round out the Semantic Context Hub CLI after the Sprint 01 consolidation mission.
+This backlog captures follow-up work required to round out the Semantext Hub CLI after the Sprint 01 consolidation mission.
 
 ## SCH-CLI-001 — Context Inventory Report
 - **Goal:** Provide a concrete `sch context status` command that inspects cached manifests, context bundles, and registry parity.

@@ -1,6 +1,6 @@
-# Semantic Context Hub CLI
+# Semantext Hub CLI
 
-The Semantic Context Hub (SCH) CLI consolidates the previous OSSP-AGI tooling surfaces into a single executable exposed as `sch`. The CLI focuses on four MVP workflows: protocol validation, registry inspection, context management, and retrieval QA.
+The Semantext Hub CLI consolidates the previous OSSP-AGI tooling surfaces into a single executable exposed as `sch`. The CLI focuses on four MVP workflows: protocol validation, registry inspection, context management, and retrieval QA.
 
 ## Command Tree (Sprint 01 MVP)
 

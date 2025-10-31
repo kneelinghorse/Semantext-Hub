@@ -10,7 +10,7 @@ const program = new Command();
 
 program
   .name('sch')
-  .description('Semantic Context Hub CLI')
+  .description('Semantext Hub CLI')
   .version('0.1.0', '-v, --version', 'Show CLI version')
   .configureHelp({ sortSubcommands: true })
   .showSuggestionAfterError(true)
@@ -34,7 +34,7 @@ program.parseAsync(process.argv).catch(handleCliError);
 function registerPerfCommands(root) {
   const perf = root
     .command('perf')
-    .description('Performance telemetry utilities for SCH workspaces');
+    .description('Performance telemetry utilities for Semantext Hub workspaces');
 
   const statusAction = async (options) => {
     const { perfStatusCommand } = await import('./commands/perf-status.js');
