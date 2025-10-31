@@ -17,7 +17,7 @@ The Workflow Library provides:
 
 ### Installation
 
-The workflow library is part of the OSSP-AGI project. No separate installation needed.
+The workflow library is part of the Semantext Hub project. No separate installation needed.
 
 ### Validate a Workflow
 
@@ -495,7 +495,7 @@ The executor emits events for monitoring and debugging:
 
 ## License
 
-Part of the OSSP-AGI project.
+Part of the Semantext Hub project.
 
 ## Contributing
 

@@ -89,7 +89,7 @@ if (isValid) {
     "version": "1.0.0",
     "description": "Agent description",
     "createdAt": "2024-01-01T00:00:00.000Z",
-    "generator": "OSSP-AGI-ACM-Generator",
+    "generator": "Semantext-Hub-ACM-Generator",
     "generatorVersion": "1.0.0"
   },
   "spec": {

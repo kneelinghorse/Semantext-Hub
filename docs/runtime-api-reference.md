@@ -1,6 +1,6 @@
 # Runtime Integration API Reference
 
-This document provides comprehensive API documentation for all runtime integration components in the OSSP-AGI project.
+This document provides comprehensive API documentation for all runtime integration components in the Semantext Hub project.
 
 ## Table of Contents
 

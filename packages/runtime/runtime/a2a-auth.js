@@ -129,7 +129,7 @@ export class NoAuthProvider {
 export async function createAuthHeaders(authProvider, options = {}) {
   const headers = {
     'Content-Type': 'application/json',
-    'User-Agent': 'OSSP-AGI-A2A-Client/1.0.0',
+    'User-Agent': 'Semantext-Hub-A2A-Client/1.0.0',
     ...options.additionalHeaders
   };
 

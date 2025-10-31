@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "Demonstrates conditional execution based on content type and size",
   "metadata": {
-    "author": "OSSP-AGI",
+    "author": "Semantext Hub",
     "tags": ["conditional", "content-processing", "example"],
     "created": "2025-10-06T00:00:00Z"
   },

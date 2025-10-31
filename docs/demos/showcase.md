@@ -37,14 +37,14 @@ node scripts/demo/run-showcase.mjs --overwrite
 Expected console output (trimmed for brevity):
 
 ```
-Workspace: /Users/d/portfolio/OSSP-AGI
-Showcase manifests: /Users/d/portfolio/OSSP-AGI/artifacts/catalogs/showcase
+Workspace: /Users/d/portfolio/Semantext Hub
+Showcase manifests: /Users/d/portfolio/Semantext Hub/artifacts/catalogs/showcase
 ✔ Showcase pipeline completed
   Manifests copied: 3
   Graph nodes: 7
   Graph edges: 10
-  Graph output: /Users/d/portfolio/OSSP-AGI/artifacts/graphs/showcase/catalog-graph.json
-  Diagram output: /Users/d/portfolio/OSSP-AGI/artifacts/diagrams/showcase.drawio
+  Graph output: /Users/d/portfolio/Semantext Hub/artifacts/graphs/showcase/catalog-graph.json
+  Diagram output: /Users/d/portfolio/Semantext Hub/artifacts/diagrams/showcase.drawio
 Protocols discovered:
   - Demo Order Service API [api]
   - Demo Order Fulfillment Workflow [workflow]

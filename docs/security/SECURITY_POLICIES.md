@@ -1,6 +1,6 @@
 # Security Policies
 
-This document outlines the security policies and guardrails implemented for the OSSP-AGI project to detect secrets, disallowed licenses, and security vulnerabilities in protocol artifacts.
+This document outlines the security policies and guardrails implemented for the Semantext Hub project to detect secrets, disallowed licenses, and security vulnerabilities in protocol artifacts.
 
 ## Overview
 
@@ -11,7 +11,7 @@ The security scanning system provides comprehensive protection against:
 
 ## Secure Defaults (Sprint 21+)
 
-Starting with Sprint 21, the OSSP-AGI platform enforces secure-by-default behavior across all runtime services:
+Starting with Sprint 21, the Semantext Hub platform enforces secure-by-default behavior across all runtime services:
 
 ### Registry API Security
 
@@ -465,4 +465,4 @@ For security policy questions or issues:
 
 ---
 
-*This document is part of the OSSP-AGI security framework. For updates and questions, refer to the project documentation.*
+*This document is part of the Semantext Hub security framework. For updates and questions, refer to the project documentation.*

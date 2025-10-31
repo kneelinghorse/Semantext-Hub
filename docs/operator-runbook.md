@@ -1,10 +1,10 @@
-# Operator Runbook for OSSP-AGI MCP Server
+# Operator Runbook for Semantext Hub MCP Server
 
 Mission B9.1: Performance Optimization & Hardening
 
 ## Overview
 
-This runbook provides operational guidance for running the OSSP-AGI MCP Server in production environments with performance optimization and monitoring.
+This runbook provides operational guidance for running the Semantext Hub MCP Server in production environments with performance optimization and monitoring.
 
 ## Performance Targets
 
@@ -254,7 +254,7 @@ Structured JSON logging with:
 
 ## Contact Information
 
-- **Team**: OSSP-AGI Team
+- **Team**: Semantext Hub Team
 - **Mission**: B9.1 Performance Optimization & Hardening
 - **Version**: 0.1.0
 - **Last Updated**: 2025-01-09

@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://ossp-agi.dev/schemas/workflow.schema.json",
-  "title": "OSSP-AGI Workflow Definition",
+  "title": "Semantext Hub Workflow Definition",
   "description": "Schema for defining agent orchestration workflows with sequential, parallel, conditional, and saga (compensation) patterns",
   "type": "object",
   "required": ["workflowId", "name", "version", "steps"],

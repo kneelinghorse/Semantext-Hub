@@ -5,7 +5,7 @@
       "args": ["./bin/protocol-mcp-server.js"],
       "type": "stdio",
       "env": {
-        "PROTOCOL_ROOT": "/your-file-path/OSSP-AGI"
+        "PROTOCOL_ROOT": "/your-file-path/Semantext-Hub"
       }
     }
   }

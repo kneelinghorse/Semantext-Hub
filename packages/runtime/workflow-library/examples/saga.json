@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "Demonstrates saga pattern with compensation for distributed transaction across multiple services",
   "metadata": {
-    "author": "OSSP-AGI",
+    "author": "Semantext Hub",
     "tags": ["saga", "compensation", "distributed-transaction", "example"],
     "created": "2025-10-06T00:00:00Z"
   },

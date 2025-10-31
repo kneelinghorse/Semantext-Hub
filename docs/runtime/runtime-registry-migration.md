@@ -6,7 +6,7 @@
 
 ## Overview
 
-This is the authoritative guide for working with the unified runtime registry server. After completing Mission IM-01 (phases A-D), the OSSP-AGI project has fully migrated from the legacy JSONL-based registry to the canonical SQLite-based runtime registry.
+This is the authoritative guide for working with the unified runtime registry server. After completing Mission IM-01 (phases A-D), the Semantext Hub project has fully migrated from the legacy JSONL-based registry to the canonical SQLite-based runtime registry.
 
 **Key Principle:** `packages/runtime/registry/server.mjs` is the **single entry point** for all registry operations.
 

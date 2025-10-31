@@ -1,6 +1,6 @@
-# OSSP-AGI Developer Onboarding
+# Semantext Hub Developer Onboarding
 
-Complete onboarding guide for new developers joining the OSSP-AGI project.
+Complete onboarding guide for new developers joining the Semantext Hub project.
 
 ## Table of Contents
 
@@ -19,11 +19,11 @@ Complete onboarding guide for new developers joining the OSSP-AGI project.
 
 ## Welcome
 
-Welcome to the OSSP-AGI project! This guide will help you get up and running quickly and understand how to contribute effectively to the project.
+Welcome to the Semantext Hub project! This guide will help you get up and running quickly and understand how to contribute effectively to the project.
 
-### What is OSSP-AGI?
+### What is Semantext Hub?
 
-OSSP-AGI (Open Source Software Protocol - Artificial General Intelligence) is a comprehensive protocol suite for modern software systems. It provides:
+Semantext Hub is a local-first mission orchestration and protocol discovery platform for modern software systems. It provides:
 
 - **Protocol Discovery** - Automatically discover and convert API contracts, database schemas, and event definitions
 - **Cross-Protocol Validation** - Validate relationships and dependencies between different protocol types
@@ -78,8 +78,8 @@ OSSP-AGI (Open Source Software Protocol - Artificial General Intelligence) is a 
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/ossp-agi.git
-cd ossp-agi
+git clone https://github.com/kneelinghorse/Semantext-Hub.git
+cd Semantext-Hub
 
 # Checkout the main branch
 git checkout main
@@ -106,18 +106,18 @@ node --version  # Should be 18+
 # Check npm version
 npm --version
 
-# Verify OSSP-AGI CLI
-npm --prefix app run cli --version
+# Verify Semantext Hub CLI
+npx sch --version
 ```
 
 ### Step 4: Run Initial Setup
 
 ```bash
 # Run the quickstart wizard
-npm --prefix app run cli quickstart
+npx sch quickstart
 
 # Or run non-interactively
-npm --prefix app run cli quickstart --template microservices --name my-project
+npx sch quickstart --template microservices --name my-project
 ```
 
 ### Step 5: Validate Setup
@@ -196,7 +196,7 @@ ossp-agi/
 
 #### 1. CLI (`app/cli/`)
 
-The command-line interface provides access to all OSSP-AGI functionality:
+The command-line interface provides access to all Semantext Hub functionality:
 
 - **Discovery Commands** - `discover api`, `discover data`, `discover event`
 - **Validation Commands** - `validate`, `validate --ecosystem`
@@ -879,7 +879,7 @@ When reporting issues, include:
 
 ## Conclusion
 
-Welcome to the OSSP-AGI team! This onboarding guide provides the foundation you need to start contributing effectively. Remember:
+Welcome to the Semantext Hub team! This onboarding guide provides the foundation you need to start contributing effectively. Remember:
 
 - **Ask questions** - Don't hesitate to reach out for help
 - **Start small** - Begin with simple contributions

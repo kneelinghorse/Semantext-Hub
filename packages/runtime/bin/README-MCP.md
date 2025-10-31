@@ -18,7 +18,7 @@ This MCP (Model Context Protocol) server wraps the protocol discovery tooling fo
      "mcpServers": {
        "system-protocols": {
          "command": "node",
-         "args": ["/path/to/OSSP-AGI/app/bin/protocol-mcp-server.js"],
+         "args": ["/path/to/Semantext-Hub/app/bin/protocol-mcp-server.js"],
          "type": "stdio",
          "env": {
            "PROTOCOL_ROOT": "/path/to/your/workspace"

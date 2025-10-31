@@ -1,6 +1,6 @@
-# Getting Started — OSSP-AGI Workbench (v0.25 Launch Bundle)
+# Getting Started — Semantext Hub Workbench (v0.25 Launch Bundle)
 
-This guide walks through the v0.25 release flow so newcomers experience the hardened OSSP-AGI workbench exactly as we ship it: run the preflight, regenerate the curated GitHub/Stripe showcase, and explore the “discover → validate → visualize” loop with truthful telemetry.
+This guide walks through the v0.25 release flow so newcomers experience the hardened Semantext Hub workbench exactly as we ship it: run the preflight, regenerate the curated GitHub/Stripe showcase, and explore the “discover → validate → visualize” loop with truthful telemetry.
 
 ## Prerequisites
 

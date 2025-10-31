@@ -228,7 +228,7 @@ Service discovery metadata.
 **Response:**
 ```json
 {
-  "service": "OSSP-AGI Registry Service (SQLite)",
+  "service": "Semantext Hub Registry Service (SQLite)",
   "version": "registry.ossp-agi.io/v1",
   "description": "SQLite-backed registry with WAL mode for durability",
   "links": {

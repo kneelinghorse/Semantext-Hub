@@ -10,7 +10,7 @@ const require = createRequire(import.meta.url);
 const schema = require('./schema.json');
 
 const DEFAULT_GRAPH_ID = 'catalog-graph';
-const DEFAULT_GRAPH_NAME = 'OSSP-AGI Protocol Catalog';
+const DEFAULT_GRAPH_NAME = 'Semantext Hub Protocol Catalog';
 const DEFAULT_GRAPH_VERSION = '1.0.0';
 
 const ajv = new Ajv({
@@ -69,7 +69,7 @@ export async function buildCatalogGraph(options = {}) {
     name: options.graphName || DEFAULT_GRAPH_NAME,
     description:
       options.graphDescription ||
-      'Canonical property graph representation of the OSSP-AGI catalog manifests.',
+      'Canonical property graph representation of the Semantext Hub catalog manifests.',
     version: options.graphVersion || DEFAULT_GRAPH_VERSION,
     generatedAt: new Date().toISOString(),
     nodes,

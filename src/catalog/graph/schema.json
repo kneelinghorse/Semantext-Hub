@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "urn:ossp-agi:catalog:graph:schema:v1",
-  "title": "OSSP-AGI Catalog Graph",
+  "title": "Semantext Hub Catalog Graph",
   "type": "object",
   "additionalProperties": false,
   "required": ["id", "name", "generatedAt", "nodes", "edges"],

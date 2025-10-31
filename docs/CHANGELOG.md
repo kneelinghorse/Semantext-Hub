@@ -49,7 +49,7 @@
   - Truth guarantees (no mocks, fail-fast on staleness, budget enforcement)
   - Integration with import → validate → visualize → document workflow
   - Developer use cases and CI integration patterns
-- **README Updates**: Added telemetry reference in "Why Use OSSP-AGI" and documentation index.
+- **README Updates**: Added telemetry reference in "Why Use Semantext Hub" and documentation index.
 - **Roadmap Updates**: Marked Sprint 22 complete in [`cmos/docs/roadmap-sprint-21-25.md`](../cmos/docs/roadmap-sprint-21-25.md).
 - **CHANGELOG**: This entry captures Sprint 22 achievements.
 
@@ -88,7 +88,7 @@ None. Sprint 22 is additive: new CLI commands and docs enhance existing workflow
 
 ### Documentation Reality Pass (S21.3 – This Mission)
 
-- **README.md**: Repositioned OSSP-AGI as a "Protocol Discovery Workbench", corrected CLI examples, and added hardened-surface callouts.
+- **README.md**: Repositioned Semantext Hub as a "Protocol Discovery Workbench", corrected CLI examples, and added hardened-surface callouts.
 - **Getting Started Guide**: New [`docs/Getting_Started.md`](Getting_Started.md) walks through secure setup, validation, and viewer behaviour (trimmed surfaces + 501 responses).
 - **Security Policies & Quickstart**: Updated to reference the current registry start command and fail-closed onboarding steps; removed stale references (e.g., docker/app paths, governance CLI).
 - **Change Log**: Consolidated Sprint 21 achievements here and linked to [`docs/SPRINT_21_SURFACE_CHANGES.md`](SPRINT_21_SURFACE_CHANGES.md) for trimmed/disabled surface details.

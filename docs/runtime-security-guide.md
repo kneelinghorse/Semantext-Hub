@@ -1,6 +1,6 @@
 # Runtime Security Guide
 
-This guide provides comprehensive security best practices for the OSSP-AGI runtime components, covering authentication, authorization, data protection, and security monitoring.
+This guide provides comprehensive security best practices for the Semantext Hub runtime components, covering authentication, authorization, data protection, and security monitoring.
 
 ## Table of Contents
 
@@ -1438,4 +1438,4 @@ console.log('Security test summary:', summary);
 - Have response plans ready
 - Document security incidents
 
-This security guide provides comprehensive best practices and examples for securing the OSSP-AGI runtime components against common security threats and vulnerabilities.
+This security guide provides comprehensive best practices and examples for securing the Semantext Hub runtime components against common security threats and vulnerabilities.

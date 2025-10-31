@@ -2,7 +2,7 @@
 
 ## Overview
 
-OSSP-AGI's Protocol Discovery Workbench operates on a principle of **truthful telemetry**: every metric, every performance gate, and every dashboard reflects live operational data—never seeded mocks, never placeholder numbers.
+Semantext Hub's Protocol Discovery Workbench operates on a principle of **truthful telemetry**: every metric, every performance gate, and every dashboard reflects live operational data—never seeded mocks, never placeholder numbers.
 
 This document explains how telemetry flows through the workbench and how guardrails ensure manifests remain trustworthy across the import → validate → visualize → document lifecycle.
 
@@ -295,4 +295,4 @@ The Workbench Telemetry system delivers:
 ✅ **Visibility**: CLI reports show p50/p95/p99 with exit codes  
 ✅ **Audit Trail**: JSONL logs provide timestamped operation history  
 
-This foundation ensures OSSP-AGI demos and releases reflect genuine performance characteristics, giving developers trustworthy data to make informed decisions.
+This foundation ensures Semantext Hub demos and releases reflect genuine performance characteristics, giving developers trustworthy data to make informed decisions.

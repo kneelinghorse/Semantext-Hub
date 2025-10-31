@@ -1,4 +1,4 @@
-# OSSP-AGI App/Ops Toolkit
+# Semantext Hub App/Ops Toolkit
 
 The `app/` folder hosts application-focused and operational tooling, demo services, and generated artifacts used in WSAP and release workflows.
 

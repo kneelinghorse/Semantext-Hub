@@ -3,7 +3,7 @@
 > Intended for a 5–7 minute walkthrough paired with the commands in `docs/demos/showcase.md`.
 
 ## Opening (0:00 – 0:45)
-- Introduce OSSP-AGI as a local-first protocol discovery workbench.
+- Introduce Semantext Hub as a local-first protocol discovery workbench.
 - Frame the goal: demonstrate the curated order-fulfillment journey built in Sprint 23.
 - Highlight trust guarantees (no seeded data, catalog + validation only).
 

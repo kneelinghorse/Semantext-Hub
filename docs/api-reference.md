@@ -1,6 +1,6 @@
-# OSSP-AGI API Reference
+# Semantext Hub API Reference
 
-Complete API reference for all OSSP-AGI protocol types, CLI commands, and runtime components.
+Complete API reference for all Semantext Hub protocol types, CLI commands, and runtime components.
 
 ## Table of Contents
 
