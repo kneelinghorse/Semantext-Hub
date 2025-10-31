@@ -5,8 +5,10 @@
   "private": true,
   "description": "Protocol-Driven Discovery tooling and missions",
   "bin": {
-    "protocol-discover": "./packages/runtime/cli/index.js",
-    "protocol-generate": "./packages/runtime/cli/generate-cli.js",
+    "sch": "./cli/index.js",
+    "sch-cli": "./cli/index.js",
+    "protocol-discover": "./bin/deprecated-protocol-discover.js",
+    "protocol-generate": "./bin/deprecated-protocol-generate.js",
     "protocol-mcp-server": "./packages/runtime/bin/protocol-mcp-server.js"
   },
   "scripts": {
@@ -21,11 +23,11 @@
     "test:deflake:report": "node tests/util/deflake-reporter.js",
     "check:boundaries": "node scripts/check-layer-boundaries.js",
     "check:cli-duplicates": "./scripts/ci/check-duplicate-commands.sh",
-    "perf:report": "node cli/index.js perf:report",
-    "perf:status": "node cli/index.js perf:status",
+    "perf:report": "node cli/index.js perf report",
+    "perf:status": "node cli/index.js perf status",
     "demo:preflight": "node scripts/preflight/demo-preflight.mjs",
     "release:bundle": "node scripts/release/create-launch-bundle.mjs",
-    "cli": "node ./packages/runtime/cli/index.js",
+    "cli": "node ./cli/index.js",
     "wsap": "node app/cli/wsap.mjs",
     "build": "echo 'No build step required for Node.js'",
     "start": "node packages/runtime/bin/protocol-mcp-server.js",
