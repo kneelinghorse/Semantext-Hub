@@ -11,3 +11,5 @@
 {"ts":"2025-10-16T14:25:14Z","agent":"codex","mission":"B15.2-20251015","action":"complete","status":"completed","summary":"Registry service shipped with auth, rate limits, JSONL store, and API tests.","next_hint":"Turn attention to B15.3 CI perf gate preparation."}
 {"ts":"2025-10-17T14:03:29Z","agent":"codex","mission":"B18.1","action":"start","status":"in_progress","summary":"Adapter wizard kickoff"}
 {"ts":"2025-10-17T14:29:02Z","agent":"codex","mission":"B18.1","action":"complete","status":"completed","summary":"Adapter wizard delivered with templates and tests","next_hint":"B18.2"}
+{"ts":"2025-10-31T20:39:24.050899+00:00","agent":"codex","mission":"B1.6","action":"start","status":"in_progress","summary":"Kickoff Sprint 01 end-of-sprint summary deliverables."}
+{"ts":"2025-10-31T20:41:54.856902+00:00","agent":"codex","mission":"B1.6","action":"complete","status":"completed","summary":"Sprint 01 wrap-up delivered: summary report, roadmap updated, backlog closed.","next_hint":"Define Sprint 02 discovery missions and mark first target as Current."}
