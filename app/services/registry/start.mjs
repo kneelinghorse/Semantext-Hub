@@ -12,10 +12,26 @@ import path from 'node:path';
 import { startServer } from './server.mjs';
 
 const DEFAULT_PORT = process.env.PORT || process.env.REGISTRY_PORT || 3000;
+const DEFAULT_HOST =
+  process.env.REGISTRY_HOST ||
+  process.env.HUB_HOST ||
+  process.env.HOST ||
+  '0.0.0.0';
 const apiKey =
   typeof process.env.REGISTRY_API_KEY === 'string'
     ? process.env.REGISTRY_API_KEY.trim()
     : '';
+
+function resolveRegistryDbPath() {
+  const envPath =
+    process.env.REGISTRY_DB_PATH ??
+    process.env.HUB_REGISTRY_DB ??
+    null;
+  if (typeof envPath === 'string' && envPath.trim().length > 0) {
+    return path.resolve(process.cwd(), envPath.trim());
+  }
+  return path.resolve(process.cwd(), 'var/registry.sqlite');
+}
 
 function resolveIamPolicyPath() {
   const envPolicy =
@@ -119,6 +135,8 @@ function emitStartupChecklist(effectiveApiKey) {
 
 async function main() {
   const port = Number.parseInt(DEFAULT_PORT, 10);
+  const host = DEFAULT_HOST;
+  const dbPath = resolveRegistryDbPath();
 
   // Security Check: Fail if no API key is provided
   if (!apiKey || apiKey.length === 0) {
@@ -133,13 +151,17 @@ async function main() {
   }
 
   console.log(`Starting Registry Server on port ${port}`);
+  console.log(`Binding on host ${host}`);
   console.log(`API Key: ${apiKey.substring(0, 8)}... (${apiKey.length} chars)`);
+  console.log(`Registry DB path: ${dbPath}`);
   emitStartupChecklist(apiKey);
 
   try {
     const { close, port: boundPort, host: boundHost } = await startServer({
       port,
-      apiKey
+      host,
+      apiKey,
+      dbPath
     });
 
     const resolvedHost = boundHost || 'localhost';
@@ -180,8 +202,10 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 
 export {
   DEFAULT_PORT,
+  DEFAULT_HOST,
   resolveIamPolicyPath,
   resolveIamAuditPath,
+  resolveRegistryDbPath,
   emitStartupChecklist,
   main
 };

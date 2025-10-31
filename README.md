@@ -22,6 +22,22 @@ npx sch --help
 npx sch perf status --help
 ```
 
+```bash
+# Load semantic protocols into the local registry
+npx sch registry load --directory ./artifacts/protocols --dry-run
+```
+
+## Docker Compose Stack
+```bash
+cp .env.example .env
+# edit .env and set REGISTRY_API_KEY to a secure value
+docker compose up --build
+```
+- Registry server listens on `http://localhost:3000` with `/health` and `/openapi.json`.
+- Named volumes (`registry-data`, `lancedb-data`, `redis-data`) persist state across restarts.
+- Default Redis endpoint is exposed on `localhost:6379`; override ports through `.env`.
+- Stop the stack with `docker compose down` (add `--volumes` to reset persisted data).
+
 ## Repository Map
 - `cli/` — source for the `sch` CLI entry point and command implementations.
 - `cmos/` — backlog, mission specs, and context packs that drive the build.

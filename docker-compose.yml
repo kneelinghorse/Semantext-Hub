@@ -1,0 +1,48 @@
+services:
+  hub:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["node", "app/services/registry/start.mjs"]
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      PROTOCOL_ROOT: /app
+      PORT: ${HUB_PORT:-3000}
+      REGISTRY_API_KEY: ${REGISTRY_API_KEY:?Set REGISTRY_API_KEY in .env before starting the stack}
+      REGISTRY_DB_PATH: ${REGISTRY_DB_PATH:-/app/var/registry.sqlite}
+      LANCEDB_PATH: ${LANCEDB_PATH:-/app/data/lancedb}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      MCP_METRICS_LOG_MODE: ${MCP_METRICS_LOG_MODE:-file}
+      MCP_METRICS_LOG_INTERVAL_MS: ${MCP_METRICS_LOG_INTERVAL_MS:-300000}
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+    ports:
+      - "${HUB_PORT:-3000}:3000"
+    volumes:
+      - registry-data:/app/var
+      - lancedb-data:/app/data/lancedb
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--save", "60", "1", "--loglevel", "warning"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+
+volumes:
+  registry-data:
+  lancedb-data:
+  redis-data:
