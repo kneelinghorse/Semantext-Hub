@@ -23,6 +23,9 @@ npx sch perf status --help
 ```
 
 ```bash
+# Prepare artifacts/protocols with approved manifests
+node scripts/setup/sync-approved-protocols.mjs
+
 # Load semantic protocols into the local registry
 npx sch registry load --directory ./artifacts/protocols --dry-run
 ```
