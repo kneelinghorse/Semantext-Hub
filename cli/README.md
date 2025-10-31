@@ -1,4 +1,4 @@
-# OSSP-AGI Repo CLI
+# Semantext Hub Repo CLI
 
 This directory contains the repository-level CLI used by developers for catalog browsing, visualization, workbench orchestration, security scanning, and performance status reporting.
 
@@ -14,4 +14,3 @@ Examples:
 Notes:
 - This CLI is separate from `app/cli`, which hosts app/ops scripts (WSAP demo, release gates, signing, etc.).
 - Tests and hooks reference this CLI directly (see `tests/cli/*` and `scripts/hooks/`).
-

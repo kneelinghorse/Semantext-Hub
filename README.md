@@ -34,7 +34,7 @@ npx sch perf status --help
 - Architecture Notes: `cmos/docs/technical_architecture.md`
 - CLI Backlog: `docs/operations/cli-backlog.md`
 
-Need deeper historical context or OSSP-AGI compatibility notes? Check the mission archives under `cmos/missions/sprint-00/` and the research briefs in `cmos/missions/research/`.
+Need deeper historical context or legacy compatibility notes? Check the mission archives under `cmos/missions/sprint-00/` and the research briefs in `cmos/missions/research/`.
 
 ## Contributing
 Contributions are welcome. Open an issue describing the mission or improvement you want to tackle, align it with the backlog, and submit a PR with clear context and testing notes.

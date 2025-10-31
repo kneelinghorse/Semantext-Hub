@@ -1,7 +1,7 @@
 {
   "openapi": "3.0.0",
   "info": {
-    "title": "OSSP-AGI Registry Service API",
+    "title": "Semantext Hub Registry Service API",
     "version": "1.0.0",
     "description": "SQLite-backed registry with WAL mode for durability. Provides agent registration, resolution, and capability-based querying."
   },

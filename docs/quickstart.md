@@ -1,4 +1,4 @@
-# OSSP-AGI Quickstart Cheatsheet (Sprint 21 Baseline)
+# Semantext Hub Quickstart Cheatsheet (Sprint 21 Baseline)
 
 This cheatsheet distills the hardened Sprint 21 workflow into a few repeatable commands. For a full walkthrough, see [`docs/Getting_Started.md`](Getting_Started.md).
 

@@ -17,15 +17,15 @@ This guide provides step-by-step instructions for using the runtime integration 
 ### Prerequisites
 
 1. Node.js 18+ installed
-2. OSSP-AGI project cloned and dependencies installed
+2. Semantext Hub project cloned and dependencies installed
 3. Basic understanding of agent-to-agent communication concepts
 
 ### Installation
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/OSSP-AGI.git
-cd OSSP-AGI
+git clone https://github.com/kneelinghorse/Semantext-Hub.git
+cd Semantext-Hub
 
 # Install dependencies
 npm install

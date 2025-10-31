@@ -148,7 +148,7 @@ describe('A2A Auth', () => {
 
       expect(headers).toEqual({
         'Content-Type': 'application/json',
-        'User-Agent': 'OSSP-AGI-A2A-Client/1.0.0',
+        'User-Agent': 'Semantext-Hub-A2A-Client/1.0.0',
         'Authorization': 'Bearer test-token-123'
       });
     });
@@ -160,7 +160,7 @@ describe('A2A Auth', () => {
 
       expect(headers).toEqual({
         'Content-Type': 'application/json',
-        'User-Agent': 'OSSP-AGI-A2A-Client/1.0.0'
+        'User-Agent': 'Semantext-Hub-A2A-Client/1.0.0'
       });
       expect(headers.Authorization).toBeUndefined();
     });
@@ -174,7 +174,7 @@ describe('A2A Auth', () => {
 
       expect(headers).toEqual({
         'Content-Type': 'application/json',
-        'User-Agent': 'OSSP-AGI-A2A-Client/1.0.0',
+        'User-Agent': 'Semantext-Hub-A2A-Client/1.0.0',
         'Authorization': 'Bearer test-token-123',
         'x-agent-delegation': 'urn:agent:delegator:agent'
       });
@@ -192,7 +192,7 @@ describe('A2A Auth', () => {
 
       expect(headers).toEqual({
         'Content-Type': 'application/json',
-        'User-Agent': 'OSSP-AGI-A2A-Client/1.0.0',
+        'User-Agent': 'Semantext-Hub-A2A-Client/1.0.0',
         'Authorization': 'Bearer test-token-123',
         'X-Custom-Header': 'custom-value',
         'Accept': 'application/json'
@@ -206,7 +206,7 @@ describe('A2A Auth', () => {
 
       expect(headers).toEqual({
         'Content-Type': 'application/json',
-        'User-Agent': 'OSSP-AGI-A2A-Client/1.0.0'
+        'User-Agent': 'Semantext-Hub-A2A-Client/1.0.0'
       });
       expect(headers.Authorization).toBeUndefined();
     });

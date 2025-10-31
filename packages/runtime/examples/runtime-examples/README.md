@@ -101,7 +101,7 @@ Common issues and solutions:
 ### Import Errors
 ```bash
 # Ensure you're in the correct directory
-cd /Users/d/portfolio/OSSP-AGI/app/examples/runtime-examples
+cd /Users/d/portfolio/Semantext Hub/app/examples/runtime-examples
 
 # Check module paths
 node --check basic-discovery.js

@@ -321,4 +321,4 @@ See mission file: `missions/current.md` (B7.1.0)
 
 ## License
 
-Part of the OSSP-AGI project.
+Part of the Semantext Hub project.

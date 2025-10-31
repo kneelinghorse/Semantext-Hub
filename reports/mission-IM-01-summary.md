@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-The IM-01 mission series successfully migrated the OSSP-AGI registry from a legacy JSONL-based implementation to a unified SQLite-backed runtime server with comprehensive CI guardrails. This four-phase effort established `packages/runtime/registry/server.mjs` as the single authoritative entry point, retired legacy code paths, and implemented automated enforcement mechanisms to prevent regressions.
+The IM-01 mission series successfully migrated the legacy registry from a JSONL-based implementation to a unified SQLite-backed runtime server with comprehensive CI guardrails. This four-phase effort established `packages/runtime/registry/server.mjs` as the single authoritative entry point, retired legacy code paths, and implemented automated enforcement mechanisms to prevent regressions.
 
 ### Mission Phases
 

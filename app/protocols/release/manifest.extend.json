@@ -151,7 +151,7 @@
         "durationMs": 60022,
         "qps": 2,
         "windowSeconds": 60,
-        "logPath": "/Users/d/portfolio/OSSP-AGI/artifacts/perf/2025-10-16/release-canary-20251016234155.jsonl",
+        "logPath": "/Users/d/portfolio/Semantext Hub/artifacts/perf/2025-10-16/release-canary-20251016234155.jsonl",
         "breaches": [
           "errorRate:1.0000>0.1"
         ]
@@ -294,7 +294,7 @@
         "durationMs": 60095,
         "qps": 2,
         "windowSeconds": 60,
-        "logPath": "/Users/d/portfolio/OSSP-AGI/artifacts/perf/2025-10-16/release-canary-20251016234337.jsonl",
+        "logPath": "/Users/d/portfolio/Semantext Hub/artifacts/perf/2025-10-16/release-canary-20251016234337.jsonl",
         "breaches": [
           "errorRate:1.0000>0.1"
         ]
@@ -437,7 +437,7 @@
         "durationMs": 60097,
         "qps": 2,
         "windowSeconds": 60,
-        "logPath": "/Users/d/portfolio/OSSP-AGI/artifacts/perf/2025-10-16/release-canary-20251016234456.jsonl",
+        "logPath": "/Users/d/portfolio/Semantext Hub/artifacts/perf/2025-10-16/release-canary-20251016234456.jsonl",
         "breaches": [
           "errorRate:1.0000>0.1"
         ]
@@ -580,7 +580,7 @@
         "durationMs": 60097,
         "qps": 2,
         "windowSeconds": 60,
-        "logPath": "/Users/d/portfolio/OSSP-AGI/artifacts/perf/2025-10-16/release-canary-20251016235004.jsonl",
+        "logPath": "/Users/d/portfolio/Semantext Hub/artifacts/perf/2025-10-16/release-canary-20251016235004.jsonl",
         "breaches": [
           "errorRate:1.0000>0.1"
         ]
@@ -724,7 +724,7 @@
         "durationMs": 60392,
         "qps": 2,
         "windowSeconds": 60,
-        "logPath": "/Users/d/portfolio/OSSP-AGI/artifacts/perf/2025-10-16/release-canary-20251016235119.jsonl",
+        "logPath": "/Users/d/portfolio/Semantext Hub/artifacts/perf/2025-10-16/release-canary-20251016235119.jsonl",
         "breaches": [
           "errorRate:1.0000>0.1"
         ]
@@ -758,7 +758,7 @@
         "durationMs": 10008,
         "qps": 1,
         "windowSeconds": 10,
-        "logPath": "/Users/d/portfolio/OSSP-AGI/artifacts/perf/2025-10-17/release-canary-20251017002733.jsonl",
+        "logPath": "/Users/d/portfolio/Semantext Hub/artifacts/perf/2025-10-17/release-canary-20251017002733.jsonl",
         "breaches": [
           "p95:649.50>500",
           "errorRate:1.0000>0.2"
@@ -793,7 +793,7 @@
         "durationMs": 10009,
         "qps": 1,
         "windowSeconds": 10,
-        "logPath": "/Users/d/portfolio/OSSP-AGI/artifacts/perf/2025-10-17/release-canary-20251017005446.jsonl",
+        "logPath": "/Users/d/portfolio/Semantext Hub/artifacts/perf/2025-10-17/release-canary-20251017005446.jsonl",
         "breaches": [
           "p95:687.90>500",
           "errorRate:1.0000>0.2"

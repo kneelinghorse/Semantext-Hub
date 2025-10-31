@@ -206,7 +206,7 @@ export class ACMGenerator {
         version: config.version,
         description: config.description,
         createdAt: new Date().toISOString(),
-        generator: 'OSSP-AGI-ACM-Generator',
+        generator: 'Semantext-Hub-ACM-Generator',
         generatorVersion: '1.0.0'
       },
       spec: {

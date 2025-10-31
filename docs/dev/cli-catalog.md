@@ -1,6 +1,6 @@
 # Catalog CLI Reference
 
-The catalog command suite lives under `app-cli catalog` and provides discovery, inspection, and diagram generation workflows for OSSP-AGI protocol manifests. Commands default to the current working directory but accept `--workspace` to target another catalog.
+The catalog command suite lives under `app-cli catalog` and provides discovery, inspection, and diagram generation workflows for Semantext Hub protocol manifests. Commands default to the current working directory but accept `--workspace` to target another catalog.
 
 ## Available Commands
 

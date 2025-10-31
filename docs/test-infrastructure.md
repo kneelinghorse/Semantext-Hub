@@ -4,7 +4,7 @@ Mission B7.6.0 - Comprehensive test infrastructure and CI/CD pipeline for protoc
 
 ## Overview
 
-The test infrastructure provides automated testing, quality assurance, and continuous integration for the OSSP-AGI protocol suite. It includes contract testing, performance benchmarks, property-based testing, and comprehensive CI/CD workflows.
+The test infrastructure provides automated testing, quality assurance, and continuous integration for the Semantext Hub protocol suite. It includes contract testing, performance benchmarks, property-based testing, and comprehensive CI/CD workflows.
 
 ## Components
 

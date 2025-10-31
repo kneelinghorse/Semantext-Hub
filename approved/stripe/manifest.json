@@ -5,7 +5,7 @@
     "status": "approved",
     "source": {
       "type": "openapi",
-      "reference": "/Users/systemsystems/portfolio/OSSP-AGI/app/seeds/openapi/stripe/spec.json"
+      "reference": "/Users/d/portfolio/Semantext Hub/app/seeds/openapi/stripe/spec.json"
     }
   },
   "catalog": {
@@ -14,7 +14,7 @@
       {
         "path": "/api/v1",
         "method": "GET",
-        "description": "API endpoint discovered from /Users/systemsystems/portfolio/OSSP-AGI/app/seeds/openapi/stripe/spec.json"
+        "description": "API endpoint discovered from /Users/d/portfolio/Semantext Hub/app/seeds/openapi/stripe/spec.json"
       }
     ]
   }

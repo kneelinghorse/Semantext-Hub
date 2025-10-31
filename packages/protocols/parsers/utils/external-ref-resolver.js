@@ -290,7 +290,7 @@ class ExternalRefResolver {
               signal: controller.signal,
               redirect: 'follow',
               headers: {
-                'User-Agent': 'OSSP-AGI OpenAPI Parser/1.0',
+                'User-Agent': 'Semantext-Hub OpenAPI Parser/1.0',
                 'Accept': 'application/json, application/yaml, application/x-yaml, text/yaml, text/x-yaml, */*'
               }
             });

@@ -1,6 +1,6 @@
 # Microservices Integration Pattern
 
-This example demonstrates a real-world microservice integration pattern using OSSP-AGI's MCP tools and protocol discovery capabilities.
+This example demonstrates a real-world microservice integration pattern using Semantext Hub's MCP tools and protocol discovery capabilities.
 
 ## Overview
 

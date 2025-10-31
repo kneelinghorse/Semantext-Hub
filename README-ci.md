@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document provides operational guidance for the OSSP-AGI CI/CD pipeline.
+This document provides operational guidance for the Semantext Hub CI/CD pipeline.
 
 ## Pipeline Structure
 

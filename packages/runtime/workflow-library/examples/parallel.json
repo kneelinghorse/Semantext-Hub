@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "Demonstrates parallel execution for fetching and aggregating data from multiple sources",
   "metadata": {
-    "author": "OSSP-AGI",
+    "author": "Semantext Hub",
     "tags": ["parallel", "aggregation", "example"],
     "created": "2025-10-06T00:00:00Z"
   },

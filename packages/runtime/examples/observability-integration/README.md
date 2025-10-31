@@ -1,6 +1,6 @@
 # Observability Integration Example
 
-This example demonstrates a production-depth observability integration using OSSP-AGI's multi-protocol capabilities across Logs, Metrics, and Event protocols.
+This example demonstrates a production-depth observability integration using Semantext Hub's multi-protocol capabilities across Logs, Metrics, and Event protocols.
 
 ## Overview
 

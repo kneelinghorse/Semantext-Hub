@@ -579,7 +579,7 @@ export class MCPClient extends EventEmitter {
         protocolVersion: MCP_CONSTANTS.PROTOCOL_VERSION,
         capabilities: options.capabilities || {},
         clientInfo: {
-          name: 'OSSP-AGI-MCP-Client',
+          name: 'Semantext-Hub-MCP-Client',
           version: '1.0.0'
         }
       }

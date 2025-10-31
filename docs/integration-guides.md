@@ -1,6 +1,6 @@
-# OSSP-AGI Integration Guides
+# Semantext Hub Integration Guides
 
-Step-by-step guides for integrating OSSP-AGI into your applications and workflows.
+Step-by-step guides for integrating Semantext Hub into your applications and workflows.
 
 ## Table of Contents
 
@@ -24,7 +24,7 @@ Step-by-step guides for integrating OSSP-AGI into your applications and workflow
 - Git (optional but recommended)
 - Basic familiarity with command line
 
-### Step 1: Install OSSP-AGI
+### Step 1: Install Semantext Hub
 
 ```bash
 # Install globally
@@ -77,7 +77,7 @@ cat workflows/microservices-integration.yaml
 
 ### Overview
 
-This guide shows how to integrate OSSP-AGI into a microservices architecture with cross-service validation and governance.
+This guide shows how to integrate Semantext Hub into a microservices architecture with cross-service validation and governance.
 
 ### Step 1: Discover Service APIs
 
@@ -398,7 +398,7 @@ describe('Microservices Integration', () => {
 
 ### Overview
 
-This guide shows how to integrate OSSP-AGI's API discovery capabilities into your development workflow.
+This guide shows how to integrate Semantext Hub's API discovery capabilities into your development workflow.
 
 ### Step 1: Set Up API Discovery
 
@@ -781,7 +781,7 @@ export default APIIntegrationService;
 
 ### Overview
 
-This guide shows how to integrate OSSP-AGI's event discovery and consumer generation capabilities.
+This guide shows how to integrate Semantext Hub's event discovery and consumer generation capabilities.
 
 ### Step 1: Discover Event Protocols
 
@@ -1087,7 +1087,7 @@ app.initialize()
 
 ### Overview
 
-This guide shows how to integrate OSSP-AGI's agent discovery and communication capabilities.
+This guide shows how to integrate Semantext Hub's agent discovery and communication capabilities.
 
 ### Step 1: Discover Agents
 
@@ -1498,7 +1498,7 @@ app.initialize()
 
 ### Overview
 
-This guide shows how to integrate OSSP-AGI's workflow validation and execution capabilities.
+This guide shows how to integrate Semantext Hub's workflow validation and execution capabilities.
 
 ### Step 1: Create Workflow Definitions
 
@@ -1946,7 +1946,7 @@ app.initialize()
 
 ### Overview
 
-This guide shows how to integrate OSSP-AGI's runtime components into your applications.
+This guide shows how to integrate Semantext Hub's runtime components into your applications.
 
 ### Step 1: Create Runtime Integration Service
 
@@ -2287,14 +2287,14 @@ app.initialize()
 
 ### Overview
 
-This guide shows how to integrate OSSP-AGI into your CI/CD pipeline for automated protocol validation and governance generation.
+This guide shows how to integrate Semantext Hub into your CI/CD pipeline for automated protocol validation and governance generation.
 
 ### Step 1: Create CI/CD Configuration
 
 Create `.github/workflows/ossp-agi.yml`:
 
 ```yaml
-name: OSSP-AGI Integration
+name: Semantext Hub Integration
 
 on:
   push:
@@ -2315,7 +2315,7 @@ jobs:
         with:
           node-version: '18'
           
-      - name: Install OSSP-AGI
+      - name: Install Semantext Hub
         run: npm install -g @ossp-agi/cli
         
       - name: Discover APIs
@@ -2345,7 +2345,7 @@ jobs:
         with:
           node-version: '18'
           
-      - name: Install OSSP-AGI
+      - name: Install Semantext Hub
         run: npm install -g @ossp-agi/cli
         
       - name: Download artifacts
@@ -2374,7 +2374,7 @@ jobs:
         with:
           node-version: '18'
           
-      - name: Install OSSP-AGI
+      - name: Install Semantext Hub
         run: npm install -g @ossp-agi/cli
         
       - name: Download artifacts
@@ -2408,7 +2408,7 @@ jobs:
         with:
           node-version: '18'
           
-      - name: Install OSSP-AGI
+      - name: Install Semantext Hub
         run: npm install -g @ossp-agi/cli
         
       - name: Download artifacts
@@ -2434,7 +2434,7 @@ jobs:
         with:
           node-version: '18'
           
-      - name: Install OSSP-AGI
+      - name: Install Semantext Hub
         run: npm install -g @ossp-agi/cli
         
       - name: Download artifacts
@@ -2456,19 +2456,19 @@ repos:
   - repo: local
     hooks:
       - id: ossp-agi-validate
-        name: OSSP-AGI Protocol Validation
+        name: Semantext Hub Protocol Validation
         entry: ossp validate --ecosystem --manifests ./artifacts
         language: system
         files: '^artifacts/.*\.json$'
         
       - id: ossp-agi-governance
-        name: OSSP-AGI Governance Check
+        name: Semantext Hub Governance Check
         entry: ossp governance --manifests ./artifacts --check
         language: system
         files: '^artifacts/.*\.json$'
         
       - id: ossp-agi-workflow-validate
-        name: OSSP-AGI Workflow Validation
+        name: Semantext Hub Workflow Validation
         entry: ossp workflow validate
         language: system
         files: '^workflows/.*\.yaml$'
@@ -2483,7 +2483,7 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Install OSSP-AGI
+# Install Semantext Hub
 RUN npm install -g @ossp-agi/cli
 
 # Copy artifacts

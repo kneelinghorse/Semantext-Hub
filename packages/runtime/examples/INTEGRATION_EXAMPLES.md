@@ -212,7 +212,7 @@ Both examples demonstrate how different protocol types can work together:
 
 ### Prerequisites
 - Node.js 18+
-- OSSP-AGI CLI installed
+- Semantext Hub CLI installed
 - Access to example fixtures (OpenAPI, AsyncAPI specs)
 
 ### Quick Start

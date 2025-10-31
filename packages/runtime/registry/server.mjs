@@ -17,7 +17,7 @@ const DEFAULT_PROVENANCE_KEY = fileURLToPath(
 const OPENAPI_SPEC_PATH = fileURLToPath(new URL('./openapi.json', import.meta.url));
 
 const WELL_KNOWN_PAYLOAD = {
-  service: 'OSSP-AGI Registry Service (SQLite)',
+  service: 'Semantext Hub Registry Service (SQLite)',
   version: 'registry.ossp-agi.io/v1',
   description: 'SQLite-backed registry with WAL mode for durability',
   links: {

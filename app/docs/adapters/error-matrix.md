@@ -6,7 +6,7 @@
 
 ## Executive Summary
 
-This document provides a comprehensive mapping of error conditions, warnings, and unsupported features across the three core adapters in the OSSP-AGI system. It is derived from executable boundary tests with ≥25 assertions per adapter.
+This document provides a comprehensive mapping of error conditions, warnings, and unsupported features across the three core adapters in the Semantext Hub system. It is derived from executable boundary tests with ≥25 assertions per adapter.
 
 **Test Coverage:**
 - **OpenAPI Adapter:** 32 assertions (all pass; warnings documented in tests 14 & 32)
@@ -336,4 +336,4 @@ Each test should:
 
 **Document Status:** ✅ Complete  
 **Next Review:** After adapter pack v2 release or major version changes  
-**Maintained By:** OSSP-AGI Core Team
+**Maintained By:** Semantext Hub Core Team

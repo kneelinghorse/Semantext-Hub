@@ -1,6 +1,6 @@
 # Observability Guide - B11.8
 
-This guide covers the observability features implemented in OSSP-AGI, including performance monitoring, correlation IDs, and trace toggles for faster diagnosis.
+This guide covers the observability features implemented in Semantext Hub, including performance monitoring, correlation IDs, and trace toggles for faster diagnosis.
 
 ## Overview
 

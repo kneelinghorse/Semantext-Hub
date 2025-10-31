@@ -9,7 +9,7 @@
     {
       "keyId": "ossp-agi-main-v1",
       "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA...\n-----END PUBLIC KEY-----",
-      "comment": "Primary signing key for OSSP-AGI system"
+      "comment": "Primary signing key for Semantext Hub system"
     },
     {
       "keyId": "ci-builder-v1",

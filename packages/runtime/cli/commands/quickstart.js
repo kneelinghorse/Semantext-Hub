@@ -23,7 +23,7 @@ const execFile = promisify(_execFile);
 export async function quickstartCommand(options = {}) {
   const startTime = performance.now();
   
-  console.log('🚀 Welcome to OSSP-AGI Quickstart!');
+  console.log('🚀 Welcome to Semantext Hub Quickstart!');
   console.log('This wizard will get you up and running in under 2 minutes.\n');
 
   try {
@@ -253,7 +253,7 @@ async function createPackageJson(config) {
   const packageJson = {
     "name": config.projectName,
     "version": "1.0.0",
-    "description": "OSSP-AGI project",
+    "description": "Semantext Hub project",
     "type": "module",
     "scripts": {
       "discover": "ossp discover",

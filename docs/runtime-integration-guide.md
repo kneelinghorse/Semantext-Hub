@@ -1,6 +1,6 @@
 # Runtime Integration Guide
 
-This guide explains how to integrate the OSSP-AGI runtime components into your applications, covering different integration patterns, architectures, and deployment scenarios.
+This guide explains how to integrate the Semantext Hub runtime components into your applications, covering different integration patterns, architectures, and deployment scenarios.
 
 ## Table of Contents
 
@@ -2517,4 +2517,4 @@ await canaryDeployment.initialize();
 - Implement circuit breakers and retry policies
 - Monitor and optimize resource usage
 
-This integration guide provides comprehensive patterns and examples for integrating the OSSP-AGI runtime components into various application architectures and deployment scenarios.
+This integration guide provides comprehensive patterns and examples for integrating the Semantext Hub runtime components into various application architectures and deployment scenarios.

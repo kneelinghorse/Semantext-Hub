@@ -13,7 +13,7 @@
       "hasRequiredJobs": true,
       "duration": 0,
       "details": {
-        "path": "/Users/d/portfolio/OSSP-AGI/.github/workflows/runtime-integration.yml",
+        "path": "/Users/d/portfolio/Semantext Hub/.github/workflows/runtime-integration.yml",
         "size": 13764
       }
     },
@@ -23,7 +23,7 @@
       "hasRequiredFeatures": true,
       "duration": 0,
       "details": {
-        "path": "/Users/d/portfolio/OSSP-AGI/app/scripts/ci-artifact-exporter.js",
+        "path": "/Users/d/portfolio/Semantext Hub/app/scripts/ci-artifact-exporter.js",
         "size": 18686
       }
     },
@@ -70,7 +70,7 @@
       "runtimeNotesExists": true,
       "duration": 0,
       "details": {
-        "docsDir": "/Users/d/portfolio/OSSP-AGI/app/docs",
+        "docsDir": "/Users/d/portfolio/Semantext Hub/app/docs",
         "files": [
           "ci-troubleshooting.md",
           "runtime-integration-notes.md"

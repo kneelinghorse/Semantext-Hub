@@ -14,7 +14,7 @@
     "name": "analytics-workflow",
     "type": "workflow",
     "version": "1.0.0",
-    "engine": "OSSP-AGI Workflow Engine",
+    "engine": "Semantext Hub Workflow Engine",
     "execution": {
       "mode": "async",
       "timeout": 300,

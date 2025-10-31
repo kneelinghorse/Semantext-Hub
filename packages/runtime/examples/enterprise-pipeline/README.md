@@ -1,6 +1,6 @@
 # Enterprise Data Pipeline Integration Example
 
-This example demonstrates a production-depth enterprise data pipeline integration using OSSP-AGI's multi-protocol capabilities across API, Data, and Workflow protocols.
+This example demonstrates a production-depth enterprise data pipeline integration using Semantext Hub's multi-protocol capabilities across API, Data, and Workflow protocols.
 
 ## Overview
 

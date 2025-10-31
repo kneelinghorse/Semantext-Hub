@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://ossp-agi.dev/schemas/feedback.schema.json",
-  "title": "OSSP-AGI Structured Feedback Schema",
+  "title": "Semantext Hub Structured Feedback Schema",
   "description": "Unified schema for errors, hints, and progress events",
 
   "definitions": {

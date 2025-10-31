@@ -1,6 +1,6 @@
 # Runtime Performance Optimization Guide
 
-This guide provides comprehensive performance optimization recommendations for the OSSP-AGI runtime components, including caching strategies, connection pooling, monitoring, and tuning guidelines.
+This guide provides comprehensive performance optimization recommendations for the Semantext Hub runtime components, including caching strategies, connection pooling, monitoring, and tuning guidelines.
 
 ## Table of Contents
 
@@ -2344,4 +2344,4 @@ console.log('Performance diagnostics report:', JSON.stringify(report, null, 2));
 - Generate performance recommendations
 - Use diagnostics to identify bottlenecks
 
-This performance optimization guide provides comprehensive strategies and examples for optimizing the OSSP-AGI runtime components for maximum performance and reliability.
+This performance optimization guide provides comprehensive strategies and examples for optimizing the Semantext Hub runtime components for maximum performance and reliability.

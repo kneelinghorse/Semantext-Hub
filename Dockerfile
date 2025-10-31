@@ -1,4 +1,4 @@
-# Dockerfile for OSSP-AGI MCP Server
+# Dockerfile for Semantext Hub MCP Server
 # Mission B9.1: Performance Optimization & Hardening
 
 FROM node:18-alpine AS base
@@ -67,7 +67,7 @@ ENTRYPOINT ["dumb-init", "--"]
 CMD ["node", "packages/runtime/bin/protocol-mcp-server.js"]
 
 # Labels for metadata
-LABEL maintainer="OSSP-AGI Team"
+LABEL maintainer="Semantext Hub Team"
 LABEL version="0.1.0"
 LABEL description="Protocol Discovery MCP Server"
 LABEL mission="B9.1-Performance-Optimization-Hardening"
