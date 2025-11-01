@@ -21,6 +21,7 @@ registerRegistryCommands(program);
 registerPerfCommands(program);
 registerContextCommands(program);
 registerRetrievalCommands(program);
+registerEventCommands(program);
 
 program
   .command('help')
@@ -295,6 +296,38 @@ function registerRetrievalCommands(root) {
         options.output
       );
     });
+}
+
+function registerEventCommands(root) {
+  const events = root
+    .command('events')
+    .description('Redis event stream utilities');
+
+  configureEventsListenOptions(
+    events
+      .command('listen')
+      .description('Listen for Semantext Hub events emitted via Redis Streams')
+  ).action(async (options) => {
+    const { eventsListenCommand } = await import('./commands/events-listen.js');
+    await eventsListenCommand(options);
+  });
+}
+
+function configureEventsListenOptions(command) {
+  return command
+    .option('--redis-url <url>', 'Redis connection URI', process.env.SEMANTEXT_REDIS_URL || process.env.REDIS_URL || 'redis://127.0.0.1:6379/0')
+    .option('--env <name>', 'Environment segment (defaults to SEMANTEXT_ENV or NODE_ENV)')
+    .option('--domain <name>', 'Domain segment', 'semantext')
+    .option('--object <name>', 'Object segment', 'tool')
+    .option('--event <name>', 'Event segment', 'activated')
+    .option('--object-id <id>', 'Object identifier segment', 'global')
+    .option('--group <name>', 'Consumer group name', 'cli-listener')
+    .option('--consumer <name>', 'Consumer name (defaults to <group>-<pid>)')
+    .option('--count <number>', 'Messages fetched per read (default 10)', (value) => Number.parseInt(value, 10))
+    .option('--block <ms>', 'Block duration for each read (default 5000)', (value) => Number.parseInt(value, 10))
+    .option('--no-ack', 'Do not acknowledge messages after printing')
+    .option('--oneshot', 'Exit after the first batch of messages')
+    .option('--json', 'Emit raw JSON lines instead of formatted output');
 }
 
 function registerLegacyAlias(root, legacyName, preferredCommand, configure, action) {
