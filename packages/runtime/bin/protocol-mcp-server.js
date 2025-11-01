@@ -25,6 +25,7 @@ import { runTool, runWorkflow } from '../src/agents/runtime.js';
 import { PerformanceOptimizer } from '../services/mcp-server/performance-optimizations.js';
 import { createMetricsEndpoint } from '../services/mcp-server/metrics-endpoint.js';
 import { createStructuredLogger } from '../services/mcp-server/logger.js';
+import { ToolHubSearchService } from '../services/tool-hub/search-service.js';
 
 // Dynamic imports for CommonJS modules
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -51,6 +52,9 @@ const shutdownLogger = lifecycleLogger.child('shutdown');
 const performanceLogger = logger.child('performance');
 const metricsLogger = logger.child('metrics');
 const toolLogger = logger.child('tool');
+const toolHubSearchService = new ToolHubSearchService({
+  logger: toolLogger.child('tool_hub.search')
+});
 const governanceLogger = logger.child('governance');
 
 // Initialize performance optimizations
@@ -640,6 +644,96 @@ const tools = [
   },
   
   {
+    name: 'tool_hub.search',
+    description: 'Semantic search across registered tools using embeddings and LanceDB retrieval',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        query: {
+          type: 'string',
+          description: 'Natural language query describing the desired tool capability'
+        },
+        limit: {
+          type: 'integer',
+          minimum: 1,
+          maximum: 50,
+          description: 'Maximum number of search results to return (default 10)'
+        },
+        include_vectors: {
+          type: 'boolean',
+          description: 'Include raw embedding vectors in the response (diagnostics only)'
+        },
+        actor: {
+          type: 'object',
+          description: 'Actor context used for IAM filtering',
+          properties: {
+            id: { type: 'string', description: 'Actor or agent identifier' },
+            urn: { type: 'string', description: 'Optional URN for the requesting agent' },
+            capabilities: {
+              type: 'array',
+              description: 'Capabilities already granted to the actor',
+              items: { type: 'string' }
+            }
+          },
+          additionalProperties: false
+        },
+        capabilities: {
+          type: 'array',
+          description: 'Inline capability grants to merge with actor.capabilities',
+          items: { type: 'string' }
+        }
+      },
+      required: ['query'],
+      additionalProperties: false
+    },
+    handler: withPerformanceTracking('tool_hub.search', 'search', async ({ query, limit, actor, include_vectors, capabilities }) => {
+      try {
+        const actorContext =
+          typeof actor === 'object' && actor !== null
+            ? { ...actor }
+            : typeof actor === 'string' && actor.trim()
+              ? { id: actor.trim() }
+              : {};
+
+        if (Array.isArray(capabilities) && capabilities.length > 0) {
+          const merged = Array.isArray(actorContext.capabilities)
+            ? actorContext.capabilities.slice()
+            : [];
+          merged.push(...capabilities);
+          actorContext.capabilities = merged;
+        }
+
+        const response = await toolHubSearchService.search({
+          query,
+          limit,
+          actor: actorContext,
+          includeVectors: Boolean(include_vectors)
+        });
+
+        return {
+          success: true,
+          query: response.query,
+          limit: response.limit,
+          total_results: response.returned,
+          total_candidates: response.totalCandidates,
+          results: response.results,
+          timings: response.timings
+        };
+      } catch (error) {
+        toolLogger.error('tool_hub.search failed', {
+          error,
+          query
+        });
+        return {
+          success: false,
+          error: error?.message ?? 'Failed to execute tool_hub.search',
+          query
+        };
+      }
+    })
+  },
+
+  {
     name: 'protocol_list_test_files',
     description: 'List available OpenAPI test files in the seeds directory',
     inputSchema: {
@@ -1064,6 +1158,20 @@ function cleanup() {
   } catch (error) {
     shutdownLogger.error('Failed to destroy metrics endpoint', { error });
     encounteredError ??= error;
+  }
+
+  if (toolHubSearchService?.shutdown) {
+    try {
+      const result = toolHubSearchService.shutdown();
+      if (result && typeof result.then === 'function') {
+        result.catch((error) => {
+          shutdownLogger.error('Failed to shutdown tool hub search service', { error });
+        });
+      }
+    } catch (error) {
+      shutdownLogger.error('Failed to shutdown tool hub search service', { error });
+      encounteredError ??= error;
+    }
   }
 
   if (encounteredError) {

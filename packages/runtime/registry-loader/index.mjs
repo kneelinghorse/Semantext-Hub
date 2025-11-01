@@ -31,7 +31,52 @@ async function* walkDirectory(root) {
   }
 }
 
+function extractCapabilities(manifest) {
+  if (!manifest || typeof manifest !== 'object') {
+    return [];
+  }
+
+  const values = new Set();
+
+  const pushEntry = (entry) => {
+    if (!entry) return;
+    if (typeof entry === 'string') {
+      const trimmed = entry.trim();
+      if (trimmed) values.add(trimmed);
+      return;
+    }
+    if (typeof entry !== 'object') return;
+    if (typeof entry.capability === 'string' && entry.capability.trim()) {
+      values.add(entry.capability.trim());
+    }
+    if (typeof entry.urn === 'string' && entry.urn.trim()) {
+      values.add(entry.urn.trim());
+    }
+  };
+
+  const rootCaps = manifest.capabilities;
+  if (Array.isArray(rootCaps)) {
+    for (const entry of rootCaps) {
+      pushEntry(entry);
+    }
+  } else if (rootCaps && typeof rootCaps === 'object') {
+    if (Array.isArray(rootCaps.tools)) {
+      for (const entry of rootCaps.tools) {
+        pushEntry(entry);
+      }
+    }
+    if (Array.isArray(rootCaps.resources)) {
+      for (const entry of rootCaps.resources) {
+        pushEntry(entry);
+      }
+    }
+  }
+
+  return Array.from(values);
+}
+
 function extractMetadata(manifest, filePath) {
+  const capabilities = extractCapabilities(manifest);
   if (!manifest || typeof manifest !== 'object' || Array.isArray(manifest)) {
     throw new Error(`Manifest at ${filePath} is not a JSON object.`);
   }
@@ -69,7 +114,8 @@ function extractMetadata(manifest, filePath) {
   const searchParts = [
     name,
     summary,
-    Array.isArray(tags) && tags.length > 0 ? tags.join(' ') : ''
+    Array.isArray(tags) && tags.length > 0 ? tags.join(' ') : '',
+    capabilities.length > 0 ? capabilities.join(' ') : ''
   ]
     .map((part) => (typeof part === 'string' ? part.trim() : ''))
     .filter(Boolean);
@@ -83,6 +129,7 @@ function extractMetadata(manifest, filePath) {
     name,
     summary,
     tags,
+    capabilities,
     manifest,
     filePath,
     searchDocument
@@ -228,7 +275,8 @@ export class RegistryLoader {
             urn: entry.urn,
             name: entry.name,
             summary: entry.summary,
-            tags: entry.tags
+            tags: entry.tags,
+            capabilities: entry.capabilities
           }
         }));
         await vectorStore.upsert(payloads);

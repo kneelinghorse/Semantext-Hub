@@ -31,6 +31,43 @@ function computeFallbackEmbedding(text, dimensions = DEFAULT_DIMENSIONS) {
   return values;
 }
 
+function applySearchPrefix(text, prefix) {
+  const token = prefix.endsWith(':') ? prefix : `${prefix}:`;
+  const trimmed = typeof text === 'string' ? text.trim() : '';
+  if (!trimmed) {
+    return token;
+  }
+  return trimmed.startsWith(token) ? trimmed : `${token} ${trimmed}`;
+}
+
+function toNumberArray(value) {
+  if (Array.isArray(value)) {
+    return value.map((entry) => Number(entry));
+  }
+  if (value && typeof value.tolist === 'function') {
+    const list = value.tolist();
+    return Array.isArray(list) ? list.map((entry) => Number(entry)) : [];
+  }
+  if (value && typeof value.toArray === 'function') {
+    const arr = value.toArray();
+    return Array.isArray(arr) ? arr.map((entry) => Number(entry)) : Array.from(arr ?? [], (entry) => Number(entry));
+  }
+  if (ArrayBuffer.isView(value)) {
+    return Array.from(value, (entry) => Number(entry));
+  }
+  if (value && typeof value.length === 'number') {
+    try {
+      return Array.from(value, (entry) => Number(entry));
+    } catch {
+      return [];
+    }
+  }
+  if (typeof value === 'number') {
+    return [Number(value)];
+  }
+  return [];
+}
+
 export class EmbeddingService {
   static #instance = null;
   static #initializing = null;
@@ -112,6 +149,50 @@ export class EmbeddingService {
     return null;
   }
 
+  async #embedNormalized(texts) {
+    if (!Array.isArray(texts) || texts.length === 0) {
+      return [];
+    }
+
+    if (this.mode === 'transformers' && this._pipeline) {
+      const results = [];
+      for (let start = 0; start < texts.length; start += this.batchSize) {
+        const batch = texts.slice(start, start + this.batchSize);
+        try {
+          const output = await this._pipeline(batch, {
+            pooling: 'mean',
+            normalize: true
+          });
+          if (Array.isArray(output)) {
+            if (batch.length === 1 && !Array.isArray(output[0]) && typeof output[0] === 'number') {
+              results.push(output.map((entry) => Number(entry)));
+            } else {
+              for (const row of output) {
+                results.push(toNumberArray(row));
+              }
+            }
+          } else {
+            results.push(toNumberArray(output));
+          }
+        } catch (error) {
+          this.logger.warn?.(
+            `[embedding] Transformer pipeline batch failed, falling back (${error.message ?? error})`
+          );
+          return texts.map((text) => computeFallbackEmbedding(text, this.dimensions));
+        }
+      }
+
+      if (results.length === texts.length) {
+        return results;
+      }
+      this.logger.warn?.(
+        `[embedding] Transformer pipeline returned unexpected result count (expected ${texts.length}, received ${results.length}), using fallback`
+      );
+    }
+
+    return texts.map((text) => computeFallbackEmbedding(text, this.dimensions));
+  }
+
   /**
    * Generate embeddings for a list of documents. Documents are automatically
    * prefixed with "search_document:" per R1.1 research guidance.
@@ -123,36 +204,21 @@ export class EmbeddingService {
 
     await this.initialize();
 
-    const normalized = documents.map((text) => {
-      const trimmed = typeof text === 'string' ? text.trim() : '';
-      if (!trimmed) {
-        return 'search_document:';
-      }
-      return trimmed.startsWith('search_document:')
-        ? trimmed
-        : `search_document: ${trimmed}`;
-    });
+    const normalized = documents.map((text) => applySearchPrefix(text, 'search_document'));
+    return this.#embedNormalized(normalized);
+  }
 
-    if (this.mode === 'transformers' && this._pipeline) {
-      const results = [];
-      for (let start = 0; start < normalized.length; start += this.batchSize) {
-        const batch = normalized.slice(start, start + this.batchSize);
-        const output = await this._pipeline(batch, {
-          pooling: 'mean',
-          normalize: true
-        });
-        if (Array.isArray(output)) {
-          for (const row of output) {
-            results.push(Array.isArray(row) ? row : Array.from(row));
-          }
-        } else {
-          results.push(Array.isArray(output) ? output : Array.from(output));
-        }
-      }
-      return results;
+  /**
+   * Generate an embedding for a search query using the "search_query:" prefix.
+   */
+  async embedQuery(query) {
+    await this.initialize();
+    const normalized = applySearchPrefix(query, 'search_query');
+    const [vector] = await this.#embedNormalized([normalized]);
+    if (Array.isArray(vector) && vector.length > 0) {
+      return vector;
     }
-
-    return normalized.map((text) => computeFallbackEmbedding(text, this.dimensions));
+    return computeFallbackEmbedding(normalized, this.dimensions);
   }
 
   getDiagnostics() {

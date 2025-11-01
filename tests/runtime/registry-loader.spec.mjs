@@ -93,6 +93,7 @@ describe('RegistryLoader', () => {
     expect(result.manifestsProcessed).toBe(2);
     expect(vectorStore.records).toHaveLength(2);
     expect(vectorStore.records[0].payload.tool_id).toBe('urn:example:alpha');
+    expect(vectorStore.records[0].payload.capabilities).toEqual([]);
 
     const db = await openDb({ dbPath: join(tempRoot, 'registry.sqlite') });
     const row = await db.get('SELECT COUNT(*) as count FROM manifests');
