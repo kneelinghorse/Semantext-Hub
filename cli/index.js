@@ -169,7 +169,10 @@ function registerRegistryCommands(root) {
       collection: options.collection,
       batchSize: options.batchSize,
       dryRun: Boolean(options.dryRun),
-      json: Boolean(options.json)
+      json: Boolean(options.json),
+      vectorDriver: options.vectorDriver,
+      qdrantUrl: options.qdrantUrl,
+      qdrantApiKey: options.qdrantApiKey
     });
   });
 }
@@ -203,6 +206,9 @@ function configureRegistryLoadOptions(command) {
     .option('--db <path>', 'Path to SQLite registry database', 'var/registry.sqlite')
     .option('--lancedb <path>', 'Directory for LanceDB vector store', 'data/lancedb')
     .option('--collection <name>', 'LanceDB collection name', 'protocol_registry_vectors')
+    .option('--vector-driver <driver>', 'Vector store driver (lancedb|qdrant)', process.env.SEMANTEXT_VECTOR_DRIVER || 'lancedb')
+    .option('--qdrant-url <url>', 'Qdrant base URL when using qdrant driver', process.env.SEMANTEXT_QDRANT_URL || undefined)
+    .option('--qdrant-api-key <key>', 'Qdrant API key when using qdrant driver', process.env.SEMANTEXT_QDRANT_API_KEY || undefined)
     .option('--batch-size <number>', 'Embedding batch size', '32')
     .option('--dry-run', 'Inspect manifests without writing to disk', false)
     .option('--json', 'Emit JSON summary instead of human-readable output', false);

@@ -10,9 +10,19 @@ function formatSummary(stats) {
   lines.push(`Manifests processed: ${stats.manifestsProcessed}`);
   lines.push(`Embeddings generated: ${stats.embeddingsGenerated}`);
   lines.push(`SQLite path: ${stats.dbPath}`);
-  lines.push(
-    `Vector store: ${stats.lancedbPath}${stats.vectorMode ? ` (${stats.vectorMode})` : ''}`
-  );
+  const vectorSegments = [];
+  if (stats.vectorDriver) {
+    vectorSegments.push(stats.vectorDriver);
+  }
+  if (stats.vectorMode && stats.vectorMode !== stats.vectorDriver) {
+    vectorSegments.push(stats.vectorMode);
+  }
+  if (stats.vectorPath) {
+    vectorSegments.push(stats.vectorPath);
+  } else if (stats.lancedbPath) {
+    vectorSegments.push(stats.lancedbPath);
+  }
+  lines.push(`Vector store: ${vectorSegments.join(' / ')}`);
   if (stats.dryRun) {
     lines.push('Dry run: no changes written to disk.');
   }
@@ -51,7 +61,10 @@ export async function registryLoadCommand(options = {}) {
       collectionName: options.collection,
       batchSize: options.batchSize ? Number(options.batchSize) : undefined,
       dryRun: Boolean(options.dryRun),
-      logger: consoleUi
+      logger: consoleUi,
+      vectorDriver: options.vectorDriver,
+      qdrantUrl: options.qdrantUrl,
+      qdrantApiKey: options.qdrantApiKey
     });
 
     const stats = await loader.load();
@@ -66,7 +79,8 @@ export async function registryLoadCommand(options = {}) {
           {
             ...stats,
             dbPath: path.resolve(stats.dbPath),
-            lancedbPath: path.resolve(stats.lancedbPath)
+            lancedbPath: stats.lancedbPath ? path.resolve(stats.lancedbPath) : null,
+            vectorPath: stats.vectorPath
           },
           null,
           2

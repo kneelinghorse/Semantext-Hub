@@ -2,7 +2,10 @@ import path from 'node:path';
 import { performance } from 'node:perf_hooks';
 
 import { EmbeddingService } from '../../registry-loader/embedding-service.mjs';
-import { LanceDBAdapter } from '../../registry-loader/lancedb-adapter.mjs';
+import {
+  VECTOR_STORE_DRIVERS,
+  createVectorStoreAdapter
+} from '../../vector-store/index.mjs';
 import { openDb } from '../../registry/db.mjs';
 import { IAMFilter } from './iam-filter.js';
 
@@ -39,6 +42,33 @@ export class ToolHubSearchService {
 
     this.vectorStore = options.vectorStore ?? null;
     this.vectorOptions = options.vectorOptions ?? {};
+
+    this.workspace = options.workspace ? path.resolve(options.workspace) : process.cwd();
+
+    const envVectorDriver = process.env.SEMANTEXT_VECTOR_DRIVER;
+    const rawVectorDriver = options.vectorDriver ?? envVectorDriver ?? VECTOR_STORE_DRIVERS.LANCEDB;
+    this.vectorDriver = String(rawVectorDriver).trim().toLowerCase() || VECTOR_STORE_DRIVERS.LANCEDB;
+
+    if (this.vectorDriver === VECTOR_STORE_DRIVERS.QDRANT) {
+      const qdrantUrl = options.qdrantUrl ?? process.env.SEMANTEXT_QDRANT_URL;
+      const qdrantApiKey = options.qdrantApiKey ?? process.env.SEMANTEXT_QDRANT_API_KEY;
+      const qdrantVectorSize = options.qdrantVectorSize ?? process.env.SEMANTEXT_VECTOR_DIMENSION;
+      const qdrantDistance = options.qdrantDistance ?? process.env.SEMANTEXT_QDRANT_DISTANCE;
+
+      this.vectorOptions = {
+        workspace: this.workspace,
+        ...this.vectorOptions,
+        ...(qdrantUrl ? { url: qdrantUrl } : {}),
+        ...(qdrantApiKey ? { apiKey: qdrantApiKey } : {}),
+        ...(qdrantVectorSize ? { vectorSize: Number(qdrantVectorSize) } : {}),
+        ...(qdrantDistance ? { distance: qdrantDistance } : {})
+      };
+    } else {
+      this.vectorOptions = {
+        workspace: this.workspace,
+        ...this.vectorOptions
+      };
+    }
 
     this.iamFilter =
       options.iamFilter ??
@@ -84,11 +114,13 @@ export class ToolHubSearchService {
         await this.vectorStore.initialize(this.collectionName);
       }
     } else {
-      this.vectorStore = new LanceDBAdapter({
-        dbPath: this.lanceDbPath,
+      this.vectorStore = createVectorStoreAdapter({
+        driver: this.vectorDriver,
+        lancedbPath: this.lanceDbPath,
         collectionName: this.collectionName,
         logger: this.logger,
-        ...this.vectorOptions
+        workspace: this.workspace,
+        vectorOptions: this.vectorOptions
       });
       await this.vectorStore.initialize(this.collectionName);
     }
