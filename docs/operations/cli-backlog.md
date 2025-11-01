@@ -33,10 +33,11 @@ This backlog captures follow-up work required to round out the Semantext Hub CLI
 - **Goal:** Fold WSAP bootstrap logic into `sch context sync --mode wsap`.
 - **Deliverables:** Local express harness launch, graph rebuild, telemetry ingest, deprecation of `app/cli/wsap.mjs`.
 
-## SCH-CLI-009 — Search & Retrieval QA
-- **Goal:** Introduce search QA harness aligning with roadmap Sprint 03 requirements.
-- **Command:** `sch retrieval search --dataset <name>` (front-load dataset argument contracts).
-- **Testing:** Snapshot expected retrieval scores and diff on regressions.
+## SCH-CLI-009 — Search Experience
+- **Goal:** Provide a first-class CLI entry point for semantic tool discovery built on LanceDB retrieval.
+- **Command:** `sch search <query> [--limit] [--json] [--activate]` (shipped via mission B2.5).
+- **Status:** ✅ Delivered — results table/JSON output, activation hand-off, timings surfaced for QA.
+- **Follow-on:** Feed query fixtures into SCH-CLI-010 once evaluation harness lands.
 
 ## SCH-CLI-010 — Retrieval Benchmark Harness
 - **Goal:** Deliver `sch retrieval qa` to compare retrieval quality across datasets.

@@ -10,6 +10,7 @@ The Semantext Hub CLI consolidates the previous legacy tooling surfaces into a s
 | `sch registry list [options]` | List registered protocols in tabular or JSON form | Reuses catalog tooling; accepts `--workspace` and `--format`. |
 | `sch registry view <identifier> [options]` | Inspect manifest metadata by name/URN/path | Pretty or JSON output formats. |
 | `sch registry diagram [identifier] [options]` | Generate Draw.io diagrams for the registry | Supports `--output`, `--format`, `--theme`, `--overwrite`, `--open`. |
+| `sch search <query> [options]` | Search semantic tool registry via embeddings | `--limit`, `--json`, `--activate` supported (activates top result). |
 | `sch perf status [options]` | Summarise recent performance telemetry | Mirrors the existing perf status command. |
 | `sch perf report [options]` | Produce percentile reports for perf logs | Table/JSON output. |
 | `sch perf gc [options]` | Garbage collect perf artifacts | Supports dry run and JSON output. |
@@ -52,6 +53,7 @@ All legacy wrappers exit with code 1 after printing guidance to make failures 
 | `SCH-CLI-006` | Signing workflows | `sch context sign` | Pending security alignment |
 | `SCH-CLI-007` | Verification workflows | `sch protocol verify` | Pending validation API update |
 | `SCH-CLI-008` | WSAP automation | `sch context sync --mode wsap` | Pending workspace agent design |
+| `SCH-CLI-009` | Search & Retrieval QA | `sch search` | Shipped via mission B2.5 (`sch search` command) |
 | `SCH-CLI-010` | Retrieval QA | `sch retrieval qa` | Stub (prints backlog reference) |
 
 Detailed notes live in `docs/operations/cli-backlog.md`.

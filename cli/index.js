@@ -18,6 +18,7 @@ program
 
 registerProtocolCommands(program);
 registerRegistryCommands(program);
+registerSearchCommand(program);
 registerPerfCommands(program);
 registerContextCommands(program);
 registerRetrievalCommands(program);
@@ -213,6 +214,25 @@ function configureRegistryLoadOptions(command) {
     .option('--batch-size <number>', 'Embedding batch size', '32')
     .option('--dry-run', 'Inspect manifests without writing to disk', false)
     .option('--json', 'Emit JSON summary instead of human-readable output', false);
+}
+
+function registerSearchCommand(root) {
+  root
+    .command('search <query>')
+    .description('Search the semantic tool registry using embeddings and LanceDB retrieval')
+    .option('--workspace <path>', 'Workspace root', process.cwd())
+    .option('-l, --limit <number>', 'Maximum number of results to return')
+    .option('--json', 'Emit machine-readable JSON output', false)
+    .option('--activate', 'Activate the top-ranked search result', false)
+    .action(async (query, options) => {
+      const { searchCommand } = await import('./commands/search.js');
+      await searchCommand(query, {
+        workspace: options.workspace,
+        limit: options.limit,
+        json: Boolean(options.json),
+        activate: Boolean(options.activate)
+      });
+    });
 }
 
 function registerProtocolCommands(root) {
