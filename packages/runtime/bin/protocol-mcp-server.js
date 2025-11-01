@@ -26,6 +26,7 @@ import { PerformanceOptimizer } from '../services/mcp-server/performance-optimiz
 import { createMetricsEndpoint } from '../services/mcp-server/metrics-endpoint.js';
 import { createStructuredLogger } from '../services/mcp-server/logger.js';
 import { ToolHubSearchService } from '../services/tool-hub/search-service.js';
+import { ToolHubActivationService } from '../services/tool-hub/activation-service.js';
 
 // Dynamic imports for CommonJS modules
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -54,6 +55,9 @@ const metricsLogger = logger.child('metrics');
 const toolLogger = logger.child('tool');
 const toolHubSearchService = new ToolHubSearchService({
   logger: toolLogger.child('tool_hub.search')
+});
+const toolHubActivationService = new ToolHubActivationService({
+  logger: toolLogger.child('tool_hub.activate')
 });
 const governanceLogger = logger.child('governance');
 
@@ -734,6 +738,80 @@ const tools = [
   },
 
   {
+    name: 'tool_hub.activate',
+    description: 'Resolve a tool manifest from the registry and produce activation metadata',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        tool_id: {
+          type: 'string',
+          description: 'Tool URN or identifier to activate'
+        },
+        urn: {
+          type: 'string',
+          description: 'Explicit URN override for activation'
+        },
+        include_manifest: {
+          type: 'boolean',
+          description: 'Include the full manifest payload in the response (default true)'
+        },
+        include_provenance: {
+          type: 'boolean',
+          description: 'Include provenance summary if recorded (default true)'
+        },
+        actor: {
+          type: 'object',
+          description: 'Actor context used for IAM authorization',
+          properties: {
+            id: { type: 'string', description: 'Actor or agent identifier' },
+            urn: { type: 'string', description: 'Optional URN for the requesting agent' },
+            capabilities: {
+              type: 'array',
+              description: 'Capabilities currently granted to the actor',
+              items: { type: 'string' }
+            }
+          },
+          additionalProperties: false
+        },
+        capabilities: {
+          type: 'array',
+          description: 'Inline capability grants to merge with actor.capabilities',
+          items: { type: 'string' }
+        }
+      },
+      additionalProperties: false
+    },
+    handler: withPerformanceTracking('tool_hub.activate', 'activate', async ({ tool_id, urn, actor, include_manifest, include_provenance, capabilities }) => {
+      try {
+        const response = await toolHubActivationService.activate({
+          tool_id,
+          urn,
+          actor,
+          capabilities,
+          includeManifest: include_manifest,
+          includeProvenance: include_provenance
+        });
+
+        return {
+          success: true,
+          ...response
+        };
+      } catch (error) {
+        toolLogger.error('tool_hub.activate failed', {
+          error,
+          urn: urn ?? tool_id ?? null
+        });
+        return {
+          success: false,
+          error: error?.message ?? 'Failed to activate tool',
+          code: error?.code ?? null,
+          urn: urn ?? tool_id ?? null
+        };
+      }
+    })
+  },
+
+  {
     name: 'protocol_list_test_files',
     description: 'List available OpenAPI test files in the seeds directory',
     inputSchema: {
@@ -1170,6 +1248,20 @@ function cleanup() {
       }
     } catch (error) {
       shutdownLogger.error('Failed to shutdown tool hub search service', { error });
+      encounteredError ??= error;
+    }
+  }
+
+  if (toolHubActivationService?.shutdown) {
+    try {
+      const result = toolHubActivationService.shutdown();
+      if (result && typeof result.then === 'function') {
+        result.catch((error) => {
+          shutdownLogger.error('Failed to shutdown tool hub activation service', { error });
+        });
+      }
+    } catch (error) {
+      shutdownLogger.error('Failed to shutdown tool hub activation service', { error });
       encounteredError ??= error;
     }
   }
