@@ -1,107 +1,14 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
+import {
+  ensureStringArray,
+  toPlainArray,
+  cosineSimilarity,
+  buildPayload
+} from '../vector-store/utils.mjs';
+
 const DEFAULT_COLLECTION = 'protocol_vectors';
-const COSINE_EPSILON = 1e-9;
-
-const ensureStringArray = (value) => {
-  if (!Array.isArray(value)) {
-    return [];
-  }
-  return value
-    .map((entry) => {
-      if (entry == null) {
-        return null;
-      }
-      if (typeof entry === 'string') {
-        return entry.trim();
-      }
-      return String(entry).trim();
-    })
-    .filter((entry) => entry && entry.length > 0);
-};
-
-const toPlainArray = (vector) => {
-  if (!vector) {
-    return [];
-  }
-  if (Array.isArray(vector)) {
-    return vector.slice();
-  }
-  if (ArrayBuffer.isView(vector)) {
-    return Array.from(vector);
-  }
-  if (typeof vector.toArray === 'function') {
-    try {
-      const result = vector.toArray();
-      return Array.isArray(result) ? result.slice() : Array.from(result ?? []);
-    } catch {
-      return [];
-    }
-  }
-  if (typeof vector === 'object' && typeof vector.length === 'number') {
-    try {
-      return Array.from(vector);
-    } catch {
-      return [];
-    }
-  }
-  return [];
-};
-
-const cosineSimilarity = (a, b) => {
-  const lhs = toPlainArray(a);
-  const rhs = toPlainArray(b);
-  const length = Math.min(lhs.length, rhs.length);
-  if (length === 0) {
-    return 0;
-  }
-  let dot = 0;
-  let magA = 0;
-  let magB = 0;
-  for (let i = 0; i < length; i += 1) {
-    const ax = lhs[i];
-    const bx = rhs[i];
-    if (!Number.isFinite(ax) || !Number.isFinite(bx)) {
-      continue;
-    }
-    dot += ax * bx;
-    magA += ax * ax;
-    magB += bx * bx;
-  }
-  if (magA <= COSINE_EPSILON || magB <= COSINE_EPSILON) {
-    return 0;
-  }
-  return dot / (Math.sqrt(magA) * Math.sqrt(magB));
-};
-
-const buildPayload = (entry) => {
-  const payloadSource =
-    entry && typeof entry === 'object' && entry.payload && typeof entry.payload === 'object'
-      ? entry.payload
-      : {};
-
-  const toolIdCandidate =
-    payloadSource.tool_id ??
-    entry?.tool_id ??
-    payloadSource.urn ??
-    entry?.urn ??
-    null;
-
-  const urnCandidate =
-    payloadSource.urn ??
-    entry?.urn ??
-    (toolIdCandidate ? String(toolIdCandidate) : null);
-
-  return {
-    tool_id: toolIdCandidate ? String(toolIdCandidate) : null,
-    urn: urnCandidate ? String(urnCandidate) : null,
-    name: payloadSource.name ?? entry?.name ?? null,
-    summary: payloadSource.summary ?? entry?.summary ?? null,
-    tags: ensureStringArray(payloadSource.tags ?? entry?.tags ?? []),
-    capabilities: ensureStringArray(payloadSource.capabilities ?? entry?.capabilities ?? [])
-  };
-};
 
 export class LanceDBAdapter {
   constructor(options = {}) {
@@ -232,6 +139,52 @@ export class LanceDBAdapter {
     if (this._fallbackFile) {
       const serialisable = Array.from(this._records.values());
       await fs.writeFile(this._fallbackFile, JSON.stringify(serialisable, null, 2), 'utf8');
+    }
+  }
+
+  async delete(ids) {
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return;
+    }
+
+    const keys = ids
+      .map((id) => (typeof id === 'string' ? id.trim() : String(id ?? '').trim()))
+      .filter((id) => id.length > 0);
+
+    if (keys.length === 0) {
+      return;
+    }
+
+    if (this.mode === 'lancedb' && this._table) {
+      try {
+        if (typeof this._table.delete === 'function') {
+          await this._table.delete(keys);
+          return;
+        }
+        if (typeof this._table.deleteRows === 'function') {
+          await this._table.deleteRows(keys);
+          return;
+        }
+        if (typeof this._table.deleteWhere === 'function') {
+          const placeholders = keys.map(() => '?').join(',');
+          await this._table.deleteWhere(`tool_id IN (${placeholders})`, keys);
+          return;
+        }
+        this.logger?.warn?.('[lancedb] Table does not expose delete API, skipping vector removal.');
+      } catch (error) {
+        this.logger?.warn?.(
+          `[lancedb] Unable to delete vectors via LanceDB adapter (${error.message ?? error}). Falling back to in-memory removal.`
+        );
+      }
+    }
+
+    let removed = false;
+    for (const key of keys) {
+      removed = this._records.delete(key) || removed;
+    }
+
+    if (removed && this.mode === 'fallback' && this._fallbackFile) {
+      await this.flush();
     }
   }
 

@@ -5,7 +5,10 @@ import { openDb, ensureSchema } from '../registry/db.mjs';
 import { upsertManifest } from '../registry/repository.mjs';
 
 import { EmbeddingService } from './embedding-service.mjs';
-import { LanceDBAdapter } from './lancedb-adapter.mjs';
+import {
+  VECTOR_STORE_DRIVERS,
+  createVectorStoreAdapter
+} from '../vector-store/index.mjs';
 
 const DEFAULT_COLLECTION = 'protocol_registry_vectors';
 const DEFAULT_BATCH_SIZE = 32;
@@ -161,7 +164,33 @@ export class RegistryLoader {
     this.embeddingOptions = options.embeddingOptions || {};
 
     this.vectorStore = options.vectorStore || null;
-    this.vectorOptions = options.vectorOptions || {};
+    this.vectorOptions = options.vectorOptions ? { ...options.vectorOptions } : {};
+
+    const envVectorDriver = process.env.SEMANTEXT_VECTOR_DRIVER;
+    const rawVectorDriver = options.vectorDriver ?? envVectorDriver ?? VECTOR_STORE_DRIVERS.LANCEDB;
+    this.vectorDriver = String(rawVectorDriver).trim().toLowerCase() || VECTOR_STORE_DRIVERS.LANCEDB;
+
+    if (this.vectorDriver === VECTOR_STORE_DRIVERS.QDRANT) {
+      const qdrantUrl = options.qdrantUrl ?? process.env.SEMANTEXT_QDRANT_URL;
+      const qdrantApiKey = options.qdrantApiKey ?? process.env.SEMANTEXT_QDRANT_API_KEY;
+      const qdrantVectorSize = options.qdrantVectorSize ?? process.env.SEMANTEXT_VECTOR_DIMENSION;
+      const qdrantDistance = options.qdrantDistance ?? process.env.SEMANTEXT_QDRANT_DISTANCE;
+
+      this.vectorOptions = {
+        workspace: this.workspace,
+        enableFallback: options.qdrantEnableFallback ?? this.vectorOptions.enableFallback,
+        ...this.vectorOptions,
+        ...(qdrantUrl ? { url: qdrantUrl } : {}),
+        ...(qdrantApiKey ? { apiKey: qdrantApiKey } : {}),
+        ...(qdrantVectorSize ? { vectorSize: Number(qdrantVectorSize) } : {}),
+        ...(qdrantDistance ? { distance: qdrantDistance } : {})
+      };
+    } else {
+      this.vectorOptions = {
+        workspace: this.workspace,
+        ...this.vectorOptions
+      };
+    }
   }
 
   async #resolveEmbeddingService() {
@@ -186,10 +215,13 @@ export class RegistryLoader {
       }
       return this.vectorStore;
     }
-    const adapter = new LanceDBAdapter({
-      dbPath: this.lanceDbPath,
+    const adapter = createVectorStoreAdapter({
+      driver: this.vectorDriver,
+      lancedbPath: this.lanceDbPath,
       collectionName: this.collectionName,
-      logger: this.logger
+      logger: this.logger,
+      workspace: this.workspace,
+      vectorOptions: this.vectorOptions
     });
     await adapter.initialize(this.collectionName);
     return adapter;
@@ -291,6 +323,10 @@ export class RegistryLoader {
         dryRun: this.dryRun,
         schemaResult,
         vectorMode: vectorStore.mode,
+        vectorDriver: this.vectorDriver,
+        vectorPath: this.vectorDriver === VECTOR_STORE_DRIVERS.QDRANT
+          ? this.vectorOptions.url ?? null
+          : this.lanceDbPath,
         embeddingMode: embeddingService.mode,
         manifestSummaries: summaries
       };
