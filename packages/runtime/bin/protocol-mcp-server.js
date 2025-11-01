@@ -27,6 +27,8 @@ import { createMetricsEndpoint } from '../services/mcp-server/metrics-endpoint.j
 import { createStructuredLogger } from '../services/mcp-server/logger.js';
 import { ToolHubSearchService } from '../services/tool-hub/search-service.js';
 import { ToolHubActivationService } from '../services/tool-hub/activation-service.js';
+import { RedisEventPublisher } from '../events/event-publisher.js';
+import { ContextStore } from '../services/context/context-store.js';
 
 // Dynamic imports for CommonJS modules
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -53,11 +55,42 @@ const shutdownLogger = lifecycleLogger.child('shutdown');
 const performanceLogger = logger.child('performance');
 const metricsLogger = logger.child('metrics');
 const toolLogger = logger.child('tool');
+const deploymentEnv = (process.env.SEMANTEXT_ENV || process.env.NODE_ENV || 'development').trim().toLowerCase();
+const eventLogger = logger.child('events');
+const redisEventPublisher = new RedisEventPublisher({
+  logger: eventLogger,
+  streamDefaults: {
+    env: deploymentEnv,
+    domain: 'semantext',
+    object: 'tool',
+    event: 'activated'
+  }
+});
+const contextStore = new ContextStore({
+  logger: logger.child('context'),
+  workspace: ROOT,
+  eventPublisher: redisEventPublisher,
+  streamDefaults: {
+    env: deploymentEnv,
+    domain: 'semantext',
+    object: 'context',
+    event: 'updated',
+    objectId: 'global'
+  }
+});
 const toolHubSearchService = new ToolHubSearchService({
   logger: toolLogger.child('tool_hub.search')
 });
 const toolHubActivationService = new ToolHubActivationService({
-  logger: toolLogger.child('tool_hub.activate')
+  logger: toolLogger.child('tool_hub.activate'),
+  eventPublisher: redisEventPublisher,
+  contextStore,
+  eventStreamDefaults: {
+    env: deploymentEnv,
+    domain: 'semantext',
+    object: 'tool',
+    event: 'activated'
+  }
 });
 const governanceLogger = logger.child('governance');
 
@@ -1236,6 +1269,20 @@ function cleanup() {
   } catch (error) {
     shutdownLogger.error('Failed to destroy metrics endpoint', { error });
     encounteredError ??= error;
+  }
+
+  if (redisEventPublisher) {
+    try {
+      const result = redisEventPublisher.close();
+      if (result && typeof result.then === 'function') {
+        result.catch((error) => {
+          shutdownLogger.error('Failed to close Redis event publisher', { error });
+        });
+      }
+    } catch (error) {
+      shutdownLogger.error('Failed to close Redis event publisher', { error });
+      encounteredError ??= error;
+    }
   }
 
   if (toolHubSearchService?.shutdown) {

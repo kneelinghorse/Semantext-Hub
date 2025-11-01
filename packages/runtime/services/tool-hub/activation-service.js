@@ -218,6 +218,21 @@ export class ToolHubActivationService {
     this.toolLoader =
       typeof options.toolLoader === 'function' ? options.toolLoader : null;
 
+    this.eventPublisher =
+      options.eventPublisher && typeof options.eventPublisher.publish === 'function'
+        ? options.eventPublisher
+        : null;
+
+    this.contextStore =
+      options.contextStore && typeof options.contextStore === 'object'
+        ? options.contextStore
+        : null;
+
+    this.eventStreamDefaults =
+      options.eventStreamDefaults && typeof options.eventStreamDefaults === 'object'
+        ? { ...options.eventStreamDefaults }
+        : { object: 'tool', event: 'activated' };
+
     this.includeManifestByDefault =
       options.includeManifest !== undefined ? Boolean(options.includeManifest) : true;
     this.includeProvenanceByDefault =
@@ -293,6 +308,13 @@ export class ToolHubActivationService {
       response.resources = record.resources;
     }
 
+    await this.#emitActivationEvents({
+      urn,
+      actor,
+      response,
+      params
+    });
+
     return response;
   }
 
@@ -340,6 +362,116 @@ export class ToolHubActivationService {
         }
       }
     }
+  }
+
+  async #emitActivationEvents(context) {
+    await Promise.allSettled([
+      this.#publishActivationEvent(context),
+      this.#recordContextEntry(context)
+    ]);
+  }
+
+  async #publishActivationEvent({ urn, actor, response, params }) {
+    if (!this.eventPublisher) {
+      return;
+    }
+
+    try {
+      const toolId = response.tool_id ?? urn;
+      const streamObjectId = toolId ? String(toolId) : 'unknown';
+      const toolTag = toolId ? String(toolId).toLowerCase() : null;
+      const safeActor = this.#sanitiseActorForEvent(actor);
+      await this.eventPublisher.publish({
+        eventType: 'ToolActivated',
+        source: 'tool_hub.activate',
+        streamSegments: {
+          ...this.eventStreamDefaults,
+          objectId: streamObjectId
+        },
+        correlationId: params?.correlation_id || params?.correlationId || params?.request_id,
+        context: {
+          urn,
+          actorId: safeActor?.id ?? null
+        },
+        tags: ['tool', 'activation', toolTag].filter(Boolean),
+        payload: {
+          urn,
+          toolId: streamObjectId,
+          actor: safeActor,
+          capabilities: response.capabilities,
+          metadata: response.metadata,
+          resolvedAt: response.resolved_at,
+          iam: response.iam,
+          resources: response.resources ?? null
+        }
+      });
+    } catch (error) {
+      this.logger.warn('Failed to publish tool activation event', {
+        urn,
+        error: error?.message || String(error)
+      });
+    }
+  }
+
+  async #recordContextEntry({ urn, actor, response, params }) {
+    if (!this.contextStore || typeof this.contextStore.recordToolActivation !== 'function') {
+      return;
+    }
+
+    try {
+      const toolId = response.tool_id ?? urn;
+      const streamObjectId = toolId ? String(toolId) : 'unknown';
+      const safeActor = this.#sanitiseActorForEvent(actor);
+      await this.contextStore.recordToolActivation({
+        urn,
+        toolId: streamObjectId,
+        actor: safeActor,
+        capabilities: response.capabilities,
+        metadata: response.metadata,
+        resolvedAt: response.resolved_at,
+        iam: response.iam
+      }, {
+        source: 'tool_hub.activate',
+        correlationId: params?.correlation_id || params?.correlationId || params?.request_id,
+        context: {
+          urn,
+          actorId: safeActor?.id ?? null
+        },
+        streamSegments: {
+          object: 'tool',
+          event: 'activated',
+          objectId: streamObjectId
+        }
+      });
+    } catch (error) {
+      this.logger.warn('Failed to record activation context entry', {
+        urn,
+        error: error?.message || String(error)
+      });
+    }
+  }
+
+  #sanitiseActorForEvent(actor) {
+    if (!actor || typeof actor !== 'object') {
+      return null;
+    }
+
+    const safeActor = {};
+    if (actor.id) {
+      safeActor.id = String(actor.id);
+    } else if (actor.urn) {
+      safeActor.id = String(actor.urn);
+    }
+
+    if (actor.role) {
+      safeActor.role = String(actor.role);
+    }
+
+    if (Array.isArray(actor.capabilities)) {
+      safeActor.capabilities = actor.capabilities.map((cap) => String(cap));
+    }
+
+    return Object.keys(safeActor).length > 0 ? safeActor : null;
   }
 
   #resolveUrn(params) {
